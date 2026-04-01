@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Outfit:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-dark-bg: #0A0A0B;
+  --color-dark-card: #141416;
+  --color-dark-border: #1E1E22;
+  --color-light-bg: #FAFAF9;
+  --color-light-card: #FFFFFF;
+  --color-light-border: #E5E5E3;
+  --color-accent: #2DD4BF;
+  --color-accent-dim: #1a8a7a;
+  --color-muted: #71717A;
+  --color-muted-light: #A1A1AA;
+
+  --font-outfit: 'Outfit', sans-serif;
+  --font-dm-sans: 'DM Sans', sans-serif;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent iOS zoom on input focus */
+  touch-action: manipulation;
+}
+
+body {
+  font-family: var(--font-dm-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+  /* Safe area insets for notched phones */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Prevent iOS zoom on input focus (font-size >= 16px) */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* Safe area for bottom nav on notched phones */
+nav.fixed {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 2px;
+}
+
+/* Hide scrollbar for filter chips */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Input autofill override */
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px var(--color-dark-card) inset !important;
+  -webkit-text-fill-color: white !important;
+}
+
+.light input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #18181B !important;
+}
