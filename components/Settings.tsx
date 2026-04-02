@@ -82,15 +82,14 @@ export default function Settings({
 
   // ── Education ──────────────────────────────────────────
   const addEducation = () => {
-    const edu: Education = { id: nanoid(), university: '', program: '', gradYear: '' };
+    const edu: Education = { id: nanoid(), university: '', program: '', gradYear: '', isPrimary: false };
     onProfileChange({ ...userProfile, education: [...userProfile.education, edu] });
   };
 
   const updateEducation = (id: string, patch: Partial<Education>) => {
-    onProfileChange({
-      ...userProfile,
-      education: userProfile.education.map((e) => (e.id === id ? { ...e, ...patch } : e)),
-    });
+    let education = userProfile.education.map((e) => (e.id === id ? { ...e, ...patch } : e));
+    if (patch.isPrimary) education = education.map((e) => (e.id === id ? e : { ...e, isPrimary: false }));
+    onProfileChange({ ...userProfile, education });
   };
 
   const removeEducation = (id: string) => {

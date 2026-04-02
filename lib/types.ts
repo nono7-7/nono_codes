@@ -62,6 +62,7 @@ export interface Education {
   university: string;
   program: string;
   gradYear: string;
+  isPrimary: boolean;
 }
 
 export interface Job {

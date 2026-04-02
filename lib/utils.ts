@@ -157,10 +157,10 @@ export function getDisplayJob(contact: Contact): { role: string; company: string
   return { role: contact.role, company: contact.company };
 }
 
-/** Get the display university from a contact, preferring first education entry */
+/** Get the display university from a contact, preferring the primary education entry */
 export function getDisplayEducation(contact: Contact): string {
   if (contact.education && contact.education.length > 0) {
-    const e = contact.education[0] as Education;
+    const e = (contact.education.find((ed: Education) => ed.isPrimary) ?? contact.education[0]) as Education;
     const parts = [e.university, e.program, e.gradYear].filter(Boolean);
     return parts.join(' · ');
   }

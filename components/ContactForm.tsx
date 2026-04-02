@@ -85,14 +85,15 @@ export default function ContactForm({
 
   // Education helpers
   const addEducation = () => {
-    const edu: Education = { id: nanoid(), university: '', program: '', gradYear: '' };
+    const edu: Education = { id: nanoid(), university: '', program: '', gradYear: '', isPrimary: false };
     setForm((f) => ({ ...f, education: [...(f.education || []), edu] }));
   };
   const updateEducation = (id: string, patch: Partial<Education>) => {
-    setForm((f) => ({
-      ...f,
-      education: (f.education || []).map((e) => (e.id === id ? { ...e, ...patch } : e)),
-    }));
+    setForm((f) => {
+      let education = (f.education || []).map((e) => (e.id === id ? { ...e, ...patch } : e));
+      if (patch.isPrimary) education = education.map((e) => (e.id === id ? e : { ...e, isPrimary: false }));
+      return { ...f, education };
+    });
   };
   const removeEducation = (id: string) => {
     setForm((f) => ({ ...f, education: (f.education || []).filter((e) => e.id !== id) }));
@@ -246,6 +247,14 @@ export default function ContactForm({
                     className={`${inputClass} py-1.5 text-xs w-16`}
                   />
                 </div>
+                <button
+                  type="button"
+                  onClick={() => updateEducation(edu.id, { isPrimary: !edu.isPrimary })}
+                  className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${edu.isPrimary ? 'text-accent' : 'text-muted'}`}
+                >
+                  <Star size={11} fill={edu.isPrimary ? 'currentColor' : 'none'} />
+                  {edu.isPrimary ? 'Shown on card' : 'Show on card'}
+                </button>
               </div>
               <button type="button" onClick={() => removeEducation(edu.id)} className="text-muted hover:text-red-400 mt-1 flex-shrink-0">
                 <X size={14} />
