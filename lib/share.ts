@@ -44,6 +44,28 @@ export function decodeSharedContact(importParam: string): Partial<Contact> | nul
     const json = decodeURIComponent(escape(atob(importParam)));
     const data = JSON.parse(json);
     if (typeof data !== 'object' || !data.name) return null;
+
+    // Map flat role/company into jobs array so the form shows them
+    if ((data.role || data.company) && (!data.jobs || data.jobs.length === 0)) {
+      data.jobs = [{
+        id: Math.random().toString(36).slice(2, 10),
+        role: data.role || '',
+        company: data.company || '',
+        isCurrent: true,
+      }];
+    }
+
+    // Map flat university into education array
+    if (data.university && (!data.education || data.education.length === 0)) {
+      data.education = [{
+        id: Math.random().toString(36).slice(2, 10),
+        university: data.university,
+        program: '',
+        gradYear: '',
+        isPrimary: true,
+      }];
+    }
+
     return data;
   } catch {
     return null;
