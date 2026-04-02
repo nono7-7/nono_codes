@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Search, Plus, MapPin, Mail, Phone, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Contact, ActiveFilter, SortOrder } from '@/lib/types';
-import { filterContacts, sortContacts, getTopTags, capitalizeTag } from '@/lib/utils';
+import { filterContacts, sortContacts, getTopTags, capitalizeTag, getDisplayJob, getDisplayEducation } from '@/lib/utils';
 import FilterChips from './FilterChips';
 import SortSelector from './SortSelector';
 import SyncIndicator, { type SyncStatus } from './SyncIndicator';
@@ -134,16 +134,18 @@ export default function ContactList({
                 <p className="font-[family-name:var(--font-outfit)] font-semibold text-sm truncate">
                   {contact.name}
                 </p>
-                {(contact.role || contact.company) && (
-                  <p className="text-xs text-muted mt-0.5 truncate">
-                    {contact.role}
-                    {contact.role && contact.company && ' @ '}
-                    {contact.company}
-                  </p>
-                )}
-                {contact.university && (
-                  <p className="text-xs text-muted mt-0.5 truncate">{contact.university}</p>
-                )}
+                {(() => {
+                  const dj = getDisplayJob(contact);
+                  return (dj.role || dj.company) ? (
+                    <p className="text-xs text-muted mt-0.5 truncate">
+                      {dj.role}{dj.role && dj.company && ' @ '}{dj.company}
+                    </p>
+                  ) : null;
+                })()}
+                {(() => {
+                  const de = getDisplayEducation(contact);
+                  return de ? <p className="text-xs text-muted mt-0.5 truncate">{de}</p> : null;
+                })()}
                 {contact.homeLocation && (
                   <p className="text-xs text-muted mt-1 flex items-center gap-1">
                     <MapPin size={11} />

@@ -34,6 +34,9 @@ export interface Contact {
   lastContacted: string;                 // ISO date or ''
   interactions: Interaction[];
 
+  education: Education[];
+  jobs: Job[];
+
   dateAdded: string;
   lastUpdated: string;
 }

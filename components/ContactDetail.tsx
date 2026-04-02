@@ -1,13 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Pencil, Trash2, MapPin, Phone, Mail, ExternalLink, Cake, Clock, QrCode } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Pencil, Trash2, MapPin, Phone, Mail, ExternalLink, Cake, Clock, GraduationCap, Briefcase, Star } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { Contact } from '@/lib/types';
-import { buildHowMetSentence, capitalizeTag } from '@/lib/utils';
+import { buildHowMetSentence, capitalizeTag, getDisplayJob, getDisplayEducation } from '@/lib/utils';
 import InteractionLog from './InteractionLog';
 import Avatar from './Avatar';
-import ContactShareModal from './ContactShareModal';
 
 export default function ContactDetail({
   contact,
@@ -25,10 +24,11 @@ export default function ContactDetail({
   isDark: boolean;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [showShare, setShowShare] = useState(false);
 
   const howMet = buildHowMetSentence(contact);
   const hasContactInfo = contact.phone || contact.email || contact.linkedinUrl || contact.birthday;
+  const displayJob = getDisplayJob(contact);
+  const displayEdu = getDisplayEducation(contact);
   const hasHowMet = contact.howMet || contact.whereMet || contact.eventOrContext || contact.dateMet;
 
   const handleDelete = () => {
@@ -58,14 +58,6 @@ export default function ContactDetail({
           <ArrowLeft size={18} />
         </button>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowShare(true)}
-            className={`w-9 h-9 flex items-center justify-center rounded-lg ${
-              isDark ? 'bg-dark-card' : 'bg-light-border'
-            }`}
-          >
-            <QrCode size={16} className="text-muted-light" />
-          </button>
           <button
             onClick={onEdit}
             className={`w-9 h-9 flex items-center justify-center rounded-lg ${
@@ -98,15 +90,15 @@ export default function ContactDetail({
         <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-bold tracking-tight">
           {contact.name}
         </h2>
-        {(contact.role || contact.company) && (
+        {(displayJob.role || displayJob.company) && (
           <p className="text-muted mt-1">
-            {contact.role}
-            {contact.role && contact.company && ' @ '}
-            {contact.company}
+            {displayJob.role}
+            {displayJob.role && displayJob.company && ' @ '}
+            {displayJob.company}
           </p>
         )}
-        {contact.university && (
-          <p className="text-muted text-sm mt-0.5">{contact.university}</p>
+        {displayEdu && (
+          <p className="text-muted text-sm mt-0.5">{displayEdu}</p>
         )}
         <div className="flex items-center gap-3 mt-3">
           <span
@@ -196,6 +188,56 @@ export default function ContactDetail({
           </div>
         )}
 
+        {/* Education */}
+        {contact.education && contact.education.length > 0 && (
+          <div className={sectionClass}>
+            <h3 className="font-[family-name:var(--font-outfit)] text-xs font-semibold text-muted uppercase tracking-wider mb-3">
+              Education
+            </h3>
+            <div className="space-y-2.5">
+              {contact.education.map((edu) => (
+                <div key={edu.id} className="flex items-start gap-2.5">
+                  <GraduationCap size={14} className="text-muted mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">{edu.university}</p>
+                    {(edu.program || edu.gradYear) && (
+                      <p className="text-xs text-muted mt-0.5">
+                        {edu.program}{edu.program && edu.gradYear && ' · '}{edu.gradYear}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Work */}
+        {contact.jobs && contact.jobs.length > 0 && (
+          <div className={sectionClass}>
+            <h3 className="font-[family-name:var(--font-outfit)] text-xs font-semibold text-muted uppercase tracking-wider mb-3">
+              Work
+            </h3>
+            <div className="space-y-2.5">
+              {contact.jobs.map((job) => (
+                <div key={job.id} className="flex items-start gap-2.5">
+                  <Briefcase size={14} className="text-muted mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">
+                      {job.role}{job.role && job.company && ' @ '}{job.company}
+                    </p>
+                    {job.isCurrent && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-accent mt-0.5">
+                        <Star size={10} fill="currentColor" /> Current
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Notes */}
         <div className={sectionClass}>
           <h3 className="font-[family-name:var(--font-outfit)] text-xs font-semibold text-muted uppercase tracking-wider mb-2">
@@ -237,16 +279,6 @@ export default function ContactDetail({
         )}
       </div>
 
-      {/* Share Modal */}
-      <AnimatePresence>
-        {showShare && (
-          <ContactShareModal
-            contact={contact}
-            onClose={() => setShowShare(false)}
-            isDark={isDark}
-          />
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }

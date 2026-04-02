@@ -1,4 +1,4 @@
-import type { Contact, ActiveFilter, SortOrder } from './types';
+import type { Contact, ActiveFilter, SortOrder, Job, Education } from './types';
 
 export const DEFAULT_TAGS = [
   'finance', 'tech', 'vc', 'startup', 'consulting', 'legal',
@@ -27,10 +27,12 @@ export function filterContacts(contacts: Contact[], filter: ActiveFilter): Conta
   if (filter.search.trim()) {
     const q = filter.search.toLowerCase();
     result = result.filter((c) => {
+      const eduParts = (c.education || []).flatMap((e) => [e.university, e.program, e.gradYear]);
+      const jobParts = (c.jobs || []).flatMap((j) => [j.role, j.company]);
       const searchable = [
         c.name, c.company, c.university, c.role, c.howMet, c.whereMet,
         c.eventOrContext, c.homeLocation, c.nationality, c.dateMet,
-        c.notes, ...c.tags,
+        c.notes, ...c.tags, ...eduParts, ...jobParts,
       ].join(' ').toLowerCase();
       return searchable.includes(q);
     });
@@ -141,5 +143,26 @@ export function createEmptyContact(): Omit<Contact, 'id' | 'dateAdded' | 'lastUp
     reconnectIntervalWeeks: null,
     lastContacted: '',
     interactions: [],
+    education: [],
+    jobs: [],
   };
+}
+
+/** Get the display role/company from a contact, preferring current job from jobs array */
+export function getDisplayJob(contact: Contact): { role: string; company: string } {
+  if (contact.jobs && contact.jobs.length > 0) {
+    const current = contact.jobs.find((j: Job) => j.isCurrent) ?? contact.jobs[0];
+    return { role: current.role, company: current.company };
+  }
+  return { role: contact.role, company: contact.company };
+}
+
+/** Get the display university from a contact, preferring first education entry */
+export function getDisplayEducation(contact: Contact): string {
+  if (contact.education && contact.education.length > 0) {
+    const e = contact.education[0] as Education;
+    const parts = [e.university, e.program, e.gradYear].filter(Boolean);
+    return parts.join(' · ');
+  }
+  return contact.university;
 }

@@ -41,6 +41,8 @@ function normalizeContact(c: Record<string, unknown>): Contact {
     lastContacted: (c.lastContacted as string) ?? '',
     interactions: (c.interactions as Contact['interactions']) ?? [],
     tags: (c.tags as string[]) ?? [],
+    education: (c.education as Contact['education']) ?? [],
+    jobs: (c.jobs as Contact['jobs']) ?? [],
   } as Contact;
 }
 

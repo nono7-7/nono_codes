@@ -39,7 +39,6 @@ export default function ImageCropModal({
       const dataUrl = await cropAndCompress(imageSrc, croppedAreaPixels as PixelCrop);
       onSave(dataUrl);
     } catch {
-      // fallback: save original without crop
       onSave(imageSrc);
     } finally {
       setSaving(false);
@@ -52,9 +51,10 @@ export default function ImageCropModal({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex flex-col"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      {/* Backdrop + crop area */}
-      <div className={`flex-1 relative ${isDark ? 'bg-black' : 'bg-zinc-900'}`}>
+      {/* Crop area — takes remaining space above controls */}
+      <div className="flex-1 relative bg-black min-h-0">
         <Cropper
           image={imageSrc}
           crop={crop}
@@ -68,37 +68,42 @@ export default function ImageCropModal({
         />
       </div>
 
-      {/* Zoom slider */}
-      <div className={`px-6 pt-4 pb-2 ${isDark ? 'bg-dark-bg' : 'bg-white'}`}>
-        <p className="text-xs text-muted text-center mb-2">Pinch or drag to adjust</p>
-        <input
-          type="range"
-          min={1}
-          max={3}
-          step={0.01}
-          value={zoom}
-          onChange={(e) => setZoom(Number(e.target.value))}
-          className="w-full accent-accent"
-        />
-      </div>
+      {/* Controls panel — always visible at bottom */}
+      <div className={`flex-shrink-0 ${isDark ? 'bg-dark-bg' : 'bg-white'} border-t ${isDark ? 'border-dark-border' : 'border-light-border'}`}>
+        {/* Zoom */}
+        <div className="px-6 pt-4 pb-3">
+          <p className="text-xs text-muted text-center mb-2">Drag to reposition · Pinch to zoom</p>
+          <input
+            type="range"
+            min={1}
+            max={3}
+            step={0.01}
+            value={zoom}
+            onChange={(e) => setZoom(Number(e.target.value))}
+            className="w-full accent-accent h-2"
+          />
+        </div>
 
-      {/* Buttons */}
-      <div className={`flex gap-3 px-6 pb-8 pt-2 ${isDark ? 'bg-dark-bg' : 'bg-white'}`}>
-        <button
-          onClick={onCancel}
-          className={`flex-1 py-3 rounded-lg text-sm font-semibold font-[family-name:var(--font-outfit)] ${
-            isDark ? 'bg-dark-card text-muted' : 'bg-light-border text-zinc-600'
-          }`}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="flex-1 py-3 rounded-lg bg-accent text-dark-bg text-sm font-semibold font-[family-name:var(--font-outfit)] active:scale-[0.98] transition-transform disabled:opacity-60"
-        >
-          {saving ? 'Saving…' : 'Use Photo'}
-        </button>
+        {/* Buttons — large, clearly visible */}
+        <div className="flex gap-3 px-6 pb-6 pt-1">
+          <button
+            onClick={onCancel}
+            className={`flex-1 py-3.5 rounded-xl text-sm font-bold font-[family-name:var(--font-outfit)] border-2 ${
+              isDark
+                ? 'bg-dark-card border-dark-border text-white hover:bg-dark-border'
+                : 'bg-white border-light-border text-zinc-700 hover:bg-light-border'
+            }`}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 py-3.5 rounded-xl bg-accent text-dark-bg text-sm font-bold font-[family-name:var(--font-outfit)] active:scale-[0.98] transition-transform disabled:opacity-60 border-2 border-accent"
+          >
+            {saving ? 'Saving...' : 'Use Photo'}
+          </button>
+        </div>
       </div>
     </motion.div>
   );

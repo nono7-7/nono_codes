@@ -386,7 +386,9 @@ export default function NetworkView({
                     {c.classification === 'inner' ? 'Inner' : 'Wider'}
                   </span>
                   <span className="text-xs text-muted">
-                    {new Date(c.dateAdded).toLocaleDateString()}
+                    {c.dateAdded && !isNaN(new Date(c.dateAdded).getTime())
+                      ? new Date(c.dateAdded).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                      : ''}
                   </span>
                 </div>
               </div>

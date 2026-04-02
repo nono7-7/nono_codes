@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { nanoid } from 'nanoid';
-import { Camera } from 'lucide-react';
-import type { Contact } from '@/lib/types';
+import { Camera, Plus, X, Star, GraduationCap, Briefcase } from 'lucide-react';
+import type { Contact, Education, Job } from '@/lib/types';
 import { createEmptyContact } from '@/lib/utils';
 import { compressImage } from '@/lib/avatar';
 import TagInput from './TagInput';
@@ -81,6 +81,37 @@ export default function ContactForm({
 
   const set = (field: string, value: string | string[]) => {
     setForm((f) => ({ ...f, [field]: value }));
+  };
+
+  // Education helpers
+  const addEducation = () => {
+    const edu: Education = { id: nanoid(), university: '', program: '', gradYear: '' };
+    setForm((f) => ({ ...f, education: [...(f.education || []), edu] }));
+  };
+  const updateEducation = (id: string, patch: Partial<Education>) => {
+    setForm((f) => ({
+      ...f,
+      education: (f.education || []).map((e) => (e.id === id ? { ...e, ...patch } : e)),
+    }));
+  };
+  const removeEducation = (id: string) => {
+    setForm((f) => ({ ...f, education: (f.education || []).filter((e) => e.id !== id) }));
+  };
+
+  // Jobs helpers
+  const addJob = () => {
+    const job: Job = { id: nanoid(), company: '', role: '', isCurrent: false };
+    setForm((f) => ({ ...f, jobs: [...(f.jobs || []), job] }));
+  };
+  const updateJob = (id: string, patch: Partial<Job>) => {
+    setForm((f) => {
+      let jobs = (f.jobs || []).map((j) => (j.id === id ? { ...j, ...patch } : j));
+      if (patch.isCurrent) jobs = jobs.map((j) => (j.id === id ? j : { ...j, isCurrent: false }));
+      return { ...f, jobs };
+    });
+  };
+  const removeJob = (id: string) => {
+    setForm((f) => ({ ...f, jobs: (f.jobs || []).filter((j) => j.id !== id) }));
   };
 
   const inputClass = `w-full px-3 py-2.5 rounded-lg text-sm outline-none border ${
@@ -168,39 +199,6 @@ export default function ContactForm({
           />
         </div>
         <div>
-          <label className={labelClass}>{optLabel('Role')}</label>
-          <AutoSuggestInput
-            value={form.role}
-            onChange={(v) => set('role', v)}
-            suggestions={suggestionPools.role}
-            placeholder="Job title, student, etc."
-            inputClass={inputClass}
-            isDark={isDark}
-          />
-        </div>
-        <div>
-          <label className={labelClass}>{optLabel('Company')}</label>
-          <AutoSuggestInput
-            value={form.company}
-            onChange={(v) => set('company', v)}
-            suggestions={suggestionPools.company}
-            placeholder="Company name"
-            inputClass={inputClass}
-            isDark={isDark}
-          />
-        </div>
-        <div>
-          <label className={labelClass}>{optLabel('University')}</label>
-          <AutoSuggestInput
-            value={form.university}
-            onChange={(v) => set('university', v)}
-            suggestions={suggestionPools.university}
-            placeholder="University or school"
-            inputClass={inputClass}
-            isDark={isDark}
-          />
-        </div>
-        <div>
           <label className={labelClass}>{optLabel('Home Location')}</label>
           <AutoSuggestInput
             value={form.homeLocation}
@@ -211,6 +209,102 @@ export default function ContactForm({
             isDark={isDark}
           />
         </div>
+      </div>
+
+      {/* Education */}
+      {sectionLabel('Education (optional)')}
+      <div className="space-y-2">
+        {(form.education || []).map((edu) => (
+          <div
+            key={edu.id}
+            className={`rounded-lg p-3 border ${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'}`}
+          >
+            <div className="flex items-start gap-2">
+              <GraduationCap size={14} className="text-muted mt-2.5 flex-shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <AutoSuggestInput
+                  value={edu.university}
+                  onChange={(v) => updateEducation(edu.id, { university: v })}
+                  suggestions={suggestionPools.university}
+                  placeholder="University"
+                  inputClass={`${inputClass} py-1.5 text-xs`}
+                  isDark={isDark}
+                />
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={edu.program}
+                    onChange={(e) => updateEducation(edu.id, { program: e.target.value })}
+                    placeholder="Programme"
+                    className={`${inputClass} py-1.5 text-xs flex-1`}
+                  />
+                  <input
+                    type="text"
+                    value={edu.gradYear}
+                    onChange={(e) => updateEducation(edu.id, { gradYear: e.target.value })}
+                    placeholder="Year"
+                    className={`${inputClass} py-1.5 text-xs w-16`}
+                  />
+                </div>
+              </div>
+              <button type="button" onClick={() => removeEducation(edu.id)} className="text-muted hover:text-red-400 mt-1 flex-shrink-0">
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        ))}
+        <button type="button" onClick={addEducation} className="flex items-center gap-2 text-xs text-accent font-medium py-2">
+          <Plus size={14} /> Add University
+        </button>
+      </div>
+
+      {/* Work */}
+      {sectionLabel('Work (optional)')}
+      <div className="space-y-2">
+        {(form.jobs || []).map((job) => (
+          <div
+            key={job.id}
+            className={`rounded-lg p-3 border ${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'}`}
+          >
+            <div className="flex items-start gap-2">
+              <Briefcase size={14} className="text-muted mt-2.5 flex-shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <div className="flex gap-1.5">
+                  <AutoSuggestInput
+                    value={job.role}
+                    onChange={(v) => updateJob(job.id, { role: v })}
+                    suggestions={suggestionPools.role}
+                    placeholder="Role"
+                    inputClass={`${inputClass} py-1.5 text-xs flex-1`}
+                    isDark={isDark}
+                  />
+                  <AutoSuggestInput
+                    value={job.company}
+                    onChange={(v) => updateJob(job.id, { company: v })}
+                    suggestions={suggestionPools.company}
+                    placeholder="Company"
+                    inputClass={`${inputClass} py-1.5 text-xs flex-1`}
+                    isDark={isDark}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => updateJob(job.id, { isCurrent: !job.isCurrent })}
+                  className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${job.isCurrent ? 'text-accent' : 'text-muted'}`}
+                >
+                  <Star size={11} fill={job.isCurrent ? 'currentColor' : 'none'} />
+                  {job.isCurrent ? 'Current' : 'Mark as current'}
+                </button>
+              </div>
+              <button type="button" onClick={() => removeJob(job.id)} className="text-muted hover:text-red-400 mt-1 flex-shrink-0">
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        ))}
+        <button type="button" onClick={addJob} className="flex items-center gap-2 text-xs text-accent font-medium py-2">
+          <Plus size={14} /> Add Job
+        </button>
       </div>
 
       {/* Classification */}
