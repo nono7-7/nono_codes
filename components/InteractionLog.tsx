@@ -1,17 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, MessageCircle } from 'lucide-react';
+import { Plus, MessageCircle, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Interaction } from '@/lib/types';
 
 export default function InteractionLog({
   interactions,
   onAdd,
+  onDelete,
   isDark,
 }: {
   interactions: Interaction[];
   onAdd: (date: string, note: string) => void;
+  onDelete?: (interactionId: string) => void;
   isDark: boolean;
 }) {
   const [showForm, setShowForm] = useState(false);
@@ -102,7 +104,7 @@ export default function InteractionLog({
           {sorted.map((interaction) => (
             <div key={interaction.id} className="flex items-start gap-2.5">
               <MessageCircle size={13} className="text-accent mt-0.5 shrink-0" />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs text-muted">
                   {new Date(interaction.date + 'T00:00:00').toLocaleDateString('en-US', {
                     month: 'short',
@@ -114,6 +116,14 @@ export default function InteractionLog({
                   <p className="text-sm mt-0.5">{interaction.note}</p>
                 )}
               </div>
+              {onDelete && (
+                <button
+                  onClick={() => onDelete(interaction.id)}
+                  className="text-muted/40 hover:text-red-400 transition-colors mt-0.5 shrink-0"
+                >
+                  <Trash2 size={12} />
+                </button>
+              )}
             </div>
           ))}
         </div>

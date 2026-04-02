@@ -14,6 +14,7 @@ export default function ContactDetail({
   onEdit,
   onDelete,
   onLogInteraction,
+  onDeleteInteraction,
   isDark,
 }: {
   contact: Contact;
@@ -21,6 +22,7 @@ export default function ContactDetail({
   onEdit: () => void;
   onDelete: () => void;
   onLogInteraction: (date: string, note: string) => void;
+  onDeleteInteraction?: (interactionId: string) => void;
   isDark: boolean;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -255,6 +257,7 @@ export default function ContactDetail({
           <InteractionLog
             interactions={contact.interactions}
             onAdd={onLogInteraction}
+            onDelete={onDeleteInteraction}
             isDark={isDark}
           />
         </div>

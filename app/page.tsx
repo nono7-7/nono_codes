@@ -227,6 +227,26 @@ export default function App() {
     [contacts, refresh]
   );
 
+  const handleDeleteInteraction = useCallback(
+    async (contactId: string, interactionId: string) => {
+      const contact = contacts.find((c) => c.id === contactId);
+      if (!contact) return;
+      const updated: Contact = {
+        ...contact,
+        interactions: contact.interactions.filter((i) => i.id !== interactionId),
+        lastUpdated: new Date().toISOString(),
+      };
+      await saveContact(updated);
+      await refresh();
+      setScreen((prev) =>
+        prev.type === 'detail' && prev.contact.id === contactId
+          ? { type: 'detail', contact: updated }
+          : prev
+      );
+    },
+    [contacts, refresh]
+  );
+
   const handleMarkContacted = useCallback(
     async (contactId: string) => {
       const today = new Date().toISOString().slice(0, 10);
@@ -381,6 +401,7 @@ export default function App() {
                   onEdit={() => setScreen({ type: 'form', contact: screen.contact })}
                   onDelete={() => handleDelete(screen.contact.id)}
                   onLogInteraction={(date, note) => handleLogInteraction(screen.contact.id, date, note)}
+                  onDeleteInteraction={(interactionId) => handleDeleteInteraction(screen.contact.id, interactionId)}
                   isDark={isDark}
                 />
               )}

@@ -50,11 +50,10 @@ export default function ImageCropModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="fixed inset-0 z-50 flex flex-col bg-black"
     >
-      {/* Crop area — takes remaining space above controls */}
-      <div className="flex-1 relative bg-black min-h-0">
+      {/* Crop area — capped so buttons stay visible */}
+      <div className="relative" style={{ height: '55vh' }}>
         <Cropper
           image={imageSrc}
           crop={crop}
@@ -68,11 +67,15 @@ export default function ImageCropModal({
         />
       </div>
 
-      {/* Controls panel — always visible at bottom */}
-      <div className={`flex-shrink-0 ${isDark ? 'bg-dark-bg' : 'bg-white'} border-t ${isDark ? 'border-dark-border' : 'border-light-border'}`}>
+      {/* Controls panel — guaranteed visible */}
+      <div
+        className={`flex-1 flex flex-col justify-end ${isDark ? 'bg-dark-bg' : 'bg-white'}`}
+      >
         {/* Zoom */}
-        <div className="px-6 pt-4 pb-3">
-          <p className="text-xs text-muted text-center mb-2">Drag to reposition · Pinch to zoom</p>
+        <div className="px-6 pt-5 pb-3">
+          <p className={`text-xs text-center mb-3 ${isDark ? 'text-white/60' : 'text-zinc-500'}`}>
+            Drag to reposition · Pinch to zoom
+          </p>
           <input
             type="range"
             min={1}
@@ -84,14 +87,14 @@ export default function ImageCropModal({
           />
         </div>
 
-        {/* Buttons — large, clearly visible */}
-        <div className="flex gap-3 px-6 pb-6 pt-1">
+        {/* Buttons */}
+        <div className="flex gap-3 px-6 pt-3 pb-10">
           <button
             onClick={onCancel}
-            className={`flex-1 py-3.5 rounded-xl text-sm font-bold font-[family-name:var(--font-outfit)] border-2 ${
+            className={`flex-1 py-4 rounded-xl text-base font-bold font-[family-name:var(--font-outfit)] border-2 ${
               isDark
-                ? 'bg-dark-card border-dark-border text-white hover:bg-dark-border'
-                : 'bg-white border-light-border text-zinc-700 hover:bg-light-border'
+                ? 'bg-dark-card border-dark-border text-white'
+                : 'bg-white border-zinc-300 text-zinc-800'
             }`}
           >
             Cancel
@@ -99,7 +102,7 @@ export default function ImageCropModal({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 py-3.5 rounded-xl bg-accent text-dark-bg text-sm font-bold font-[family-name:var(--font-outfit)] active:scale-[0.98] transition-transform disabled:opacity-60 border-2 border-accent"
+            className="flex-1 py-4 rounded-xl bg-accent text-dark-bg text-base font-bold font-[family-name:var(--font-outfit)] active:scale-[0.98] transition-transform disabled:opacity-60 border-2 border-accent"
           >
             {saving ? 'Saving...' : 'Use Photo'}
           </button>
