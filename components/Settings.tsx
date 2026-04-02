@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { Download, Upload, Trash2, Moon, Sun, LogOut, User, Bell, FileSpreadsheet, Cloud } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { exportContacts, importContacts, importContactsFromCSV, clearAll } from '@/lib/db';
-import type { AppSettings } from '@/lib/types';
+import { useState, useRef } from 'react';
+import { Download, Upload, Trash2, Moon, Sun, LogOut, Bell, Cloud, Camera, QrCode } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { exportContacts, importContacts, clearAll } from '@/lib/db';
+import { compressImage } from '@/lib/avatar';
+import type { AppSettings, UserProfile } from '@/lib/types';
+import Avatar from './Avatar';
+import UserQRModal from './UserQRModal';
 
 export default function Settings({
   isDark,
@@ -16,6 +19,8 @@ export default function Settings({
   userEmail,
   appSettings,
   onSettingsChange,
+  userProfile,
+  onProfileChange,
 }: {
   isDark: boolean;
   onToggleTheme: () => void;
@@ -26,8 +31,12 @@ export default function Settings({
   userEmail?: string;
   appSettings: AppSettings;
   onSettingsChange: (settings: AppSettings) => void;
+  userProfile: UserProfile;
+  onProfileChange: (profile: UserProfile) => void;
 }) {
   const [clearStep, setClearStep] = useState(0);
+  const [showQR, setShowQR] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = async () => {
     const json = await exportContacts();
@@ -60,23 +69,15 @@ export default function Settings({
     input.click();
   };
 
-  const handleCSVImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.csv';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const count = await importContactsFromCSV(text);
-        onImportComplete();
-        showToast(`${count} contact${count !== 1 ? 's' : ''} imported from LinkedIn`);
-      } catch {
-        showToast('Invalid CSV format');
-      }
-    };
-    input.click();
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await compressImage(file);
+      onProfileChange({ ...userProfile, photoUrl: dataUrl });
+    } catch {
+      // silently fail
+    }
   };
 
   const handleClear = async () => {
@@ -115,26 +116,95 @@ export default function Settings({
         Settings
       </h1>
 
-      {/* Account */}
-      {userEmail && (
-        <>
-          <h3 className="font-[family-name:var(--font-outfit)] text-xs font-semibold text-muted uppercase tracking-wider mb-3">
-            Account
-          </h3>
-          <div className="space-y-2 mb-6">
-            <div className={`${btnClass} cursor-default`}>
-              <User size={18} className="text-muted" />
-              <span className="truncate">{userEmail}</span>
+      {/* Profile */}
+      <h3 className="font-[family-name:var(--font-outfit)] text-xs font-semibold text-muted uppercase tracking-wider mb-3">
+        My Profile
+      </h3>
+      <div className="mb-6 space-y-3">
+        {/* Avatar */}
+        <div className="flex justify-center mb-1">
+          <button
+            type="button"
+            onClick={() => photoInputRef.current?.click()}
+            className="relative group"
+          >
+            <Avatar name={userProfile.name || '?'} photoUrl={userProfile.photoUrl} size="lg" />
+            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity">
+              <Camera size={18} className="text-white" />
             </div>
-            {onLogout && (
-              <button onClick={onLogout} className={`${btnClass} !text-red-400`}>
-                <LogOut size={18} className="text-red-400" />
-                <span>Sign out</span>
-              </button>
-            )}
+          </button>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoUpload}
+            className="hidden"
+          />
+        </div>
+
+        {/* Profile fields */}
+        <input
+          type="text"
+          value={userProfile.name}
+          onChange={(e) => onProfileChange({ ...userProfile, name: e.target.value })}
+          onBlur={() => onProfileChange(userProfile)}
+          placeholder="Your name"
+          className={`w-full px-3 py-2.5 rounded-lg text-sm outline-none border ${
+            isDark
+              ? 'bg-dark-card border-dark-border text-white placeholder:text-muted'
+              : 'bg-white border-light-border text-dark-bg placeholder:text-muted'
+          }`}
+        />
+        <input
+          type="text"
+          value={userProfile.role}
+          onChange={(e) => onProfileChange({ ...userProfile, role: e.target.value })}
+          placeholder="Role (optional)"
+          className={`w-full px-3 py-2.5 rounded-lg text-sm outline-none border ${
+            isDark
+              ? 'bg-dark-card border-dark-border text-white placeholder:text-muted'
+              : 'bg-white border-light-border text-dark-bg placeholder:text-muted'
+          }`}
+        />
+        <input
+          type="text"
+          value={userProfile.company}
+          onChange={(e) => onProfileChange({ ...userProfile, company: e.target.value })}
+          placeholder="Company (optional)"
+          className={`w-full px-3 py-2.5 rounded-lg text-sm outline-none border ${
+            isDark
+              ? 'bg-dark-card border-dark-border text-white placeholder:text-muted'
+              : 'bg-white border-light-border text-dark-bg placeholder:text-muted'
+          }`}
+        />
+
+        {/* My QR Code */}
+        <button
+          onClick={() => setShowQR(true)}
+          className={`${btnClass} !text-accent`}
+        >
+          <QrCode size={18} className="text-accent" />
+          <div>
+            <span className="block">My QR Code</span>
+            <span className="text-[11px] text-muted font-normal block mt-0.5">
+              Let others scan to add you as a contact
+            </span>
           </div>
-        </>
-      )}
+        </button>
+
+        {/* Account info + sign out */}
+        {userEmail && (
+          <div className={`${btnClass} cursor-default`}>
+            <span className="text-muted text-xs truncate">{userEmail}</span>
+          </div>
+        )}
+        {onLogout && (
+          <button onClick={onLogout} className={`${btnClass} !text-red-400`}>
+            <LogOut size={18} className="text-red-400" />
+            <span>Sign out</span>
+          </button>
+        )}
+      </div>
 
       {/* Features */}
       <h3 className="font-[family-name:var(--font-outfit)] text-xs font-semibold text-muted uppercase tracking-wider mb-3">
@@ -222,15 +292,6 @@ export default function Settings({
           <Upload size={18} className="text-muted" />
           <span>Import contacts (JSON)</span>
         </button>
-        <button onClick={handleCSVImport} className={btnClass}>
-          <FileSpreadsheet size={18} className="text-accent" />
-          <div>
-            <span className="block">Import from LinkedIn</span>
-            <span className="text-[11px] text-muted font-normal block mt-0.5">
-              Settings → Data Privacy → Get a copy of your data
-            </span>
-          </div>
-        </button>
         <button
           onClick={handleClear}
           className={`${btnClass} ${clearStep > 0 ? '!text-red-400 !border-red-500/20' : ''}`}
@@ -250,6 +311,17 @@ export default function Settings({
             : 'All data stored locally on your device. Nothing is ever uploaded.'}
         </p>
       </div>
+
+      {/* QR Modal */}
+      <AnimatePresence>
+        {showQR && (
+          <UserQRModal
+            profile={userProfile}
+            onClose={() => setShowQR(false)}
+            isDark={isDark}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

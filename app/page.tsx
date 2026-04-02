@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { nanoid } from 'nanoid';
-import type { Tab, Contact, ActiveFilter, SortOrder, AppSettings } from '@/lib/types';
-import { initDB, getAllContacts, saveContact, deleteContact as dbDelete, getAppSettings, saveAppSettings } from '@/lib/db';
+import type { Tab, Contact, ActiveFilter, SortOrder, AppSettings, UserProfile } from '@/lib/types';
+import { initDB, getAllContacts, saveContact, deleteContact as dbDelete, getAppSettings, saveAppSettings, getUserProfile, saveUserProfile } from '@/lib/db';
 import { auth, onAuthStateChanged, logoutUser, type User } from '@/lib/firebase';
 import BottomNav from '@/components/BottomNav';
 import ContactList from '@/components/ContactList';
@@ -44,6 +44,7 @@ export default function App() {
     sortOrder: 'name',
   });
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const [userProfile, setUserProfile] = useState<UserProfile>({ name: '', role: '', company: '', photoUrl: '' });
 
   // Lifted filter state so NetworkView can set it
   const [filter, setFilter] = useState<ActiveFilter>({
@@ -79,9 +80,10 @@ export default function App() {
     (async () => {
       try {
         await initDB();
-        const [all, settings] = await Promise.all([getAllContacts(), getAppSettings()]);
+        const [all, settings, profile] = await Promise.all([getAllContacts(), getAppSettings(), getUserProfile()]);
         setContacts(all);
         setAppSettings(settings);
+        setUserProfile(profile);
       } catch (e) {
         console.error('Init error:', e);
       }
@@ -232,6 +234,14 @@ export default function App() {
     async (newSettings: AppSettings) => {
       setAppSettings(newSettings);
       await saveAppSettings(newSettings);
+    },
+    []
+  );
+
+  const handleProfileChange = useCallback(
+    async (newProfile: UserProfile) => {
+      setUserProfile(newProfile);
+      await saveUserProfile(newProfile);
     },
     []
   );
@@ -407,6 +417,8 @@ export default function App() {
               userEmail={user?.email ?? undefined}
               appSettings={appSettings}
               onSettingsChange={handleSettingsChange}
+              userProfile={userProfile}
+              onProfileChange={handleProfileChange}
             />
           )}
         </AnimatePresence>

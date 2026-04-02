@@ -1,6 +1,5 @@
 import { openDB, type IDBPDatabase } from 'idb';
-import type { Contact, AppSettings } from './types';
-import { nanoid } from 'nanoid';
+import type { Contact, AppSettings, UserProfile } from './types';
 import { createEmptyContact } from './utils';
 
 const DB_NAME = 'intouch-db';
@@ -94,98 +93,6 @@ export async function importContacts(json: string): Promise<number> {
   return imported;
 }
 
-// CSV Import for LinkedIn exports
-// Expected columns: First Name, Last Name, Email Address, Company, Position, Connected On
-export async function importContactsFromCSV(csvText: string): Promise<number> {
-  const lines = parseCSVLines(csvText);
-  if (lines.length < 2) return 0;
-
-  const headers = lines[0].map((h) => h.trim().toLowerCase());
-  const firstNameIdx = headers.indexOf('first name');
-  const lastNameIdx = headers.indexOf('last name');
-  const emailIdx = headers.indexOf('email address');
-  const companyIdx = headers.indexOf('company');
-  const positionIdx = headers.indexOf('position');
-  const connectedOnIdx = headers.indexOf('connected on');
-
-  if (firstNameIdx === -1 && lastNameIdx === -1) return 0;
-
-  const existing = await getAllContacts();
-  const existingNames = new Set(existing.map((c) => c.name.toLowerCase().trim()));
-  const db = await getDB();
-  let imported = 0;
-  const now = new Date().toISOString();
-
-  const tx = db.transaction(STORE_NAME, 'readwrite');
-  for (let i = 1; i < lines.length; i++) {
-    const row = lines[i];
-    const firstName = (firstNameIdx >= 0 ? row[firstNameIdx]?.trim() : '') || '';
-    const lastName = (lastNameIdx >= 0 ? row[lastNameIdx]?.trim() : '') || '';
-    const name = `${firstName} ${lastName}`.trim();
-    if (!name) continue;
-    if (existingNames.has(name.toLowerCase())) continue;
-
-    const empty = createEmptyContact();
-    const contact: Contact = {
-      ...empty,
-      id: nanoid(),
-      name,
-      email: (emailIdx >= 0 ? row[emailIdx]?.trim() : '') || '',
-      company: (companyIdx >= 0 ? row[companyIdx]?.trim() : '') || '',
-      role: (positionIdx >= 0 ? row[positionIdx]?.trim() : '') || '',
-      dateMet: (connectedOnIdx >= 0 ? row[connectedOnIdx]?.trim() : '') || '',
-      dateAdded: now,
-      lastUpdated: now,
-    };
-
-    await tx.store.put(contact);
-    existingNames.add(name.toLowerCase());
-    imported++;
-  }
-  await tx.done;
-  return imported;
-}
-
-function parseCSVLines(csv: string): string[][] {
-  const results: string[][] = [];
-  const lines = csv.split(/\r?\n/);
-
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    const fields: string[] = [];
-    let current = '';
-    let inQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (inQuotes) {
-        if (ch === '"') {
-          if (i + 1 < line.length && line[i + 1] === '"') {
-            current += '"';
-            i++;
-          } else {
-            inQuotes = false;
-          }
-        } else {
-          current += ch;
-        }
-      } else {
-        if (ch === '"') {
-          inQuotes = true;
-        } else if (ch === ',') {
-          fields.push(current);
-          current = '';
-        } else {
-          current += ch;
-        }
-      }
-    }
-    fields.push(current);
-    results.push(fields);
-  }
-  return results;
-}
-
 // App Settings
 const DEFAULT_SETTINGS: AppSettings = {
   reconnectRemindersEnabled: true,
@@ -209,4 +116,25 @@ export async function saveAppSettings(settings: AppSettings): Promise<void> {
 export async function clearAll(): Promise<void> {
   const db = await getDB();
   await db.clear(STORE_NAME);
+}
+
+// User Profile
+const DEFAULT_PROFILE: UserProfile = {
+  name: '',
+  role: '',
+  company: '',
+  photoUrl: '',
+};
+
+export async function getUserProfile(): Promise<UserProfile> {
+  const db = await getDB();
+  const raw = await db.get(SETTINGS_STORE, 'profile');
+  if (!raw) return { ...DEFAULT_PROFILE };
+  const { key: _, ...rest } = raw;
+  return { ...DEFAULT_PROFILE, ...rest };
+}
+
+export async function saveUserProfile(profile: UserProfile): Promise<void> {
+  const db = await getDB();
+  await db.put(SETTINGS_STORE, { key: 'profile', ...profile });
 }

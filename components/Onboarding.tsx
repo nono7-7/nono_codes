@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, Search, ArrowRight, MapPin, Globe, Bell } from 'lucide-react';
+import { UserPlus, Search, ArrowRight, MapPin, Globe, QrCode } from 'lucide-react';
 
 const slides = [
   {
@@ -51,18 +51,26 @@ const slides = [
     ),
   },
   {
-    icon: Bell,
-    title: 'Stay Connected',
-    description: 'Set reconnect reminders on any contact and InTouch will nudge you when it\'s time to reach out. Log interactions to keep track of your conversations.',
+    icon: QrCode,
+    title: 'Share Your Card',
+    description: 'Generate your personal QR code from Settings. Anyone can scan it to instantly add you as a contact — no typing needed.',
     example: (
-      <div className="mt-4 space-y-1.5 text-xs">
-        <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg px-3 py-2">
-          <span>Sarah Chen</span>
-          <span className="text-accent">2w overdue</span>
-        </div>
-        <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg px-3 py-2">
-          <span>James Park</span>
-          <span className="text-accent">due today</span>
+      <div className="mt-4 flex justify-center">
+        <div className="bg-white p-3 rounded-xl inline-block">
+          {/* Mock QR code */}
+          <div className="grid gap-[2px]" style={{ gridTemplateColumns: 'repeat(7, 1fr)', width: 84 }}>
+            {[
+              1,1,1,1,1,1,1,
+              1,0,0,0,0,0,1,
+              1,0,1,0,1,0,1,
+              1,0,0,1,0,0,1,
+              1,0,1,0,1,0,1,
+              1,0,0,0,0,0,1,
+              1,1,1,1,1,1,1,
+            ].map((v, i) => (
+              <div key={i} className={`w-3 h-3 rounded-[1px] ${v ? 'bg-zinc-900' : 'bg-white'}`} />
+            ))}
+          </div>
         </div>
       </div>
     ),

@@ -53,3 +53,10 @@ export type ActiveFilter = {
   tag: string | null;
   search: string;
 };
+
+export interface UserProfile {
+  name: string;
+  role: string;
+  company: string;
+  photoUrl: string;
+}
