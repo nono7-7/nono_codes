@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, Search, ArrowRight, MapPin, Globe, QrCode } from 'lucide-react';
+import { UserPlus, Search, ArrowRight, MapPin, Globe, Bell, QrCode } from 'lucide-react';
 
 const slides = [
   {
@@ -46,6 +46,23 @@ const slides = [
         <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg px-3 py-2">
           <span>Madrid</span>
           <span className="text-accent">8 contacts</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    icon: Bell,
+    title: 'Stay Connected',
+    description: 'Set reconnect reminders on any contact and InTouch will nudge you when it\'s time to reach out. Log interactions to keep track of your conversations.',
+    example: (
+      <div className="mt-4 space-y-1.5 text-xs">
+        <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+          <span>Sarah Chen</span>
+          <span className="text-accent">2w overdue</span>
+        </div>
+        <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+          <span>James Park</span>
+          <span className="text-accent">due today</span>
         </div>
       </div>
     ),
