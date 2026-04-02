@@ -5,8 +5,22 @@ import { X, Copy, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import type { UserProfile } from '@/lib/types';
-import { encodeContactForSharing } from '@/lib/share';
+import { encodeProfileForSharing } from '@/lib/share';
 import Avatar from './Avatar';
+
+function sharedFieldsList(profile: UserProfile): string[] {
+  const fields: string[] = [];
+  if (profile.shareJobs && profile.jobs.length > 0) {
+    const cur = profile.jobs.find((j) => j.isCurrent) ?? profile.jobs[0];
+    if (cur.role || cur.company) fields.push(`${cur.role}${cur.role && cur.company ? ' @ ' : ''}${cur.company}`);
+  }
+  if (profile.sharePhone && profile.phone)           fields.push(profile.phone);
+  if (profile.shareEmail && profile.email)           fields.push(profile.email);
+  if (profile.shareLinkedin && profile.linkedinUrl)  fields.push('LinkedIn');
+  if (profile.shareLocation && profile.mainLocation) fields.push(profile.mainLocation);
+  if (profile.shareEducation && profile.education.length > 0) fields.push(profile.education[0].university);
+  return fields;
+}
 
 export default function UserQRModal({
   profile,
@@ -18,19 +32,7 @@ export default function UserQRModal({
   isDark: boolean;
 }) {
   const [copied, setCopied] = useState(false);
-
-  // Reuse the contact sharing encoder — pass a Contact-shaped object with profile fields
-  const shareUrl = encodeContactForSharing({
-    name: profile.name || 'Me',
-    role: profile.role,
-    company: profile.company,
-    photoUrl: profile.photoUrl,
-    university: '',
-    homeLocation: '',
-    email: '',
-    phone: '',
-    linkedinUrl: '',
-  } as Parameters<typeof encodeContactForSharing>[0]);
+  const shareUrl = encodeProfileForSharing(profile);
 
   const handleCopy = async () => {
     try {
@@ -42,6 +44,8 @@ export default function UserQRModal({
     }
   };
 
+  const fields = sharedFieldsList(profile);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -49,43 +53,33 @@ export default function UserQRModal({
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center px-6"
     >
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
 
-      {/* Modal */}
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className={`relative w-full max-w-[320px] rounded-2xl p-6 ${
-          isDark ? 'bg-dark-card' : 'bg-white'
-        }`}
+        className={`relative w-full max-w-[320px] rounded-2xl p-6 ${isDark ? 'bg-dark-card' : 'bg-white'}`}
       >
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-muted hover:text-accent"
-        >
+        <button onClick={onClose} className="absolute top-4 right-4 text-muted hover:text-accent">
           <X size={18} />
         </button>
 
-        {/* Profile info */}
+        {/* Profile */}
         <div className="flex flex-col items-center mb-5">
           <Avatar name={profile.name || '?'} photoUrl={profile.photoUrl} size="md" />
           <h3 className="font-[family-name:var(--font-outfit)] font-semibold text-base mt-3">
             {profile.name || 'Your Profile'}
           </h3>
-          {(profile.role || profile.company) && (
-            <p className="text-xs text-muted mt-0.5">
-              {profile.role}
-              {profile.role && profile.company && ' @ '}
-              {profile.company}
+          {fields.length > 0 && (
+            <p className="text-[11px] text-muted mt-1 text-center leading-relaxed">
+              Sharing: {fields.join(' · ')}
             </p>
           )}
         </div>
 
-        {/* QR Code */}
+        {/* QR */}
         <div className="flex justify-center mb-4">
           <div className="bg-white p-3 rounded-xl">
             <QRCodeSVG
@@ -102,14 +96,13 @@ export default function UserQRModal({
           Scan to add you as a contact in InTouch
         </p>
 
-        {/* Copy Link */}
         <button
           onClick={handleCopy}
           className={`w-full py-2.5 rounded-lg text-xs font-semibold font-[family-name:var(--font-outfit)] flex items-center justify-center gap-1.5 transition-colors ${
             copied
               ? 'bg-accent/15 text-accent'
               : isDark
-              ? 'bg-dark-border text-muted-light hover:text-white'
+              ? 'bg-dark-border text-muted hover:text-white'
               : 'bg-light-border text-muted hover:text-zinc-900'
           }`}
         >

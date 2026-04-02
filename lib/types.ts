@@ -54,9 +54,35 @@ export type ActiveFilter = {
   search: string;
 };
 
+export interface Education {
+  id: string;
+  university: string;
+  program: string;
+  gradYear: string;
+}
+
+export interface Job {
+  id: string;
+  company: string;
+  role: string;
+  isCurrent: boolean;
+}
+
 export interface UserProfile {
   name: string;
-  role: string;
-  company: string;
   photoUrl: string;
+  phone: string;
+  email: string;
+  linkedinUrl: string;
+  birthday: string;
+  mainLocation: string;
+  education: Education[];
+  jobs: Job[];
+  sharePhone: boolean;
+  shareEmail: boolean;
+  shareLinkedin: boolean;
+  shareBirthday: boolean;
+  shareLocation: boolean;
+  shareEducation: boolean;
+  shareJobs: boolean;
 }

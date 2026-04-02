@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from 'idb';
-import type { Contact, AppSettings, UserProfile } from './types';
+import type { Contact, AppSettings, UserProfile, Education, Job } from './types';
 import { createEmptyContact } from './utils';
 
 const DB_NAME = 'intouch-db';
@@ -121,9 +121,21 @@ export async function clearAll(): Promise<void> {
 // User Profile
 const DEFAULT_PROFILE: UserProfile = {
   name: '',
-  role: '',
-  company: '',
   photoUrl: '',
+  phone: '',
+  email: '',
+  linkedinUrl: '',
+  birthday: '',
+  mainLocation: '',
+  education: [] as Education[],
+  jobs: [] as Job[],
+  sharePhone: false,
+  shareEmail: false,
+  shareLinkedin: false,
+  shareBirthday: false,
+  shareLocation: false,
+  shareEducation: false,
+  shareJobs: false,
 };
 
 export async function getUserProfile(): Promise<UserProfile> {

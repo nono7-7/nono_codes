@@ -19,6 +19,36 @@ export function getAvatarColor(name: string): string {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
+export interface PixelCrop {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export async function cropAndCompress(imageSrc: string, pixelCrop: PixelCrop): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const size = 200;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { reject(new Error('Canvas not supported')); return; }
+      ctx.drawImage(
+        img,
+        pixelCrop.x, pixelCrop.y,
+        pixelCrop.width, pixelCrop.height,
+        0, 0, size, size
+      );
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = imageSrc;
+  });
+}
+
 export async function compressImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

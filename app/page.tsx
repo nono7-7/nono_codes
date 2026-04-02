@@ -44,7 +44,12 @@ export default function App() {
     sortOrder: 'name',
   });
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
-  const [userProfile, setUserProfile] = useState<UserProfile>({ name: '', role: '', company: '', photoUrl: '' });
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    name: '', photoUrl: '', phone: '', email: '', linkedinUrl: '',
+    birthday: '', mainLocation: '', education: [], jobs: [],
+    sharePhone: false, shareEmail: false, shareLinkedin: false,
+    shareBirthday: false, shareLocation: false, shareEducation: false, shareJobs: false,
+  });
 
   // Lifted filter state so NetworkView can set it
   const [filter, setFilter] = useState<ActiveFilter>({
