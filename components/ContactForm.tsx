@@ -434,6 +434,34 @@ export default function ContactForm({
             {option.label}
           </button>
         ))}
+        {/* Custom weeks option */}
+        <div className="flex items-center gap-1.5">
+          <input
+            type="number"
+            min={1}
+            max={52}
+            value={
+              form.reconnectIntervalWeeks !== null &&
+              ![2, 4, 8, 12].includes(form.reconnectIntervalWeeks)
+                ? form.reconnectIntervalWeeks
+                : ''
+            }
+            onChange={(e) => {
+              const v = parseInt(e.target.value, 10);
+              set('reconnectIntervalWeeks', (isNaN(v) || v < 1 ? null : v) as unknown as string);
+            }}
+            placeholder="Custom"
+            className={`w-20 px-2 py-2 rounded-lg text-xs font-medium text-center outline-none border ${
+              form.reconnectIntervalWeeks !== null &&
+              ![null, 2, 4, 8, 12].includes(form.reconnectIntervalWeeks)
+                ? 'bg-accent text-dark-bg border-accent'
+                : isDark
+                ? 'bg-dark-card border-dark-border text-muted-light'
+                : 'bg-white border-light-border text-muted'
+            }`}
+          />
+          <span className="text-xs text-muted">weeks</span>
+        </div>
       </div>
 
       {/* Tags */}
