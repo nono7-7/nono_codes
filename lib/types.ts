@@ -30,7 +30,8 @@ export interface Contact {
 
   photoUrl: string; // base64 data URL or ''
 
-  reconnectIntervalWeeks: number | null; // null = no reminder
+  reconnectIntervalWeeks: number | null; // null = no recurring reminder
+  reconnectDate: string;                 // YYYY-MM-DD or '' — one-off reminder date
   lastContacted: string;                 // ISO date or ''
   interactions: Interaction[];
 

@@ -66,8 +66,12 @@ export function sortContacts(contacts: Contact[], sortOrder: SortOrder): Contact
 
 export function getOverdueContacts(contacts: Contact[]): Contact[] {
   const now = Date.now();
+  const today = new Date().toISOString().slice(0, 10);
   return contacts
     .filter((c) => {
+      // One-off date reminder: due if today >= reconnectDate
+      if (c.reconnectDate && c.reconnectDate <= today) return true;
+      // Recurring interval reminder
       if (!c.reconnectIntervalWeeks) return false;
       const intervalMs = c.reconnectIntervalWeeks * 7 * 24 * 60 * 60 * 1000;
       const lastDate = c.lastContacted ? new Date(c.lastContacted).getTime() : 0;
@@ -76,7 +80,7 @@ export function getOverdueContacts(contacts: Contact[]): Contact[] {
     .sort((a, b) => {
       const aLast = a.lastContacted ? new Date(a.lastContacted).getTime() : 0;
       const bLast = b.lastContacted ? new Date(b.lastContacted).getTime() : 0;
-      return aLast - bLast; // most overdue first
+      return aLast - bLast;
     });
 }
 
@@ -141,6 +145,7 @@ export function createEmptyContact(): Omit<Contact, 'id' | 'dateAdded' | 'lastUp
     tags: [],
     photoUrl: '',
     reconnectIntervalWeeks: null,
+    reconnectDate: '',
     lastContacted: '',
     interactions: [],
     education: [],

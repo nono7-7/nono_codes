@@ -43,6 +43,7 @@ function normalizeContact(c: Record<string, unknown>): Contact {
     ...c,
     photoUrl: (c.photoUrl as string) ?? '',
     reconnectIntervalWeeks: (c.reconnectIntervalWeeks as number | null) ?? null,
+    reconnectDate: (c.reconnectDate as string) ?? '',
     lastContacted: (c.lastContacted as string) ?? '',
     interactions: (c.interactions as Contact['interactions']) ?? [],
     tags: (c.tags as string[]) ?? [],

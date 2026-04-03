@@ -253,9 +253,15 @@ export default function App() {
   const handleMarkContacted = useCallback(
     async (contactId: string) => {
       const today = new Date().toISOString().slice(0, 10);
+      // Clear one-off reconnectDate when marking as contacted
+      const contact = contacts.find((c) => c.id === contactId);
+      if (contact?.reconnectDate) {
+        const updated = { ...contact, reconnectDate: '', lastUpdated: new Date().toISOString() };
+        await saveContact(updated);
+      }
       await handleLogInteraction(contactId, today, 'Reconnected');
     },
-    [handleLogInteraction]
+    [contacts, handleLogInteraction]
   );
 
   const handleSettingsChange = useCallback(

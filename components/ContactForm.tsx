@@ -411,6 +411,7 @@ export default function ContactForm({
 
       {/* Reconnect Reminder */}
       {sectionLabel('Reconnect Reminder (optional)')}
+      <p className="text-[11px] text-muted mb-2 -mt-1">Recurring interval</p>
       <div className={`flex flex-wrap gap-2`}>
         {[
           { label: 'None', value: null },
@@ -434,7 +435,7 @@ export default function ContactForm({
             {option.label}
           </button>
         ))}
-        {/* Custom weeks option */}
+        {/* Custom weeks */}
         <div className="flex items-center gap-1.5">
           <input
             type="number"
@@ -462,6 +463,25 @@ export default function ContactForm({
           />
           <span className="text-xs text-muted">weeks</span>
         </div>
+      </div>
+      {/* Specific date reminder */}
+      <p className="text-[11px] text-muted mb-2 mt-4">Or set a specific date</p>
+      <div className="flex items-center gap-2">
+        <input
+          type="date"
+          value={form.reconnectDate || ''}
+          onChange={(e) => set('reconnectDate', e.target.value)}
+          className={`${inputClass} flex-1 ${form.reconnectDate ? '!border-accent' : ''}`}
+        />
+        {form.reconnectDate && (
+          <button
+            type="button"
+            onClick={() => set('reconnectDate', '')}
+            className="text-xs text-muted hover:text-red-400"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {/* Tags */}

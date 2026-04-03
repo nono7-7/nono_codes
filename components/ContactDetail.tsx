@@ -126,6 +126,12 @@ export default function ContactDetail({
               Every {contact.reconnectIntervalWeeks}w
             </span>
           )}
+          {contact.reconnectDate && (
+            <span className="text-xs text-muted flex items-center gap-1">
+              <Clock size={12} />
+              Remind {new Date(contact.reconnectDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          )}
         </div>
         {contact.lastContacted && (
           <p className="text-xs text-muted mt-2">
