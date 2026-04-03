@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { nanoid } from 'nanoid';
 import type { Tab, Contact, ActiveFilter, SortOrder, AppSettings, UserProfile } from '@/lib/types';
-import { initDB, getAllContacts, saveContact, deleteContact as dbDelete, getAppSettings, saveAppSettings, getUserProfile, saveUserProfile } from '@/lib/db';
+import { initDB, getAllContacts, saveContact, deleteContact as dbDelete, getAppSettings, saveAppSettings, getUserProfile, saveUserProfile, setDBUser } from '@/lib/db';
 import { auth, onAuthStateChanged, logoutUser, type User } from '@/lib/firebase';
 import BottomNav from '@/components/BottomNav';
 import ContactList from '@/components/ContactList';
@@ -61,12 +61,15 @@ export default function App() {
   // Auth listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      // Switch to user-scoped IndexedDB before loading any data
+      setDBUser(firebaseUser?.uid ?? null);
       setUser(firebaseUser);
       if (firebaseUser) {
-        // Check if onboarding has been completed
-        const onboarded = localStorage.getItem('intouch-onboarded');
+        const onboarded = localStorage.getItem(`intouch-onboarded-${firebaseUser.uid}`);
         setAppState(onboarded ? 'app' : 'onboarding');
       } else {
+        // Clear in-memory state on logout
+        setContacts([]);
         setAppState('auth');
       }
     });
@@ -323,7 +326,7 @@ export default function App() {
   }, []);
 
   const handleOnboardingComplete = () => {
-    localStorage.setItem('intouch-onboarded', 'true');
+    if (user) localStorage.setItem(`intouch-onboarded-${user.uid}`, 'true');
     setAppState('app');
   };
 

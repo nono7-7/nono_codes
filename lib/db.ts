@@ -2,16 +2,21 @@ import { openDB, type IDBPDatabase } from 'idb';
 import type { Contact, AppSettings, UserProfile, Education, Job } from './types';
 import { createEmptyContact } from './utils';
 
-const DB_NAME = 'intouch-db';
+const DB_PREFIX = 'intouch-db';
 const DB_VERSION = 2;
 const STORE_NAME = 'contacts';
 const SETTINGS_STORE = 'settings';
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
+let currentUserId: string | null = null;
+
+function getDBName(): string {
+  return currentUserId ? `${DB_PREFIX}-${currentUserId}` : DB_PREFIX;
+}
 
 function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB(DB_NAME, DB_VERSION, {
+    dbPromise = openDB(getDBName(), DB_VERSION, {
       upgrade(db, oldVersion) {
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           db.createObjectStore(STORE_NAME, { keyPath: 'id' });
@@ -44,6 +49,17 @@ function normalizeContact(c: Record<string, unknown>): Contact {
     education: (c.education as Contact['education']) ?? [],
     jobs: (c.jobs as Contact['jobs']) ?? [],
   } as Contact;
+}
+
+/** Call this when user changes (login/logout) to switch to the correct database */
+export function setDBUser(userId: string | null) {
+  if (userId === currentUserId) return;
+  // Close previous connection and reset
+  if (dbPromise) {
+    dbPromise.then((db) => db.close()).catch(() => {});
+    dbPromise = null;
+  }
+  currentUserId = userId;
 }
 
 export async function initDB() {
