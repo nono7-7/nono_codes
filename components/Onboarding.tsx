@@ -300,7 +300,7 @@ const slides = [
         </div>
         <div className={`${mutedCard} px-3 py-2 flex items-center gap-2`}>
           <Check size={11} className="text-accent shrink-0" strokeWidth={3} />
-          <p className="text-muted text-[10px]">Contacts &amp; profile info sync · toggle off anytime in Settings</p>
+          <p className="text-muted text-[10px]">Contacts &amp; profile sync automatically · use <span className="text-accent font-medium">Sync Now</span> in Settings to force a manual push to all devices</p>
         </div>
       </div>
     ),
