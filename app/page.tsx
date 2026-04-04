@@ -188,10 +188,9 @@ export default function App() {
       }
     })();
 
-    // Register service workers (failures are non-fatal — app works without them)
+    // Register service worker (failure is non-fatal)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
-      navigator.serviceWorker.register('/firebase-messaging-sw.js').catch(() => {});
     }
 
     return () => { cancelled = true; };

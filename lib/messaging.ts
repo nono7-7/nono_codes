@@ -23,8 +23,11 @@ export async function getFCMToken(): Promise<string | null> {
     if (!vapidKey) return null;
     if (!('serviceWorker' in navigator)) return null;
 
-    // Register the FCM service worker
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    // Try to reuse an existing registration first, then register fresh
+    let registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+    if (!registration) {
+      registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    }
 
     const msg = getMsg();
     if (!msg) return null;
@@ -32,7 +35,7 @@ export async function getFCMToken(): Promise<string | null> {
     const token = await getToken(msg, { vapidKey, serviceWorkerRegistration: registration });
     return token || null;
   } catch (e) {
-    console.error('FCM token error:', e);
+    // Non-fatal — push notifications simply won't work on this device
     return null;
   }
 }
