@@ -92,9 +92,11 @@ export default function App() {
     company: null,
   });
 
-  // Auth listener
+  // Auth listener — with a 5s timeout fallback in case Firebase hangs
   useEffect(() => {
+    const timeout = setTimeout(() => setAppState('auth'), 5000);
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      clearTimeout(timeout);
       // Always clear in-memory data first to prevent cross-account leaks
       setContacts([]);
       setUserProfile({
@@ -186,9 +188,10 @@ export default function App() {
       }
     })();
 
-    // Register service worker
+    // Register service workers (failures are non-fatal — app works without them)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/firebase-messaging-sw.js').catch(() => {});
     }
 
     return () => { cancelled = true; };
