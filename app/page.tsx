@@ -21,7 +21,8 @@ import PlannedBanner from '@/components/PlannedBanner';
 import BulkImport from '@/components/BulkImport';
 import SyncIndicator, { type SyncStatus } from '@/components/SyncIndicator';
 import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud, storePushToken, removePushToken } from '@/lib/sync';
-import { getFCMToken, onForegroundMessage } from '@/lib/messaging';
+// Messaging is loaded dynamically — firebase/messaging crashes iOS Safari if imported statically
+const loadMessaging = () => import('@/lib/messaging').catch(() => null);
 import { decodeSharedContact } from '@/lib/share';
 import type { NetworkFilterAction } from '@/components/NetworkView';
 
@@ -534,46 +535,45 @@ export default function App() {
     [contacts, refresh, showToast]
   );
 
-  // Request notification permission then immediately register FCM token
+  // Request notification permission then register FCM token (dynamic import — safe on all browsers)
   useEffect(() => {
     if (appState !== 'app') return;
     if (!user) return;
     if (!('Notification' in window)) return;
+    const uid = user.uid;
     (async () => {
-      let permission = Notification.permission;
-      if (permission === 'default') {
-        permission = await Notification.requestPermission();
-      }
-      if (permission === 'granted') {
-        const token = await getFCMToken();
+      try {
+        let permission = Notification.permission;
+        if (permission === 'default') {
+          permission = await Notification.requestPermission();
+        }
+        if (permission !== 'granted') return;
+        const mod = await loadMessaging();
+        if (!mod) return;
+        const token = await mod.getFCMToken();
         if (token) {
           setCurrentFCMToken(token);
-          storePushToken(user.uid, token).catch(() => {});
+          storePushToken(uid, token).catch(() => {});
         }
-      }
+      } catch { /* non-fatal */ }
     })();
   }, [appState, user]);
 
-  // Subscribe to FCM push notifications when logged in
+  // Subscribe to FCM foreground messages (dynamic import — safe on all browsers)
   useEffect(() => {
     if (appState !== 'app' && appState !== 'onboarding') return;
     if (!user) return;
     if (Notification.permission !== 'granted') return;
-
-    getFCMToken().then((token) => {
-      if (token && user) {
-        setCurrentFCMToken(token);
-        storePushToken(user.uid, token).catch(() => {});
-      }
-    });
-
-    // Show foreground push messages as toasts
-    const unsub = onForegroundMessage((payload) => {
-      const title = payload.notification?.title ?? 'InTouch';
-      const body = payload.notification?.body ?? '';
-      showToast(`${title}: ${body}`);
-    });
-    return unsub;
+    let unsub: (() => void) | undefined;
+    loadMessaging().then((mod) => {
+      if (!mod) return;
+      unsub = mod.onForegroundMessage((payload) => {
+        const title = payload.notification?.title ?? 'InTouch';
+        const body = payload.notification?.body ?? '';
+        showToast(`${title}: ${body}`);
+      });
+    }).catch(() => {});
+    return () => unsub?.();
   }, [appState, user, showToast]);
 
   // Fire local notifications for due items (planned, birthdays, reconnects)
@@ -638,7 +638,9 @@ export default function App() {
     try {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') return false;
-      const token = await getFCMToken();
+      const mod = await loadMessaging();
+      if (!mod) return false;
+      const token = await mod.getFCMToken();
       if (token && user) {
         setCurrentFCMToken(token);
         await storePushToken(user.uid, token);
