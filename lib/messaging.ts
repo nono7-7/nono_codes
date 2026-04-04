@@ -1,54 +1,84 @@
-import { getMessaging, getToken, onMessage, type Messaging } from 'firebase/messaging';
-import { app } from './firebase';
+/**
+ * Native Web Push — no Firebase SDK imports.
+ *
+ * Uses the standard PushManager API directly, which is supported on:
+ * - Chrome/Edge/Firefox on all platforms
+ * - Safari 16+ on macOS
+ * - Safari 16.4+ on iOS (when installed as a PWA)
+ *
+ * Crucially, this does NOT import firebase/messaging, which caused
+ * iOS Safari crashes due to module-level side effects.
+ */
 
-let _messaging: Messaging | null = null;
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
-function getMsg(): Messaging | null {
-  if (typeof window === 'undefined') return null;
+/**
+ * Request notification permission and subscribe to Web Push.
+ * Returns the full PushSubscription object, or null if not supported / denied.
+ */
+export async function subscribeToPush(): Promise<PushSubscription | null> {
   try {
-    if (!_messaging) _messaging = getMessaging(app);
-    return _messaging;
+    if (typeof window === 'undefined') return null;
+    if (!('serviceWorker' in navigator)) return null;
+    if (!('PushManager' in window)) return null;
+
+    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!vapidPublicKey) return null;
+
+    const registration = await navigator.serviceWorker.ready;
+
+    // Check if already subscribed
+    const existing = await registration.pushManager.getSubscription();
+    if (existing) return existing;
+
+    // Subscribe
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as unknown as ArrayBuffer,
+    });
+
+    return subscription;
   } catch {
     return null;
   }
 }
 
 /**
- * Request notification permission and return an FCM token for this device.
- * Returns null if permission is denied, not supported, or VAPID key is missing.
+ * Unsubscribe from Web Push for this device.
  */
-export async function getFCMToken(): Promise<string | null> {
+export async function unsubscribeFromPush(): Promise<void> {
   try {
-    const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-    if (!vapidKey) return null;
-    if (!('serviceWorker' in navigator)) return null;
-
-    // Try to reuse an existing registration first, then register fresh
-    let registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
-    if (!registration) {
-      registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-    }
-
-    const msg = getMsg();
-    if (!msg) return null;
-
-    const token = await getToken(msg, { vapidKey, serviceWorkerRegistration: registration });
-    return token || null;
-  } catch (e) {
-    // Non-fatal — push notifications simply won't work on this device
-    return null;
-  }
+    if (!('serviceWorker' in navigator)) return;
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    if (subscription) await subscription.unsubscribe();
+  } catch { /* non-fatal */ }
 }
 
 /**
- * Listen for push messages while the app is in the foreground.
- * Returns an unsubscribe function.
+ * Listen for push messages forwarded from the service worker while the app
+ * is in the foreground. Returns an unsubscribe function.
  */
 export function onForegroundMessage(
   callback: (payload: { notification?: { title?: string; body?: string } }) => void
 ): () => void {
-  const msg = getMsg();
-  if (!msg) return () => {};
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return onMessage(msg, callback as any);
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return () => {};
+
+  const handler = (event: MessageEvent) => {
+    if (event.data?.type === 'PUSH_RECEIVED') {
+      callback({ notification: event.data.notification });
+    }
+  };
+
+  navigator.serviceWorker.addEventListener('message', handler);
+  return () => navigator.serviceWorker.removeEventListener('message', handler);
 }

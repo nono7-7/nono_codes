@@ -3,7 +3,7 @@
  *
  * Runs once per day at 8am UTC (configured in vercel.json).
  * Queries Firestore for planned interactions due today or in 2 days,
- * then sends FCM push notifications to all of the user's registered devices.
+ * then sends native Web Push notifications to all of the user's registered devices.
  *
  * Auth: protected by CRON_SECRET env var (set in Vercel dashboard).
  */
@@ -11,9 +11,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { getMessaging } from 'firebase-admin/messaging';
+import webpush from 'web-push';
 
-// ── Firebase Admin init ─────────────────────────────────────────────
+// ── Firebase Admin init ─────────────────────────────────────────────────────
 function getAdminDB() {
   if (!getApps().length) {
     initializeApp({
@@ -27,12 +27,19 @@ function getAdminDB() {
   return getFirestore();
 }
 
-// ── Route handler ───────────────────────────────────────────────────
+// ── Route handler ───────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   const secret = req.headers.get('authorization');
   if (secret !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // Set VAPID details here (inside handler) so env vars are available at runtime
+  webpush.setVapidDetails(
+    'mailto:noreply@intouch.app',
+    process.env.VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  );
 
   const db = getAdminDB();
 
@@ -81,10 +88,9 @@ export async function GET(req: NextRequest) {
   // Send push notification to each user's registered devices
   let sent = 0;
   for (const [uid, items] of Object.entries(byUid)) {
-    // Get all FCM tokens for this user (one per device)
-    const tokensSnap = await db.collection(`users/${uid}/tokens`).get();
-    const tokens = tokensSnap.docs.map((d) => d.data().token as string).filter(Boolean);
-    if (tokens.length === 0) continue;
+    // Get all Web Push subscriptions for this user (one per device)
+    const subsSnap = await db.collection(`users/${uid}/pushSubscriptions`).get();
+    if (subsSnap.empty) continue;
 
     // Sort: today first
     items.sort((a, b) => a.daysAway - b.daysAway);
@@ -94,25 +100,29 @@ export async function GET(req: NextRequest) {
       ? `${items[0].contactName}: ${items[0].description} — ${items[0].daysAway === 0 ? 'today' : 'in 2 days'}`
       : `${items.length} upcoming interactions`;
 
-    try {
-      await getMessaging().sendEachForMulticast({
-        tokens,
-        notification: { title, body },
-        webpush: {
-          notification: {
-            title,
-            body,
-            icon: '/icons/icon-192.svg',
-            badge: '/icons/icon-192.svg',
+    const payload = JSON.stringify({ title, body });
+
+    for (const subDoc of subsSnap.docs) {
+      const subData = subDoc.data();
+      try {
+        await webpush.sendNotification(
+          {
+            endpoint: subData.endpoint as string,
+            keys: subData.keys as { p256dh: string; auth: string },
           },
-          fcmOptions: { link: '/' },
-        },
-      });
-      sent++;
-    } catch (e) {
-      console.error(`Push failed for uid ${uid}:`, e);
+          payload
+        );
+        sent++;
+      } catch (e: unknown) {
+        // If subscription is expired/invalid (410 Gone), remove it
+        if (typeof e === 'object' && e !== null && 'statusCode' in e && (e as { statusCode: number }).statusCode === 410) {
+          await subDoc.ref.delete();
+        } else {
+          console.error(`Push failed for uid ${uid}:`, e);
+        }
+      }
     }
   }
 
-  return NextResponse.json({ sent, message: `Sent push to ${sent} user(s)` });
+  return NextResponse.json({ sent, message: `Sent push to ${sent} device(s)` });
 }

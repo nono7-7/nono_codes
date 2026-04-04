@@ -165,14 +165,41 @@ export async function pullProfileFromCloud(uid: string): Promise<Partial<UserPro
   return snap.data() as Partial<UserProfile>;
 }
 
-/** Store an FCM push token for this device under users/{uid}/tokens/{token} */
+/**
+ * Store a native Web Push subscription for this device under
+ * users/{uid}/pushSubscriptions/{subId}.
+ * Uses a stable ID derived from the endpoint so the same device never
+ * creates duplicate documents.
+ */
+export async function storePushSubscription(uid: string, subscription: PushSubscription): Promise<void> {
+  const db = getDB();
+  const subJson = subscription.toJSON();
+  // Stable doc ID from endpoint (safe base64url without padding)
+  const subId = btoa(subscription.endpoint).replace(/[+/=]/g, '').slice(0, 40);
+  await setDoc(doc(db, 'users', uid, 'pushSubscriptions', subId), {
+    endpoint: subJson.endpoint,
+    keys: subJson.keys,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+/**
+ * Remove a stored push subscription (e.g. on logout or when unsubscribed).
+ */
+export async function removePushSubscription(uid: string, subscription: PushSubscription): Promise<void> {
+  const db = getDB();
+  const subId = btoa(subscription.endpoint).replace(/[+/=]/g, '').slice(0, 40);
+  await deleteDoc(doc(db, 'users', uid, 'pushSubscriptions', subId));
+}
+
+/** @deprecated Use storePushSubscription instead. Kept for backwards compat during migration. */
 export async function storePushToken(uid: string, token: string): Promise<void> {
   const db = getDB();
   const ref = doc(db, 'users', uid, 'tokens', token);
   await setDoc(ref, { token, updatedAt: new Date().toISOString() });
 }
 
-/** Remove an FCM push token (e.g. on logout) */
+/** @deprecated Use removePushSubscription instead. */
 export async function removePushToken(uid: string, token: string): Promise<void> {
   const db = getDB();
   const ref = doc(db, 'users', uid, 'tokens', token);

@@ -20,13 +20,8 @@ import ReconnectBanner from '@/components/ReconnectBanner';
 import PlannedBanner from '@/components/PlannedBanner';
 import BulkImport from '@/components/BulkImport';
 import SyncIndicator, { type SyncStatus } from '@/components/SyncIndicator';
-import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud, storePushToken, removePushToken } from '@/lib/sync';
+import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud, storePushSubscription } from '@/lib/sync';
 import { decodeSharedContact } from '@/lib/share';
-// Only load firebase/messaging on browsers that support PushManager (not iOS Safari in regular tab)
-const loadMessaging = () =>
-  typeof window !== 'undefined' && 'PushManager' in window
-    ? import('@/lib/messaging').catch(() => null)
-    : Promise.resolve(null);
 import type { NetworkFilterAction } from '@/components/NetworkView';
 
 /** Schedule a local notification for a future date using setTimeout.
@@ -77,7 +72,6 @@ export default function App() {
     emailNotificationsEnabled: true,
   });
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
-  const [currentFCMToken, setCurrentFCMToken] = useState<string | null>(null);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: '', photoUrl: '', phone: '', email: '', linkedinUrl: '',
@@ -529,33 +523,28 @@ export default function App() {
     [contacts, refresh, showToast]
   );
 
-  // Request notification permission then register FCM token (only on supported browsers)
+  // Subscribe to native Web Push once permission is granted.
+  // No firebase/messaging import — uses PushManager directly via lib/messaging.ts.
   useEffect(() => {
     if (appState !== 'app') return;
     if (!user) return;
-    if (!('Notification' in window)) return;
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (!('PushManager' in window)) return;
     const uid = user.uid;
-    (async () => {
+    import('@/lib/messaging').then(async (mod) => {
       try {
-        let permission = Notification.permission;
-        if (permission === 'default') permission = await Notification.requestPermission();
-        if (permission !== 'granted') return;
-        const mod = await loadMessaging();
-        if (!mod) return;
-        const token = await mod.getFCMToken();
-        if (token) { setCurrentFCMToken(token); storePushToken(uid, token).catch(() => {}); }
+        const sub = await mod.subscribeToPush();
+        if (sub) storePushSubscription(uid, sub).catch(() => {});
       } catch { /* non-fatal */ }
-    })();
+    }).catch(() => {});
   }, [appState, user]);
 
-  // Listen for foreground FCM messages and show as toasts (only on supported browsers)
+  // Listen for push messages forwarded from the service worker (foreground toasts)
   useEffect(() => {
     if (appState !== 'app' && appState !== 'onboarding') return;
-    if (!user) return;
-    if (Notification.permission !== 'granted') return;
+    if (!('serviceWorker' in navigator)) return;
     let unsub: (() => void) | undefined;
-    loadMessaging().then((mod) => {
-      if (!mod) return;
+    import('@/lib/messaging').then((mod) => {
       unsub = mod.onForegroundMessage((payload) => {
         const title = payload.notification?.title ?? 'InTouch';
         const body = payload.notification?.body ?? '';
@@ -563,7 +552,7 @@ export default function App() {
       });
     }).catch(() => {});
     return () => unsub?.();
-  }, [appState, user, showToast]);
+  }, [appState, showToast]);
 
   // Fire local notifications for due items (planned, birthdays, reconnects)
   useEffect(() => {
@@ -625,13 +614,14 @@ export default function App() {
 
   const handleEnableNotifications = useCallback(async (): Promise<boolean> => {
     try {
+      if (!('Notification' in window)) return false;
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') return false;
-      const mod = await loadMessaging();
-      if (!mod) return false;
-      const token = await mod.getFCMToken();
-      if (token && user) { setCurrentFCMToken(token); await storePushToken(user.uid, token); }
-      return !!token;
+      if (!('PushManager' in window)) return true; // Permission granted, push not available (e.g. iOS non-PWA)
+      const mod = await import('@/lib/messaging');
+      const sub = await mod.subscribeToPush();
+      if (sub && user) await storePushSubscription(user.uid, sub);
+      return true; // Permission was granted (push sub is bonus)
     } catch { return false; }
   }, [user]);
 
