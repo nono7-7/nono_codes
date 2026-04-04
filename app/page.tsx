@@ -768,6 +768,7 @@ export default function App() {
               userProfile={userProfile}
               onProfileChange={handleProfileChange}
               onForceSync={handleForceSync}
+              onEnableNotifications={handleEnableNotifications}
             />
           )}
 

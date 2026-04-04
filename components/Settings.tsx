@@ -48,6 +48,7 @@ export default function Settings({
   userProfile,
   onProfileChange,
   onForceSync,
+  onEnableNotifications,
 }: {
   isDark: boolean;
   onToggleTheme: () => void;
@@ -62,9 +63,16 @@ export default function Settings({
   userProfile: UserProfile;
   onProfileChange: (profile: UserProfile) => void;
   onForceSync?: () => Promise<void>;
+  onEnableNotifications?: () => Promise<boolean>;
 }) {
   const [clearStep, setClearStep] = useState(0);
   const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
+  const [notifState, setNotifState] = useState<'idle' | 'requesting' | 'granted' | 'denied'>(() => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return 'denied';
+    if (Notification.permission === 'granted') return 'granted';
+    if (Notification.permission === 'denied') return 'denied';
+    return 'idle';
+  });
   const [showQR, setShowQR] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -439,6 +447,32 @@ export default function Settings({
         {/* FEATURES */}
         <h3 className={`${sectionHeader} mt-2`}>Features</h3>
         <div className="space-y-2 mb-6">
+          {/* Push notifications */}
+          {onEnableNotifications && notifState !== 'denied' && (
+            <button
+              type="button"
+              disabled={notifState === 'granted' || notifState === 'requesting'}
+              onClick={async () => {
+                setNotifState('requesting');
+                const ok = await onEnableNotifications();
+                setNotifState(ok ? 'granted' : 'denied');
+                if (ok) showToast('Notifications enabled');
+              }}
+              className={btnCls}
+            >
+              {notifState === 'granted'
+                ? <CheckCircle size={18} className="text-green-500" />
+                : <Bell size={18} className="text-accent" />}
+              <div className="flex-1">
+                <span className={`block ${notifState === 'granted' ? 'text-green-500' : 'text-accent'}`}>
+                  {notifState === 'granted' ? 'Push notifications enabled' : notifState === 'requesting' ? 'Enabling…' : 'Enable push notifications'}
+                </span>
+                <span className="text-[11px] text-muted font-normal block mt-0.5">
+                  {notifState === 'granted' ? 'You\'ll be notified for planned interactions' : 'Get notified even when the app is closed'}
+                </span>
+              </div>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onSettingsChange({ ...appSettings, reconnectRemindersEnabled: !appSettings.reconnectRemindersEnabled })}
