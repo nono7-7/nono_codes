@@ -512,7 +512,7 @@ export default function Settings({
                   {syncState === 'syncing' ? 'Syncing…' : syncState === 'done' ? 'Synced!' : syncState === 'error' ? 'Sync failed' : 'Sync now'}
                 </span>
                 <span className="text-[11px] text-muted font-normal block mt-0.5">
-                  Push all contacts to cloud &amp; pull from other devices
+                  Tap when switching to a new device
                 </span>
               </div>
             </button>
