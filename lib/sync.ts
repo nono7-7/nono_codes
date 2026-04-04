@@ -5,7 +5,6 @@ import {
   getDocs,
   setDoc,
   deleteDoc,
-  enableIndexedDbPersistence,
 } from 'firebase/firestore';
 import type { PlannedInteraction } from './types';
 import { app } from './firebase';
@@ -13,17 +12,10 @@ import type { Contact } from './types';
 import { getAllContacts, saveContact } from './db';
 
 let db: ReturnType<typeof getFirestore> | null = null;
-let persistenceEnabled = false;
 
 function getDB() {
   if (!db) {
     db = getFirestore(app);
-    if (!persistenceEnabled && typeof window !== 'undefined') {
-      persistenceEnabled = true;
-      enableIndexedDbPersistence(db).catch(() => {
-        // Persistence may fail if multiple tabs are open — that's OK
-      });
-    }
   }
   return db;
 }
@@ -133,4 +125,14 @@ export async function fullSync(uid: string): Promise<Contact[]> {
   }
 
   return merged;
+}
+
+/**
+ * Force-upload all contacts from local IndexedDB to Firestore.
+ * Use this to push an existing local collection to the cloud for the first time.
+ */
+export async function forceUploadAll(uid: string, contacts: Contact[]): Promise<void> {
+  for (const contact of contacts) {
+    await syncToCloud(uid, contact);
+  }
 }

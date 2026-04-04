@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import {
   Download, Upload, Trash2, Moon, Sun, LogOut, Bell, Cloud,
-  Camera, QrCode, Plus, X, Star, Link2, Phone, Mail, MapPin, Cake, GraduationCap, Briefcase, FileSpreadsheet, AtSign,
+  Camera, QrCode, Plus, X, Star, Link2, Phone, Mail, MapPin, Cake, GraduationCap, Briefcase, FileSpreadsheet, AtSign, RefreshCw, CheckCircle, AlertCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { exportContacts, importContacts, clearAll } from '@/lib/db';
@@ -47,6 +47,7 @@ export default function Settings({
   onSettingsChange,
   userProfile,
   onProfileChange,
+  onForceSync,
 }: {
   isDark: boolean;
   onToggleTheme: () => void;
@@ -60,8 +61,10 @@ export default function Settings({
   onSettingsChange: (settings: AppSettings) => void;
   userProfile: UserProfile;
   onProfileChange: (profile: UserProfile) => void;
+  onForceSync?: () => Promise<void>;
 }) {
   const [clearStep, setClearStep] = useState(0);
+  const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
   const [showQR, setShowQR] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -478,6 +481,39 @@ export default function Settings({
               </div>
               <div className={`w-10 h-6 rounded-full relative transition-colors ${appSettings.cloudSyncEnabled ? 'bg-accent' : isDark ? 'bg-dark-border' : 'bg-light-border'}`}>
                 <div className={`absolute top-1 w-4 h-4 rounded-full transition-all ${appSettings.cloudSyncEnabled ? 'left-5 bg-white' : 'left-1 bg-muted'}`} />
+              </div>
+            </button>
+          )}
+          {userEmail && appSettings.cloudSyncEnabled && onForceSync && (
+            <button
+              type="button"
+              onClick={async () => {
+                setSyncState('syncing');
+                try {
+                  await onForceSync();
+                  setSyncState('done');
+                  showToast('Contacts synced to cloud');
+                  setTimeout(() => setSyncState('idle'), 3000);
+                } catch {
+                  setSyncState('error');
+                  showToast('Sync failed — check Firestore rules');
+                  setTimeout(() => setSyncState('idle'), 4000);
+                }
+              }}
+              disabled={syncState === 'syncing'}
+              className={btnCls}
+            >
+              {syncState === 'syncing' && <RefreshCw size={18} className="text-accent animate-spin" />}
+              {syncState === 'done' && <CheckCircle size={18} className="text-green-500" />}
+              {syncState === 'error' && <AlertCircle size={18} className="text-red-400" />}
+              {syncState === 'idle' && <RefreshCw size={18} className="text-accent" />}
+              <div className="flex-1">
+                <span className={`block ${syncState === 'error' ? 'text-red-400' : syncState === 'done' ? 'text-green-500' : 'text-accent'}`}>
+                  {syncState === 'syncing' ? 'Syncing…' : syncState === 'done' ? 'Synced!' : syncState === 'error' ? 'Sync failed' : 'Sync now'}
+                </span>
+                <span className="text-[11px] text-muted font-normal block mt-0.5">
+                  Push all contacts to cloud &amp; pull from other devices
+                </span>
               </div>
             </button>
           )}

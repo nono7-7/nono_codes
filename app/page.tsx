@@ -20,7 +20,7 @@ import ReconnectBanner from '@/components/ReconnectBanner';
 import PlannedBanner from '@/components/PlannedBanner';
 import BulkImport from '@/components/BulkImport';
 import SyncIndicator, { type SyncStatus } from '@/components/SyncIndicator';
-import { fullSync, syncToCloud, deleteFromCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference } from '@/lib/sync';
+import { fullSync, forceUploadAll, syncToCloud, deleteFromCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference } from '@/lib/sync';
 import { decodeSharedContact } from '@/lib/share';
 import type { NetworkFilterAction } from '@/components/NetworkView';
 
@@ -318,6 +318,21 @@ export default function App() {
     },
     []
   );
+
+  // Force-upload all local contacts to Firestore, then pull back (bidirectional sync)
+  const handleForceSync = useCallback(async () => {
+    if (!user) throw new Error('Not logged in');
+    setSyncStatus('syncing');
+    try {
+      await forceUploadAll(user.uid, contacts);
+      const merged = await fullSync(user.uid);
+      setContacts(merged);
+      setSyncStatus('idle');
+    } catch (e) {
+      setSyncStatus('error');
+      throw e; // re-throw so Settings can show the error state
+    }
+  }, [user, contacts]);
 
   const handleLogout = useCallback(async () => {
     await logoutUser();
@@ -647,6 +662,7 @@ export default function App() {
               onSettingsChange={handleSettingsChange}
               userProfile={userProfile}
               onProfileChange={handleProfileChange}
+              onForceSync={handleForceSync}
             />
           )}
 
