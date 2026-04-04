@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { nanoid } from 'nanoid';
 import type { Tab, Contact, ActiveFilter, SortOrder, AppSettings, UserProfile } from '@/lib/types';
-import { initDB, getAllContacts, saveContact, deleteContact as dbDelete, getAppSettings, saveAppSettings, getUserProfile, saveUserProfile, setDBUser } from '@/lib/db';
+import { initDB, getAllContacts, getContact as dbGetContact, saveContact, deleteContact as dbDelete, getAppSettings, saveAppSettings, getUserProfile, saveUserProfile, setDBUser } from '@/lib/db';
 import { auth, onAuthStateChanged, logoutUser, type User } from '@/lib/firebase';
 import BottomNav from '@/components/BottomNav';
 import ContactList from '@/components/ContactList';
@@ -239,20 +239,19 @@ export default function App() {
 
   const handleDelete = useCallback(
     async (id: string) => {
-      // Soft-delete: mark as deleted with a fresh timestamp so sync merge
-      // knows this deletion is newer than any remote copy and won't restore it.
-      const contact = contacts.find((c) => c.id === id);
+      // Read fresh from IndexedDB (avoids stale-closure issues with contacts state).
+      // Soft-delete: stamp deleted:true + fresh lastUpdated so the sync merge always
+      // picks this version over any older copy in Firestore.
+      const contact = await dbGetContact(id);
       if (contact) {
-        const deleted = { ...contact, deleted: true, lastUpdated: new Date().toISOString() };
-        await saveContact(deleted);
+        const tombstone = { ...contact, deleted: true as const, lastUpdated: new Date().toISOString() };
+        await saveContact(tombstone);
         if (appSettings.cloudSyncEnabled && user) {
-          syncToCloud(user.uid, deleted).catch((e) => {
+          syncToCloud(user.uid, tombstone).catch((e) => {
             console.error('Cloud delete error:', e);
-            setSyncStatus('error');
           });
         }
       } else {
-        // Fallback: hard delete if contact not found in memory
         await dbDelete(id);
       }
       await refresh();

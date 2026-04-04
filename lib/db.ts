@@ -50,6 +50,8 @@ function normalizeContact(c: Record<string, unknown>): Contact {
     education: (c.education as Contact['education']) ?? [],
     jobs: (c.jobs as Contact['jobs']) ?? [],
     plannedInteractions: (c.plannedInteractions as Contact['plannedInteractions']) ?? [],
+    // Explicitly preserve the deleted flag — do not let it default to undefined
+    deleted: (c.deleted as boolean) ?? false,
   } as Contact;
 }
 
