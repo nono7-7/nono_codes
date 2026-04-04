@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlus, Search, Globe, Bell, QrCode, ArrowRight,
-  MessageCircle, CalendarClock, FileSpreadsheet, MapPin, Tag, Check, AtSign, Cloud, Smartphone, Monitor, Download, CheckCircle2,
+  MessageCircle, CalendarClock, FileSpreadsheet, MapPin, Tag, Check, AtSign, Cloud, Smartphone, Monitor,
 } from 'lucide-react';
 
 // Example card/row classes that adapt to dark/light
@@ -266,17 +266,7 @@ const slides = [
     ),
   },
 
-  // ── 9. Notifications & Home Screen ──────────────────────────────
-  {
-    icon: Bell,
-    color: 'bg-amber-500/15',
-    title: 'Get Notified. Stay Ready.',
-    description:
-      'Enable notifications to get reminders for planned interactions — even when the app is closed. For the best experience, add InTouch to your home screen.',
-    example: null, // rendered dynamically in the component
-  },
-
-  // ── 10. Cloud Sync ───────────────────────────────────────────────
+  // ── 9. Cloud Sync ───────────────────────────────────────────────
   {
     icon: Cloud,
     color: 'bg-accent/15',
@@ -345,40 +335,14 @@ const slides = [
   },
 ];
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
-
 export default function Onboarding({
   onComplete,
   isDark,
-  installPrompt,
-  onInstall,
-  onEnableNotifications,
 }: {
   onComplete: () => void;
   isDark: boolean;
-  installPrompt?: BeforeInstallPromptEvent | null;
-  onInstall?: () => void;
-  onEnableNotifications?: () => Promise<boolean>;
 }) {
   const [step, setStep] = useState(0);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [notifState, setNotifState] = useState<'idle' | 'granted' | 'denied'>('idle');
-  const [installDone, setInstallDone] = useState(false);
-
-  useEffect(() => {
-    setIsIOS(/iPhone|iPad|iPod/.test(navigator.userAgent));
-    setIsInstalled(
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (navigator as { standalone?: boolean }).standalone === true
-    );
-    if (Notification.permission === 'granted') setNotifState('granted');
-    if (Notification.permission === 'denied') setNotifState('denied');
-  }, []);
-
   const isLast = step === slides.length - 1;
   const slide = slides[step];
   const Icon = slide.icon;
@@ -414,83 +378,8 @@ export default function Onboarding({
             {/* Description */}
             <p className="text-muted text-sm leading-relaxed">{slide.description}</p>
 
-            {/* Example — interactive for the notifications slide */}
+            {/* Example */}
             {slide.example}
-            {slide.example === null && (
-              <div className="mt-4 space-y-3">
-                {/* Enable Notifications */}
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (!onEnableNotifications) return;
-                    const ok = await onEnableNotifications();
-                    setNotifState(ok ? 'granted' : 'denied');
-                  }}
-                  disabled={notifState === 'granted'}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                    notifState === 'granted'
-                      ? 'bg-green-500/15 border border-green-500/30 text-green-500'
-                      : 'bg-accent/15 border border-accent/30 text-accent active:scale-[0.98]'
-                  }`}
-                >
-                  {notifState === 'granted'
-                    ? <CheckCircle2 size={18} />
-                    : <Bell size={18} />}
-                  {notifState === 'granted'
-                    ? 'Notifications enabled'
-                    : notifState === 'denied'
-                    ? 'Notifications blocked — enable in device settings'
-                    : 'Enable notifications'}
-                </button>
-
-                {/* Install to home screen */}
-                {!isInstalled && (
-                  <div>
-                    {isIOS ? (
-                      <div className={`${mutedCard} px-3 py-3 text-xs space-y-1.5`}>
-                        <p className="font-semibold text-sm flex items-center gap-2">
-                          <Download size={14} className="text-accent" />
-                          Add to Home Screen
-                        </p>
-                        <p className="text-muted">Tap <strong>Share</strong> → <strong>Add to Home Screen</strong> in Safari to get full notification support.</p>
-                      </div>
-                    ) : installPrompt ? (
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          if (!installPrompt) return;
-                          await installPrompt.prompt();
-                          const { outcome } = await installPrompt.userChoice;
-                          if (outcome === 'accepted') {
-                            setInstallDone(true);
-                            onInstall?.();
-                          }
-                        }}
-                        disabled={installDone}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                          installDone
-                            ? 'bg-green-500/15 border border-green-500/30 text-green-500'
-                            : 'bg-muted/5 border border-muted/20 text-muted hover:text-accent active:scale-[0.98]'
-                        }`}
-                      >
-                        {installDone ? <CheckCircle2 size={18} /> : <Download size={18} />}
-                        {installDone ? 'Added to home screen' : 'Add to home screen'}
-                      </button>
-                    ) : isInstalled ? null : (
-                      <p className="text-xs text-muted text-center">Already installed or not available on this browser.</p>
-                    )}
-                  </div>
-                )}
-                {isInstalled && (
-                  <div className={`${greenCard} px-3 py-2.5 flex items-center gap-2 text-xs`}>
-                    <CheckCircle2 size={14} className="text-green-500 shrink-0" />
-                    <span className="text-green-500 font-medium">Already installed on home screen</span>
-                  </div>
-                )}
-
-                <p className="text-[10px] text-muted text-center">You can change notification settings anytime in Settings</p>
-              </div>
-            )}
           </motion.div>
         </AnimatePresence>
 
