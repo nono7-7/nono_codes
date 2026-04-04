@@ -448,10 +448,10 @@ export default function Settings({
         <h3 className={`${sectionHeader} mt-2`}>Features</h3>
         <div className="space-y-2 mb-6">
           {/* Push notifications */}
-          {onEnableNotifications && notifState !== 'denied' && (
+          {onEnableNotifications && (
             <button
               type="button"
-              disabled={notifState === 'granted' || notifState === 'requesting'}
+              disabled={notifState === 'granted' || notifState === 'requesting' || notifState === 'denied'}
               onClick={async () => {
                 setNotifState('requesting');
                 const ok = await onEnableNotifications();
@@ -462,13 +462,19 @@ export default function Settings({
             >
               {notifState === 'granted'
                 ? <CheckCircle size={18} className="text-green-500" />
+                : notifState === 'denied'
+                ? <Bell size={18} className="text-muted" />
                 : <Bell size={18} className="text-accent" />}
               <div className="flex-1">
-                <span className={`block ${notifState === 'granted' ? 'text-green-500' : 'text-accent'}`}>
-                  {notifState === 'granted' ? 'Push notifications enabled' : notifState === 'requesting' ? 'Enabling…' : 'Enable push notifications'}
+                <span className={`block ${notifState === 'granted' ? 'text-green-500' : notifState === 'denied' ? 'text-muted' : 'text-accent'}`}>
+                  {notifState === 'granted' ? 'Push notifications enabled' : notifState === 'requesting' ? 'Enabling…' : notifState === 'denied' ? 'Notifications blocked' : 'Enable push notifications'}
                 </span>
                 <span className="text-[11px] text-muted font-normal block mt-0.5">
-                  {notifState === 'granted' ? 'You\'ll be notified for planned interactions' : 'Get notified even when the app is closed'}
+                  {notifState === 'granted'
+                    ? "You'll be notified for planned interactions"
+                    : notifState === 'denied'
+                    ? 'Enable in your device Settings → browser → Notifications'
+                    : 'Get notified even when the app is closed'}
                 </span>
               </div>
             </button>
