@@ -141,18 +141,22 @@ export default function App() {
             ]);
             if (!cancelled) {
               setContacts(merged);
-              // Merge cloud profile into local: cloud wins for all fields except photoUrl
               if (cloudProfile) {
+                // Cloud profile exists — merge it in (cloud wins, local photo kept)
                 const mergedProfile = { ...profile, ...cloudProfile, photoUrl: profile.photoUrl };
                 setUserProfile(mergedProfile);
                 await saveUserProfile(mergedProfile);
+              } else if (profile.name) {
+                // Nothing in Firestore yet (e.g. first sync or offline edits) —
+                // push local profile so it's never lost if the device is replaced
+                syncProfileToCloud(user.uid, profile).catch(() => {});
               }
               setSyncStatus('idle');
             }
           } catch (e) {
             console.error('Sync error:', e);
             if (!cancelled) {
-              setContacts(all); // fall back to local data
+              setContacts(all);
               setSyncStatus('error');
             }
           }
