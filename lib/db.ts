@@ -67,8 +67,16 @@ export async function initDB() {
   await getDB();
 }
 
+/** Returns all non-deleted contacts — use this everywhere in the UI */
 export async function getAllContacts(): Promise<Contact[]> {
-  // Guard: never return contacts from the shared/default DB
+  if (!currentUserId) return [];
+  const db = await getDB();
+  const raw = await db.getAll(STORE_NAME);
+  return raw.map(normalizeContact).filter((c) => !c.deleted);
+}
+
+/** Returns all contacts including soft-deleted ones — used only by sync merge */
+export async function getAllContactsRaw(): Promise<Contact[]> {
   if (!currentUserId) return [];
   const db = await getDB();
   const raw = await db.getAll(STORE_NAME);

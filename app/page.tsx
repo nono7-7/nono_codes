@@ -20,7 +20,7 @@ import ReconnectBanner from '@/components/ReconnectBanner';
 import PlannedBanner from '@/components/PlannedBanner';
 import BulkImport from '@/components/BulkImport';
 import SyncIndicator, { type SyncStatus } from '@/components/SyncIndicator';
-import { fullSync, forceUploadAll, syncToCloud, deleteFromCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud } from '@/lib/sync';
+import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud } from '@/lib/sync';
 import { decodeSharedContact } from '@/lib/share';
 import type { NetworkFilterAction } from '@/components/NetworkView';
 
@@ -239,12 +239,21 @@ export default function App() {
 
   const handleDelete = useCallback(
     async (id: string) => {
-      await dbDelete(id);
-      if (appSettings.cloudSyncEnabled && user) {
-        deleteFromCloud(user.uid, id).catch((e) => {
-          console.error('Cloud delete error:', e);
-          setSyncStatus('error');
-        });
+      // Soft-delete: mark as deleted with a fresh timestamp so sync merge
+      // knows this deletion is newer than any remote copy and won't restore it.
+      const contact = contacts.find((c) => c.id === id);
+      if (contact) {
+        const deleted = { ...contact, deleted: true, lastUpdated: new Date().toISOString() };
+        await saveContact(deleted);
+        if (appSettings.cloudSyncEnabled && user) {
+          syncToCloud(user.uid, deleted).catch((e) => {
+            console.error('Cloud delete error:', e);
+            setSyncStatus('error');
+          });
+        }
+      } else {
+        // Fallback: hard delete if contact not found in memory
+        await dbDelete(id);
       }
       await refresh();
       setScreen({ type: 'list' });

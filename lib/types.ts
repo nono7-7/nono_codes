@@ -49,6 +49,7 @@ export interface Contact {
 
   dateAdded: string;
   lastUpdated: string;
+  deleted?: boolean; // soft-delete flag — filtered out from UI but kept for sync
 }
 
 export type Tab = 'contacts' | 'network' | 'settings';

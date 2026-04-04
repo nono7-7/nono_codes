@@ -10,7 +10,7 @@ import {
 import type { PlannedInteraction, UserProfile } from './types';
 import { app } from './firebase';
 import type { Contact } from './types';
-import { getAllContacts, saveContact } from './db';
+import { getAllContactsRaw, saveContact } from './db';
 
 let db: ReturnType<typeof getFirestore> | null = null;
 
@@ -43,12 +43,12 @@ export async function pullFromCloud(uid: string): Promise<Contact[]> {
 export function mergeContacts(local: Contact[], remote: Contact[]): Contact[] {
   const map = new Map<string, Contact>();
 
-  // Add all local contacts
+  // Seed with local (includes soft-deleted)
   for (const c of local) {
     map.set(c.id, c);
   }
 
-  // Merge remote: newer lastUpdated wins
+  // Merge remote: newer lastUpdated always wins (including deletions)
   for (const c of remote) {
     const existing = map.get(c.id);
     if (!existing) {
@@ -108,24 +108,26 @@ export async function completePlannedNotification(
 }
 
 export async function fullSync(uid: string): Promise<Contact[]> {
+  // Use raw (includes soft-deleted) so deletions aren't lost during merge
   const [local, remote] = await Promise.all([
-    getAllContacts(),
+    getAllContactsRaw(),
     pullFromCloud(uid),
   ]);
 
   const merged = mergeContacts(local, remote);
 
-  // Write merged set back to local DB
+  // Write full merged set (including soft-deleted) back to local DB
   for (const contact of merged) {
     await saveContact(contact);
   }
 
-  // Write merged set to cloud
+  // Write full merged set to cloud so deletions propagate
   for (const contact of merged) {
     await syncToCloud(uid, contact);
   }
 
-  return merged;
+  // Return only non-deleted contacts for the UI
+  return merged.filter((c) => !c.deleted);
 }
 
 /**
