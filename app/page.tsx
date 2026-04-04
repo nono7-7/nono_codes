@@ -20,7 +20,8 @@ import ReconnectBanner from '@/components/ReconnectBanner';
 import PlannedBanner from '@/components/PlannedBanner';
 import BulkImport from '@/components/BulkImport';
 import SyncIndicator, { type SyncStatus } from '@/components/SyncIndicator';
-import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud } from '@/lib/sync';
+import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud, storePushToken, removePushToken } from '@/lib/sync';
+import { getFCMToken, onForegroundMessage } from '@/lib/messaging';
 import { decodeSharedContact } from '@/lib/share';
 import type { NetworkFilterAction } from '@/components/NetworkView';
 
@@ -39,6 +40,11 @@ function scheduleNotification(contactName: string, description: string, dateStr:
       });
     }, delay);
   }
+}
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
 type Screen =
@@ -67,6 +73,8 @@ export default function App() {
     emailNotificationsEnabled: true,
   });
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [currentFCMToken, setCurrentFCMToken] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: '', photoUrl: '', phone: '', email: '', linkedinUrl: '',
     birthday: '', mainLocation: '', education: [], jobs: [],
@@ -106,6 +114,16 @@ export default function App() {
       }
     });
     return () => unsubscribe();
+  }, []);
+
+  // Capture the PWA install prompt before it disappears
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e as BeforeInstallPromptEvent);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   // Load theme + data + cloud sync when we enter app state or when user changes.
@@ -370,11 +388,15 @@ export default function App() {
   }, [user, contacts, userProfile]);
 
   const handleLogout = useCallback(async () => {
+    // Remove this device's push token on logout
+    if (user && currentFCMToken) {
+      removePushToken(user.uid, currentFCMToken).catch(() => {});
+    }
     await logoutUser();
     setContacts([]);
     setTab('contacts');
     setScreen({ type: 'list' });
-  }, []);
+  }, [user, currentFCMToken]);
 
   const allUsedTags = useMemo(() => {
     const tags = new Set<string>();
@@ -518,6 +540,28 @@ export default function App() {
     }
   }, [appState]);
 
+  // Subscribe to FCM push notifications when logged in
+  useEffect(() => {
+    if (appState !== 'app' && appState !== 'onboarding') return;
+    if (!user) return;
+    if (Notification.permission !== 'granted') return;
+
+    getFCMToken().then((token) => {
+      if (token && user) {
+        setCurrentFCMToken(token);
+        storePushToken(user.uid, token).catch(() => {});
+      }
+    });
+
+    // Show foreground push messages as toasts
+    const unsub = onForegroundMessage((payload) => {
+      const title = payload.notification?.title ?? 'InTouch';
+      const body = payload.notification?.body ?? '';
+      showToast(`${title}: ${body}`);
+    });
+    return unsub;
+  }, [appState, user, showToast]);
+
   // Fire local notifications for due items (planned, birthdays, reconnects)
   useEffect(() => {
     if (appState !== 'app') return;
@@ -576,6 +620,21 @@ export default function App() {
     }
   }, [appState, contacts]);
 
+  const handleEnableNotifications = useCallback(async (): Promise<boolean> => {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return false;
+      const token = await getFCMToken();
+      if (token && user) {
+        setCurrentFCMToken(token);
+        await storePushToken(user.uid, token);
+      }
+      return !!token;
+    } catch {
+      return false;
+    }
+  }, [user]);
+
   const handleOnboardingComplete = () => {
     if (user) localStorage.setItem(`intouch-onboarded-${user.uid}`, 'true');
     setAppState('app');
@@ -599,7 +658,15 @@ export default function App() {
 
   // ── Onboarding ──
   if (appState === 'onboarding') {
-    return <Onboarding onComplete={handleOnboardingComplete} isDark={isDark} />;
+    return (
+      <Onboarding
+        onComplete={handleOnboardingComplete}
+        isDark={isDark}
+        installPrompt={installPrompt}
+        onInstall={() => setInstallPrompt(null)}
+        onEnableNotifications={handleEnableNotifications}
+      />
+    );
   }
 
   // ── Main app ──

@@ -164,3 +164,17 @@ export async function pullProfileFromCloud(uid: string): Promise<Partial<UserPro
   if (!snap.exists()) return null;
   return snap.data() as Partial<UserProfile>;
 }
+
+/** Store an FCM push token for this device under users/{uid}/tokens/{token} */
+export async function storePushToken(uid: string, token: string): Promise<void> {
+  const db = getDB();
+  const ref = doc(db, 'users', uid, 'tokens', token);
+  await setDoc(ref, { token, updatedAt: new Date().toISOString() });
+}
+
+/** Remove an FCM push token (e.g. on logout) */
+export async function removePushToken(uid: string, token: string): Promise<void> {
+  const db = getDB();
+  const ref = doc(db, 'users', uid, 'tokens', token);
+  await deleteDoc(ref);
+}
