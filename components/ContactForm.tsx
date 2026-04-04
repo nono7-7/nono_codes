@@ -15,6 +15,8 @@ export type SuggestionPools = {
   role: string[];
   company: string[];
   university: string[];
+  program: string[];
+  gradYear: string[];
   homeLocation: string[];
   howMet: string[];
   whereMet: string[];
@@ -232,19 +234,21 @@ export default function ContactForm({
                   isDark={isDark}
                 />
                 <div className="flex gap-1.5">
-                  <input
-                    type="text"
+                  <AutoSuggestInput
                     value={edu.program}
-                    onChange={(e) => updateEducation(edu.id, { program: e.target.value })}
+                    onChange={(v) => updateEducation(edu.id, { program: v })}
+                    suggestions={suggestionPools.program}
                     placeholder="Programme"
-                    className={`${inputClass} py-1.5 text-xs flex-1`}
+                    inputClass={`${inputClass} py-1.5 text-xs flex-1`}
+                    isDark={isDark}
                   />
-                  <input
-                    type="text"
+                  <AutoSuggestInput
                     value={edu.gradYear}
-                    onChange={(e) => updateEducation(edu.id, { gradYear: e.target.value })}
+                    onChange={(v) => updateEducation(edu.id, { gradYear: v })}
+                    suggestions={suggestionPools.gradYear}
                     placeholder="Year"
-                    className={`${inputClass} py-1.5 text-xs w-16`}
+                    inputClass={`${inputClass} py-1.5 text-xs w-16`}
+                    isDark={isDark}
                   />
                 </div>
                 <button

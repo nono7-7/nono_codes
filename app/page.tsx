@@ -394,10 +394,23 @@ export default function App() {
       }
       return [...set].sort();
     };
+    // Collect from nested education entries
+    const collectEdu = (extractor: (e: { university: string; program: string; gradYear: string }) => string) => {
+      const set = new Set<string>();
+      for (const c of contacts) {
+        for (const edu of c.education || []) {
+          const v = extractor(edu).trim();
+          if (v) set.add(v);
+        }
+      }
+      return [...set].sort();
+    };
     return {
       role: collect((c) => c.role),
       company: collect((c) => c.company),
-      university: collect((c) => c.university),
+      university: [...new Set([...collect((c) => c.university), ...collectEdu((e) => e.university)])].sort(),
+      program: collectEdu((e) => e.program),
+      gradYear: collectEdu((e) => e.gradYear),
       homeLocation: collect((c) => c.homeLocation),
       howMet: collect((c) => c.howMet),
       whereMet: collect((c) => c.whereMet),
@@ -606,15 +619,12 @@ export default function App() {
             >
               {screen.type === 'list' && (
                 <>
-                  <ContactList
+                  <PlannedBanner
                     contacts={contacts}
-                    filter={filter}
-                    onFilterChange={setFilter}
+                    dismissed={plannedDismissed}
+                    onDismiss={() => setPlannedDismissed(true)}
                     onSelect={(c) => setScreen({ type: 'detail', contact: c })}
-                    onAdd={() => setScreen({ type: 'form', contact: null })}
-                    sortOrder={appSettings.sortOrder}
-                    onSortChange={(sort) => handleSettingsChange({ ...appSettings, sortOrder: sort })}
-                    syncStatus={appSettings.cloudSyncEnabled ? syncStatus : undefined}
+                    onComplete={(contactId, plannedId) => handleCompletePlanned(contactId, plannedId)}
                     isDark={isDark}
                   />
                   <BirthdayBanner
@@ -633,12 +643,15 @@ export default function App() {
                     onMarkContacted={handleMarkContacted}
                     isDark={isDark}
                   />
-                  <PlannedBanner
+                  <ContactList
                     contacts={contacts}
-                    dismissed={plannedDismissed}
-                    onDismiss={() => setPlannedDismissed(true)}
+                    filter={filter}
+                    onFilterChange={setFilter}
                     onSelect={(c) => setScreen({ type: 'detail', contact: c })}
-                    onComplete={(contactId, plannedId) => handleCompletePlanned(contactId, plannedId)}
+                    onAdd={() => setScreen({ type: 'form', contact: null })}
+                    sortOrder={appSettings.sortOrder}
+                    onSortChange={(sort) => handleSettingsChange({ ...appSettings, sortOrder: sort })}
+                    syncStatus={appSettings.cloudSyncEnabled ? syncStatus : undefined}
                     isDark={isDark}
                   />
                 </>
