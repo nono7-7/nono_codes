@@ -62,7 +62,7 @@ export default function App() {
   const [plannedDismissed, setPlannedDismissed] = useState(false);
   const [appSettings, setAppSettings] = useState<AppSettings>({
     reconnectRemindersEnabled: true,
-    cloudSyncEnabled: false,
+    cloudSyncEnabled: true, // default ON — new devices pull from Firestore on first login
     sortOrder: 'name',
     emailNotificationsEnabled: true,
   });

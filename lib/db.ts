@@ -117,9 +117,9 @@ export async function importContacts(json: string): Promise<number> {
 // App Settings
 const DEFAULT_SETTINGS: AppSettings = {
   reconnectRemindersEnabled: true,
-  cloudSyncEnabled: false,
+  cloudSyncEnabled: true, // default ON so new devices always pull from Firestore on first login
   sortOrder: 'name',
-  emailNotificationsEnabled: true, // recommended on by default
+  emailNotificationsEnabled: true,
 };
 
 export async function getAppSettings(): Promise<AppSettings> {
