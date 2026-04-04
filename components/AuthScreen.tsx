@@ -79,7 +79,7 @@ export default function AuthScreen({ isDark }: { isDark: boolean }) {
             InTouch
           </h1>
           <p className="text-muted text-sm mt-2">
-            {mode === 'login' && 'Your network, always within reach.'}
+            {mode === 'login' && 'Stay in sync with your network — effortlessly.'}
             {mode === 'register' && 'Create your account.'}
             {mode === 'reset' && 'Reset your password.'}
           </p>
