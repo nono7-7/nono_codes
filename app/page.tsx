@@ -108,10 +108,14 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Load theme + data when we enter app state or when user changes
+  // Load theme + data + cloud sync when we enter app state or when user changes.
+  // Cloud sync is intentionally inside this same effect so it runs AFTER settings
+  // are loaded from IndexedDB (prevents the race condition where cloudSyncEnabled
+  // is still false when the sync effect fires).
   useEffect(() => {
     if (appState !== 'app' && appState !== 'onboarding') return;
-    if (!user) return; // Don't load data without an authenticated user
+    if (!user) return;
+    let cancelled = false;
 
     try {
       const savedTheme = localStorage.getItem('intouch-theme');
@@ -122,9 +126,30 @@ export default function App() {
       try {
         await initDB();
         const [all, settings, profile] = await Promise.all([getAllContacts(), getAppSettings(), getUserProfile()]);
-        setContacts(all);
+        if (cancelled) return;
         setAppSettings(settings);
         setUserProfile(profile);
+
+        // Cloud sync: pull from Firestore and merge with local data.
+        // This runs after settings are loaded so we can check the real cloudSyncEnabled value.
+        if (settings.cloudSyncEnabled) {
+          setSyncStatus('syncing');
+          try {
+            const merged = await fullSync(user.uid);
+            if (!cancelled) {
+              setContacts(merged);
+              setSyncStatus('idle');
+            }
+          } catch (e) {
+            console.error('Sync error:', e);
+            if (!cancelled) {
+              setContacts(all); // fall back to local data
+              setSyncStatus('error');
+            }
+          }
+        } else {
+          setContacts(all);
+        }
       } catch (e) {
         console.error('Init error:', e);
       }
@@ -134,6 +159,8 @@ export default function App() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
+
+    return () => { cancelled = true; };
   }, [appState, user]);
 
   // Handle ?import= URL param for shared contacts
@@ -145,7 +172,6 @@ export default function App() {
 
     const shared = decodeSharedContact(importParam);
     if (shared) {
-      // Create a partial contact to pre-fill the form
       const prefilled = {
         ...shared,
         id: '',
@@ -159,34 +185,10 @@ export default function App() {
         dateAdded: '',
         lastUpdated: '',
       } as Contact;
-      setScreen({ type: 'form', contact: null });
-      // Small delay to let the form mount, then we'll pass via a different mechanism
-      // Actually, we pass prefilled as the "contact" prop to pre-fill
       setScreen({ type: 'form', contact: prefilled });
     }
-    // Clear the URL param
     window.history.replaceState({}, '', window.location.pathname);
   }, [appState]);
-
-  // Cloud sync on load
-  useEffect(() => {
-    if (appState !== 'app' || !user || !appSettings.cloudSyncEnabled) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        setSyncStatus('syncing');
-        const merged = await fullSync(user.uid);
-        if (!cancelled) {
-          setContacts(merged);
-          setSyncStatus('idle');
-        }
-      } catch (e) {
-        console.error('Sync error:', e);
-        if (!cancelled) setSyncStatus('error');
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [appState, user, appSettings.cloudSyncEnabled]);
 
   const refresh = useCallback(async () => {
     const all = await getAllContacts();

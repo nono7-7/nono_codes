@@ -7,6 +7,14 @@ import {
   MessageCircle, CalendarClock, FileSpreadsheet, MapPin, Tag, Check, AtSign,
 } from 'lucide-react';
 
+// Example card/row classes that adapt to dark/light
+const card = 'bg-accent/5 border border-accent/15 rounded-lg';
+const cardXl = 'bg-accent/5 border border-accent/15 rounded-xl';
+const blueCard = 'bg-blue-500/10 border border-blue-500/20 rounded-lg';
+const greenCard = 'bg-green-500/10 border border-green-500/20 rounded-lg';
+const amberCard = 'bg-amber-500/10 border border-amber-500/20 rounded-lg';
+const mutedCard = 'bg-muted/5 border border-muted/15 rounded-lg';
+
 const slides = [
   // ── 1. Add Connections ──────────────────────────────────────────
   {
@@ -16,8 +24,8 @@ const slides = [
     description:
       'Save a contact the moment you meet them. Name is the only required field — add role, company, how you met, location, notes, and more at your own pace.',
     example: (
-      <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 text-left text-xs space-y-1.5 mt-4">
-        <p className="font-semibold text-sm text-white">Marco Rodriguez</p>
+      <div className={`${cardXl} p-3.5 text-left text-xs space-y-1.5 mt-4`}>
+        <p className="font-semibold text-sm">Marco Rodriguez</p>
         <p className="text-muted">Investment Analyst @ Goldman Sachs</p>
         <p className="text-muted flex items-center gap-1">
           <MapPin size={10} /> London
@@ -43,19 +51,19 @@ const slides = [
       'Find anyone instantly across name, company, notes, events, tags, location, and more. Stack multiple tag filters to pinpoint exactly who you need.',
     example: (
       <div className="mt-4 space-y-2 text-xs">
-        <div className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 flex items-center gap-2">
+        <div className={`${card} px-3 py-2 flex items-center gap-2`}>
           <Tag size={11} className="text-accent" />
           <span className="text-accent font-medium">Investment Banking</span>
-          <span className="text-white/40">+</span>
+          <span className="text-muted">+</span>
           <MapPin size={11} className="text-accent" />
           <span className="text-accent font-medium">Madrid</span>
-          <span className="text-white/40 ml-auto">4 contacts</span>
+          <span className="text-muted ml-auto">4</span>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-muted">
-          🔍 &quot;IE&quot; → all IE Business School contacts
+        <div className={`${mutedCard} px-3 py-2 text-muted`}>
+          Search &quot;IE&quot; &rarr; all IE Business School contacts
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-muted">
-          🔍 &quot;Goldman&quot; → everyone at Goldman Sachs
+        <div className={`${mutedCard} px-3 py-2 text-muted`}>
+          Search &quot;Goldman&quot; &rarr; everyone at Goldman Sachs
         </div>
       </div>
     ),
@@ -74,11 +82,11 @@ const slides = [
           { date: 'Mar 2025', note: 'Coffee at IE campus — discussed VC internship' },
           { date: 'Jan 2025', note: 'Connected at GS Alumni drinks in London' },
         ].map((item, i) => (
-          <div key={i} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 flex items-start gap-2.5">
+          <div key={i} className={`${blueCard} px-3 py-2.5 flex items-start gap-2.5`}>
             <MessageCircle size={12} className="text-blue-400 mt-0.5 shrink-0" />
             <div>
-              <p className="text-white/40 mb-0.5">{item.date}</p>
-              <p className="text-white/80">{item.note}</p>
+              <p className="text-muted mb-0.5">{item.date}</p>
+              <p className="text-sm">{item.note}</p>
             </div>
           </div>
         ))}
@@ -92,29 +100,29 @@ const slides = [
     color: 'bg-blue-500/15',
     title: 'Plan & Get Reminded',
     description:
-      'Schedule a future interaction with a date. InTouch sends you an email 2 days before and on the day as a reminder — then prompts you to log how it went. Email reminders are on by default and can be changed anytime in Settings.',
+      'Schedule a future interaction with a date. InTouch sends you an email reminder 2 days before and on the day — then prompts you to log how it went. Email reminders are on by default and can be changed in Settings.',
     example: (
       <div className="mt-4 space-y-2 text-xs">
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2.5 flex items-start gap-2.5">
+        <div className={`${blueCard} px-3 py-2.5 flex items-start gap-2.5`}>
           <CalendarClock size={12} className="text-blue-400 mt-0.5 shrink-0" />
           <div className="flex-1">
             <p className="text-blue-400 font-medium mb-0.5">Sarah Chen — Today</p>
-            <p className="text-white/70">Catch-up call re: summer internship</p>
+            <p className="text-sm">Catch-up call re: summer internship</p>
           </div>
           <div className="w-5 h-5 rounded-full bg-blue-400/20 flex items-center justify-center shrink-0">
             <Check size={10} className="text-blue-400" strokeWidth={3} />
           </div>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 flex items-start gap-2.5">
+        <div className={`${mutedCard} px-3 py-2.5 flex items-start gap-2.5`}>
           <CalendarClock size={12} className="text-muted mt-0.5 shrink-0" />
           <div>
             <p className="text-muted mb-0.5">James Park — Apr 18</p>
-            <p className="text-white/70">Lunch near Canary Wharf</p>
+            <p className="text-sm">Lunch near Canary Wharf</p>
           </div>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 flex items-center gap-2 mt-1">
-          <AtSign size={11} className="text-white/30 shrink-0" />
-          <p className="text-white/40 text-[10px]">Email reminders sent 2 days before &amp; day of · toggle in Settings</p>
+        <div className={`${mutedCard} px-3 py-2 flex items-center gap-2`}>
+          <AtSign size={11} className="text-muted shrink-0" />
+          <p className="text-muted text-[10px]">Email reminders 2 days before &amp; day of &middot; toggle in Settings</p>
         </div>
       </div>
     ),
@@ -129,19 +137,17 @@ const slides = [
       'Set a recurring reminder on any contact — every 2, 4, 8, or 12 weeks — or pick a specific date. InTouch tells you when it\'s time to reach out.',
     example: (
       <div className="mt-4 space-y-1.5 text-xs">
-        <div className="bg-accent/10 border border-accent/20 rounded-lg px-3 py-2.5 flex items-center gap-2.5">
+        <div className={`${card} px-3 py-2.5 flex items-center gap-2.5`}>
           <Bell size={12} className="text-accent shrink-0" />
-          <div className="flex-1">
-            <p className="text-accent font-medium">2 People to Reconnect With</p>
-          </div>
+          <p className="text-accent font-medium">2 People to Reconnect With</p>
         </div>
         {[
           { name: 'Sarah Chen', status: '2w overdue' },
           { name: 'James Park', status: 'due today' },
         ].map((c) => (
-          <div key={c.name} className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg px-3 py-2">
-            <span className="text-white/80">{c.name}</span>
-            <span className="text-accent">{c.status}</span>
+          <div key={c.name} className={`${mutedCard} flex items-center justify-between px-3 py-2`}>
+            <span className="text-sm">{c.name}</span>
+            <span className="text-accent font-medium">{c.status}</span>
           </div>
         ))}
       </div>
@@ -162,14 +168,14 @@ const slides = [
           { label: 'Madrid', inner: 3, wider: 5 },
           { label: 'New York', inner: 2, wider: 4 },
         ].map((row) => (
-          <div key={row.label} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 flex items-center gap-3">
-            <span className="flex-1 text-white/80">{row.label}</span>
+          <div key={row.label} className={`${mutedCard} px-3 py-2 flex items-center gap-3`}>
+            <span className="flex-1 text-sm">{row.label}</span>
             <span className="text-accent text-[10px]">{row.inner}</span>
-            <span className="text-white/30 text-[10px]">/</span>
-            <span className="text-white/40 text-[10px]">{row.wider}</span>
-            <div className="w-16 h-1.5 rounded-full bg-white/10 overflow-hidden flex">
+            <span className="text-muted text-[10px]">/</span>
+            <span className="text-muted text-[10px]">{row.wider}</span>
+            <div className="w-16 h-1.5 rounded-full bg-muted/15 overflow-hidden flex">
               <div className="h-full bg-accent" style={{ width: `${(row.inner / (row.inner + row.wider)) * 100}%` }} />
-              <div className="h-full bg-white/20" style={{ width: `${(row.wider / (row.inner + row.wider)) * 100}%` }} />
+              <div className="h-full bg-muted/30" style={{ width: `${(row.wider / (row.inner + row.wider)) * 100}%` }} />
             </div>
           </div>
         ))}
@@ -183,36 +189,36 @@ const slides = [
     color: 'bg-green-500/15',
     title: 'Import from Spreadsheets',
     description:
-      'Already have contacts in a CSV or Excel file? Upload it and InTouch auto-maps the columns, flags duplicates, and lets you review before saving — no manual entry needed.',
+      'Already have contacts in a CSV or Excel file? Upload it and InTouch auto-maps the columns, flags duplicates, and lets you review before saving.',
     example: (
       <div className="mt-4 space-y-2 text-xs">
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-2">
-          <p className="text-white/40 mb-1">Detected columns:</p>
+        <div className={`${mutedCard} !rounded-xl p-3 space-y-2`}>
+          <p className="text-muted mb-1">Detected columns:</p>
           {[
-            { col: 'Full Name', field: 'Name', ok: true },
-            { col: 'Work Email', field: 'Email', ok: true },
-            { col: 'Organisation', field: 'Company', ok: true },
-            { col: 'Mobile', field: 'Phone', ok: true },
+            { col: 'Full Name', field: 'Name' },
+            { col: 'Work Email', field: 'Email' },
+            { col: 'Organisation', field: 'Company' },
+            { col: 'Mobile', field: 'Phone' },
           ].map((row) => (
             <div key={row.col} className="flex items-center gap-2">
-              <span className="text-white/50 w-24 truncate">{row.col}</span>
-              <ArrowRight size={10} className="text-white/30 shrink-0" />
-              <span className={`${row.ok ? 'text-accent' : 'text-amber-400'} font-medium`}>{row.field}</span>
+              <span className="text-muted w-24 truncate">{row.col}</span>
+              <ArrowRight size={10} className="text-muted shrink-0" />
+              <span className="text-accent font-medium">{row.field}</span>
             </div>
           ))}
         </div>
         <div className="flex gap-2">
-          <div className="flex-1 bg-green-500/10 border border-green-500/20 rounded-lg px-2 py-1.5 text-center">
-            <p className="text-green-400 font-bold text-sm">54</p>
-            <p className="text-white/40 text-[10px]">Ready</p>
+          <div className={`flex-1 ${greenCard} px-2 py-1.5 text-center`}>
+            <p className="text-green-500 font-bold text-sm">54</p>
+            <p className="text-muted text-[10px]">Ready</p>
           </div>
-          <div className="flex-1 bg-amber-500/10 border border-amber-500/20 rounded-lg px-2 py-1.5 text-center">
-            <p className="text-amber-400 font-bold text-sm">3</p>
-            <p className="text-white/40 text-[10px]">Duplicate</p>
+          <div className={`flex-1 ${amberCard} px-2 py-1.5 text-center`}>
+            <p className="text-amber-500 font-bold text-sm">3</p>
+            <p className="text-muted text-[10px]">Duplicate</p>
           </div>
-          <div className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-center">
-            <p className="text-white/60 font-bold text-sm">0</p>
-            <p className="text-white/40 text-[10px]">Invalid</p>
+          <div className={`flex-1 ${mutedCard} px-2 py-1.5 text-center`}>
+            <p className="text-muted font-bold text-sm">0</p>
+            <p className="text-muted text-[10px]">Invalid</p>
           </div>
         </div>
       </div>
@@ -228,7 +234,7 @@ const slides = [
       'Generate your personal QR code from Settings. Choose which fields to share — phone, email, LinkedIn, location — and let anyone scan to add you instantly.',
     example: (
       <div className="mt-4 flex items-center gap-4 justify-center">
-        <div className="bg-white p-3 rounded-xl">
+        <div className="bg-white p-3 rounded-xl border border-muted/15">
           <div
             className="grid gap-[2px]"
             style={{ gridTemplateColumns: 'repeat(7, 1fr)', width: 84 }}
@@ -250,9 +256,9 @@ const slides = [
           {['Name', 'Phone', 'Email', 'LinkedIn'].map((f) => (
             <div key={f} className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-accent flex items-center justify-center">
-                <Check size={8} strokeWidth={3} className="text-dark-bg" />
+                <Check size={8} strokeWidth={3} className="text-white" />
               </div>
-              <span className="text-white/70">{f}</span>
+              <span className="text-sm">{f}</span>
             </div>
           ))}
         </div>
@@ -266,21 +272,22 @@ const slides = [
     color: 'bg-accent/15',
     title: "You're All Set",
     description:
-      'Your data lives on your device — no tracking, no uploads unless you enable cloud sync. Start building your network. It only takes seconds to add someone.',
+      'Your data syncs across devices when cloud sync is on. Start building your network — it only takes seconds to add someone.',
     example: (
-      <div className="mt-6 space-y-2 text-xs text-left">
+      <div className="mt-6 space-y-2.5 text-xs text-left">
         {[
           'Add contacts as you meet people',
           'Log interactions to track relationships',
-          'Plan future meetings with reminders',
+          'Plan future meetings with email reminders',
           'Import existing contacts from CSV / XLSX',
           'Share your card via QR code',
+          'Sync across devices with cloud sync',
         ].map((tip) => (
           <div key={tip} className="flex items-start gap-2.5">
             <div className="w-4 h-4 rounded-full bg-accent/20 flex items-center justify-center shrink-0 mt-0.5">
               <Check size={9} className="text-accent" strokeWidth={3} />
             </div>
-            <span className="text-white/70">{tip}</span>
+            <span className="text-sm">{tip}</span>
           </div>
         ))}
       </div>
