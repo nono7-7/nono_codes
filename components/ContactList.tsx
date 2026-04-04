@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Search, Plus, MapPin, Mail, Phone, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Contact, ActiveFilter, SortOrder } from '@/lib/types';
-import { filterContacts, sortContacts, getTopTags, capitalizeTag, getDisplayJob, getDisplayEducation } from '@/lib/utils';
+import { filterContacts, sortContacts, getTopTags, capitalizeTag, getDisplayJob, getDisplayEducation, hasActiveFilters } from '@/lib/utils';
 import FilterChips from './FilterChips';
 import SortSelector from './SortSelector';
 import SyncIndicator, { type SyncStatus } from './SyncIndicator';
@@ -35,7 +35,7 @@ export default function ContactList({
   const topTags = useMemo(() => getTopTags(contacts), [contacts]);
   const filtered = useMemo(() => sortContacts(filterContacts(contacts, filter), sortOrder), [contacts, filter, sortOrder]);
 
-  const hasAnyFilter = filter.classification !== 'all' || filter.tag || filter.search;
+  const hasAnyFilter = hasActiveFilters(filter);
 
   if (contacts.length === 0) {
     return (
@@ -96,10 +96,8 @@ export default function ContactList({
       {/* Filters */}
       <div className="mb-4">
         <FilterChips
-          classification={filter.classification}
-          onClassification={(v) => onFilterChange({ ...filter, classification: v })}
-          activeTag={filter.tag}
-          onTag={(tag) => onFilterChange({ ...filter, tag })}
+          filter={filter}
+          onFilterChange={onFilterChange}
           topTags={topTags}
           isDark={isDark}
         />

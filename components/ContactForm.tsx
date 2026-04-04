@@ -395,7 +395,18 @@ export default function ContactForm({
         </div>
         <div>
           <label className={labelClass}>{optLabel('Birthday')}</label>
-          <input type="date" value={form.birthday} onChange={(e) => set('birthday', e.target.value)} className={inputClass} />
+          <div className="flex items-center gap-2">
+            <input type="date" value={form.birthday} onChange={(e) => set('birthday', e.target.value)} className={`${inputClass} flex-1 ${form.birthday ? '!border-accent' : ''}`} />
+            {form.birthday && (
+              <button
+                type="button"
+                onClick={() => set('birthday', '')}
+                className="text-xs text-muted hover:text-red-400"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

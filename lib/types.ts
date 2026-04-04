@@ -4,6 +4,14 @@ export interface Interaction {
   note: string;
 }
 
+export interface PlannedInteraction {
+  id: string;
+  date: string;         // YYYY-MM-DD
+  description: string;
+  completed: boolean;
+  outcomeLogged: boolean;
+}
+
 export interface Contact {
   id: string;
   name: string;
@@ -37,6 +45,7 @@ export interface Contact {
 
   education: Education[];
   jobs: Job[];
+  plannedInteractions: PlannedInteraction[];
 
   dateAdded: string;
   lastUpdated: string;
@@ -50,12 +59,16 @@ export interface AppSettings {
   reconnectRemindersEnabled: boolean;
   cloudSyncEnabled: boolean;
   sortOrder: SortOrder;
+  emailNotificationsEnabled: boolean; // send email 2 days before + day of planned interactions
 }
 
 export type ActiveFilter = {
   classification: 'all' | 'inner' | 'wider';
-  tag: string | null;
+  tags: string[];
   search: string;
+  homeLocation: string | null;
+  university: string | null;
+  company: string | null;
 };
 
 export interface Education {

@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import {
   Download, Upload, Trash2, Moon, Sun, LogOut, Bell, Cloud,
-  Camera, QrCode, Plus, X, Star, Link2, Phone, Mail, MapPin, Cake, GraduationCap, Briefcase,
+  Camera, QrCode, Plus, X, Star, Link2, Phone, Mail, MapPin, Cake, GraduationCap, Briefcase, FileSpreadsheet, AtSign,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { exportContacts, importContacts, clearAll } from '@/lib/db';
@@ -38,6 +38,7 @@ export default function Settings({
   isDark,
   onToggleTheme,
   onImportComplete,
+  onBulkImport,
   onClearComplete,
   showToast,
   onLogout,
@@ -50,6 +51,7 @@ export default function Settings({
   isDark: boolean;
   onToggleTheme: () => void;
   onImportComplete: () => void;
+  onBulkImport: () => void;
   onClearComplete: () => void;
   showToast: (msg: string) => void;
   onLogout?: () => void;
@@ -448,6 +450,24 @@ export default function Settings({
           {userEmail && (
             <button
               type="button"
+              onClick={() => onSettingsChange({ ...appSettings, emailNotificationsEnabled: !appSettings.emailNotificationsEnabled })}
+              className={btnCls}
+            >
+              <AtSign size={18} className="text-muted" />
+              <div className="flex-1">
+                <span className="block">Email reminders</span>
+                <span className="text-[11px] text-muted font-normal block mt-0.5">
+                  Get emailed 2 days before &amp; day of planned interactions
+                </span>
+              </div>
+              <div className={`w-10 h-6 rounded-full relative transition-colors ${appSettings.emailNotificationsEnabled ? 'bg-accent' : isDark ? 'bg-dark-border' : 'bg-light-border'}`}>
+                <div className={`absolute top-1 w-4 h-4 rounded-full transition-all ${appSettings.emailNotificationsEnabled ? 'left-5 bg-white' : 'left-1 bg-muted'}`} />
+              </div>
+            </button>
+          )}
+          {userEmail && (
+            <button
+              type="button"
               onClick={() => onSettingsChange({ ...appSettings, cloudSyncEnabled: !appSettings.cloudSyncEnabled })}
               className={btnCls}
             >
@@ -480,6 +500,13 @@ export default function Settings({
           <button type="button" onClick={handleImport} className={btnCls}>
             <Upload size={18} className="text-muted" />
             <span>Import contacts (JSON)</span>
+          </button>
+          <button type="button" onClick={onBulkImport} className={btnCls}>
+            <FileSpreadsheet size={18} className="text-accent" />
+            <div>
+              <span className="block">Bulk import (CSV / XLSX)</span>
+              <span className="text-[11px] text-muted font-normal block mt-0.5">Import from spreadsheets with smart mapping</span>
+            </div>
           </button>
           <button
             type="button"

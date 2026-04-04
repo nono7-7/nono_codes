@@ -193,13 +193,18 @@ function buildBreakdown(
 
 /* ── Main Component ────────────────────────────────────── */
 
+export type NetworkFilterAction = {
+  field: 'homeLocation' | 'company' | 'university' | 'tag' | 'search';
+  value: string;
+};
+
 export default function NetworkView({
   contacts,
   onFilter,
   isDark,
 }: {
   contacts: Contact[];
-  onFilter: (searchQuery: string) => void;
+  onFilter: (action: NetworkFilterAction) => void;
   isDark: boolean;
 }) {
   const total = contacts.length;
@@ -299,35 +304,35 @@ export default function NetworkView({
       <BreakdownSection
         title="By Location"
         entries={byLocation}
-        onTap={(v) => onFilter(v)}
+        onTap={(v) => onFilter({ field: 'homeLocation', value: v })}
         isDark={isDark}
       />
 
       <BreakdownSection
         title="By Company"
         entries={byCompany}
-        onTap={(v) => onFilter(v)}
+        onTap={(v) => onFilter({ field: 'company', value: v })}
         isDark={isDark}
       />
 
       <BreakdownSection
         title="By University"
         entries={byUniversity}
-        onTap={(v) => onFilter(v)}
+        onTap={(v) => onFilter({ field: 'university', value: v })}
         isDark={isDark}
       />
 
       <BreakdownSection
         title="By Tag"
         entries={byTag}
-        onTap={(v) => onFilter(v)}
+        onTap={(v) => onFilter({ field: 'tag', value: v })}
         isDark={isDark}
       />
 
       <BreakdownSection
         title="By Event / Context"
         entries={byEvent}
-        onTap={(v) => onFilter(v)}
+        onTap={(v) => onFilter({ field: 'search', value: v })}
         isDark={isDark}
         defaultOpen={false}
       />
@@ -335,7 +340,7 @@ export default function NetworkView({
       <BreakdownSection
         title="By Where Met"
         entries={byWhereMet}
-        onTap={(v) => onFilter(v)}
+        onTap={(v) => onFilter({ field: 'search', value: v })}
         isDark={isDark}
         defaultOpen={false}
       />
@@ -343,7 +348,7 @@ export default function NetworkView({
       <BreakdownSection
         title="By Role"
         entries={byRole}
-        onTap={(v) => onFilter(v)}
+        onTap={(v) => onFilter({ field: 'search', value: v })}
         isDark={isDark}
         defaultOpen={false}
       />
@@ -351,7 +356,7 @@ export default function NetworkView({
       <BreakdownSection
         title="By Nationality"
         entries={byNationality}
-        onTap={(v) => onFilter(v)}
+        onTap={(v) => onFilter({ field: 'search', value: v })}
         isDark={isDark}
         defaultOpen={false}
       />

@@ -49,13 +49,13 @@ function normalizeContact(c: Record<string, unknown>): Contact {
     tags: (c.tags as string[]) ?? [],
     education: (c.education as Contact['education']) ?? [],
     jobs: (c.jobs as Contact['jobs']) ?? [],
+    plannedInteractions: (c.plannedInteractions as Contact['plannedInteractions']) ?? [],
   } as Contact;
 }
 
 /** Call this when user changes (login/logout) to switch to the correct database */
 export function setDBUser(userId: string | null) {
-  if (userId === currentUserId) return;
-  // Close previous connection and reset
+  // Always close + reset even if userId looks the same, to prevent stale connections
   if (dbPromise) {
     dbPromise.then((db) => db.close()).catch(() => {});
     dbPromise = null;
@@ -68,6 +68,8 @@ export async function initDB() {
 }
 
 export async function getAllContacts(): Promise<Contact[]> {
+  // Guard: never return contacts from the shared/default DB
+  if (!currentUserId) return [];
   const db = await getDB();
   const raw = await db.getAll(STORE_NAME);
   return raw.map(normalizeContact);
@@ -117,6 +119,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   reconnectRemindersEnabled: true,
   cloudSyncEnabled: false,
   sortOrder: 'name',
+  emailNotificationsEnabled: true, // recommended on by default
 };
 
 export async function getAppSettings(): Promise<AppSettings> {
@@ -158,6 +161,7 @@ const DEFAULT_PROFILE: UserProfile = {
 };
 
 export async function getUserProfile(): Promise<UserProfile> {
+  if (!currentUserId) return { ...DEFAULT_PROFILE };
   const db = await getDB();
   const raw = await db.get(SETTINGS_STORE, 'profile');
   if (!raw) return { ...DEFAULT_PROFILE };

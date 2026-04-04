@@ -17,9 +17,29 @@ import AuthScreen from '@/components/AuthScreen';
 import Onboarding from '@/components/Onboarding';
 import BirthdayBanner from '@/components/BirthdayBanner';
 import ReconnectBanner from '@/components/ReconnectBanner';
+import PlannedBanner from '@/components/PlannedBanner';
+import BulkImport from '@/components/BulkImport';
 import SyncIndicator, { type SyncStatus } from '@/components/SyncIndicator';
-import { fullSync, syncToCloud, deleteFromCloud } from '@/lib/sync';
+import { fullSync, syncToCloud, deleteFromCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference } from '@/lib/sync';
 import { decodeSharedContact } from '@/lib/share';
+import type { NetworkFilterAction } from '@/components/NetworkView';
+
+/** Schedule a local notification for a future date using setTimeout.
+ *  Falls back gracefully if notifications aren't supported or permitted. */
+function scheduleNotification(contactName: string, description: string, dateStr: string) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const target = new Date(dateStr + 'T09:00:00').getTime();
+  const delay = target - Date.now();
+  if (delay > 0 && delay < 2_147_483_647) {
+    // Schedule for the day of the interaction
+    setTimeout(() => {
+      new Notification(`InTouch — ${contactName}`, {
+        body: `Reminder: ${description} today`,
+        icon: '/icons/icon-192.svg',
+      });
+    }, delay);
+  }
+}
 
 type Screen =
   | { type: 'list' }
@@ -33,15 +53,18 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [tab, setTab] = useState<Tab>('contacts');
   const [screen, setScreen] = useState<Screen>({ type: 'list' });
+  const [showBulkImport, setShowBulkImport] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isDark, setIsDark] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [birthdayDismissed, setBirthdayDismissed] = useState(false);
   const [reconnectDismissed, setReconnectDismissed] = useState(false);
+  const [plannedDismissed, setPlannedDismissed] = useState(false);
   const [appSettings, setAppSettings] = useState<AppSettings>({
     reconnectRemindersEnabled: true,
     cloudSyncEnabled: false,
     sortOrder: 'name',
+    emailNotificationsEnabled: true,
   });
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -54,13 +77,24 @@ export default function App() {
   // Lifted filter state so NetworkView can set it
   const [filter, setFilter] = useState<ActiveFilter>({
     classification: 'all',
-    tag: null,
+    tags: [],
     search: '',
+    homeLocation: null,
+    university: null,
+    company: null,
   });
 
   // Auth listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      // Always clear in-memory data first to prevent cross-account leaks
+      setContacts([]);
+      setUserProfile({
+        name: '', photoUrl: '', phone: '', email: '', linkedinUrl: '',
+        birthday: '', mainLocation: '', education: [], jobs: [],
+        sharePhone: false, shareEmail: false, shareLinkedin: false,
+        shareBirthday: false, shareLocation: false, shareEducation: false, shareJobs: false,
+      });
       // Switch to user-scoped IndexedDB before loading any data
       setDBUser(firebaseUser?.uid ?? null);
       setUser(firebaseUser);
@@ -68,17 +102,16 @@ export default function App() {
         const onboarded = localStorage.getItem(`intouch-onboarded-${firebaseUser.uid}`);
         setAppState(onboarded ? 'app' : 'onboarding');
       } else {
-        // Clear in-memory state on logout
-        setContacts([]);
         setAppState('auth');
       }
     });
     return () => unsubscribe();
   }, []);
 
-  // Load theme + data when we enter app state
+  // Load theme + data when we enter app state or when user changes
   useEffect(() => {
     if (appState !== 'app' && appState !== 'onboarding') return;
+    if (!user) return; // Don't load data without an authenticated user
 
     try {
       const savedTheme = localStorage.getItem('intouch-theme');
@@ -101,7 +134,7 @@ export default function App() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
-  }, [appState]);
+  }, [appState, user]);
 
   // Handle ?import= URL param for shared contacts
   useEffect(() => {
@@ -268,8 +301,12 @@ export default function App() {
     async (newSettings: AppSettings) => {
       setAppSettings(newSettings);
       await saveAppSettings(newSettings);
+      // Sync email preference to Firestore so the cron job can read it
+      if (user && newSettings.emailNotificationsEnabled !== appSettings.emailNotificationsEnabled) {
+        syncEmailPreference(user.uid, newSettings.emailNotificationsEnabled).catch(() => {});
+      }
     },
-    []
+    [user, appSettings.emailNotificationsEnabled]
   );
 
   const handleProfileChange = useCallback(
@@ -321,15 +358,158 @@ export default function App() {
     setScreen({ type: 'list' });
   };
 
-  const handleNetworkFilter = useCallback((searchQuery: string) => {
-    setFilter({
+  const handleNetworkFilter = useCallback((action: NetworkFilterAction) => {
+    const base: ActiveFilter = {
       classification: 'all',
-      tag: null,
-      search: searchQuery,
-    });
+      tags: [],
+      search: '',
+      homeLocation: null,
+      university: null,
+      company: null,
+    };
+    if (action.field === 'homeLocation') base.homeLocation = action.value;
+    else if (action.field === 'university') base.university = action.value;
+    else if (action.field === 'company') base.company = action.value;
+    else if (action.field === 'tag') base.tags = [action.value];
+    else base.search = action.value;
+    setFilter(base);
     setTab('contacts');
     setScreen({ type: 'list' });
   }, []);
+
+  const handleAddPlanned = useCallback(
+    async (contactId: string, date: string, description: string) => {
+      const contact = contacts.find((c) => c.id === contactId);
+      if (!contact) return;
+      const planned = {
+        id: nanoid(),
+        date,
+        description,
+        completed: false,
+        outcomeLogged: false,
+      };
+      const updated: Contact = {
+        ...contact,
+        plannedInteractions: [...(contact.plannedInteractions || []), planned],
+        lastUpdated: new Date().toISOString(),
+      };
+      await saveContact(updated);
+      await refresh();
+      setScreen((prev) =>
+        prev.type === 'detail' && prev.contact.id === contactId
+          ? { type: 'detail', contact: updated }
+          : prev
+      );
+      showToast('Interaction planned');
+      // Schedule a local notification for the planned date
+      scheduleNotification(contact.name, description, date);
+      // Write to Firestore for email reminder (if user has opted in and is logged in)
+      if (user?.email && appSettings.emailNotificationsEnabled) {
+        savePlannedNotification(user.uid, user.email, contact.name, planned).catch(() => {});
+      }
+    },
+    [contacts, refresh, showToast, user, appSettings.emailNotificationsEnabled]
+  );
+
+  const handleCompletePlanned = useCallback(
+    async (contactId: string, plannedId: string) => {
+      const contact = contacts.find((c) => c.id === contactId);
+      if (!contact) return;
+      const planned = (contact.plannedInteractions || []).find((p) => p.id === plannedId);
+      const today = new Date().toISOString().slice(0, 10);
+      const updated: Contact = {
+        ...contact,
+        plannedInteractions: (contact.plannedInteractions || []).map((p) =>
+          p.id === plannedId ? { ...p, completed: true, outcomeLogged: true } : p
+        ),
+        interactions: [
+          ...contact.interactions,
+          { id: nanoid(), date: today, note: planned ? `Planned: ${planned.description}` : 'Planned interaction' },
+        ],
+        lastContacted: today,
+        lastUpdated: new Date().toISOString(),
+      };
+      await saveContact(updated);
+      await refresh();
+      setScreen((prev) =>
+        prev.type === 'detail' && prev.contact.id === contactId
+          ? { type: 'detail', contact: updated }
+          : prev
+      );
+      // Mark the Firestore notification as complete so no more emails are sent
+      if (user) {
+        completePlannedNotification(user.uid, plannedId).catch(() => {});
+      }
+      showToast('Logged & completed');
+    },
+    [contacts, refresh, showToast]
+  );
+
+  // Request notification permission on first load
+  useEffect(() => {
+    if (appState !== 'app') return;
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, [appState]);
+
+  // Fire local notifications for due items (planned, birthdays, reconnects)
+  useEffect(() => {
+    if (appState !== 'app') return;
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const mmdd = today.slice(5); // MM-DD
+    const notifiedKey = `intouch-notified-${today}`;
+    const alreadyNotified = sessionStorage.getItem(notifiedKey);
+    if (alreadyNotified) return;
+
+    const notifications: string[] = [];
+
+    // Planned interactions due
+    const due = contacts.flatMap((c) =>
+      (c.plannedInteractions || [])
+        .filter((p) => !p.completed && p.date <= today)
+        .map((p) => `${c.name}: ${p.description}`)
+    );
+    if (due.length > 0) {
+      notifications.push(
+        due.length === 1
+          ? `Planned: ${due[0]}`
+          : `${due.length} planned interactions due`
+      );
+    }
+
+    // Birthdays today
+    const bdays = contacts.filter((c) => c.birthday && c.birthday.slice(5) === mmdd);
+    if (bdays.length > 0) {
+      notifications.push(
+        bdays.length === 1
+          ? `🎂 ${bdays[0].name}'s birthday!`
+          : `🎂 ${bdays.length} birthdays today!`
+      );
+    }
+
+    // Reconnect reminders
+    const reconnects = contacts.filter((c) => {
+      if (c.reconnectDate && c.reconnectDate <= today) return true;
+      if (!c.reconnectIntervalWeeks) return false;
+      const intervalMs = c.reconnectIntervalWeeks * 7 * 24 * 60 * 60 * 1000;
+      const lastDate = c.lastContacted ? new Date(c.lastContacted).getTime() : 0;
+      return Date.now() - lastDate > intervalMs;
+    });
+    if (reconnects.length > 0) {
+      notifications.push(`${reconnects.length} reconnect reminder${reconnects.length > 1 ? 's' : ''}`);
+    }
+
+    if (notifications.length > 0) {
+      new Notification('InTouch', {
+        body: notifications.join('\n'),
+        icon: '/icons/icon-192.svg',
+      });
+      sessionStorage.setItem(notifiedKey, '1');
+    }
+  }, [appState, contacts]);
 
   const handleOnboardingComplete = () => {
     if (user) localStorage.setItem(`intouch-onboarded-${user.uid}`, 'true');
@@ -401,6 +581,14 @@ export default function App() {
                     onMarkContacted={handleMarkContacted}
                     isDark={isDark}
                   />
+                  <PlannedBanner
+                    contacts={contacts}
+                    dismissed={plannedDismissed}
+                    onDismiss={() => setPlannedDismissed(true)}
+                    onSelect={(c) => setScreen({ type: 'detail', contact: c })}
+                    onComplete={(contactId, plannedId) => handleCompletePlanned(contactId, plannedId)}
+                    isDark={isDark}
+                  />
                 </>
               )}
               {screen.type === 'detail' && (
@@ -411,6 +599,8 @@ export default function App() {
                   onDelete={() => handleDelete(screen.contact.id)}
                   onLogInteraction={(date, note) => handleLogInteraction(screen.contact.id, date, note)}
                   onDeleteInteraction={(interactionId) => handleDeleteInteraction(screen.contact.id, interactionId)}
+                  onAddPlanned={(date, desc) => handleAddPlanned(screen.contact.id, date, desc)}
+                  onCompletePlanned={(plannedId) => handleCompletePlanned(screen.contact.id, plannedId)}
                   isDark={isDark}
                 />
               )}
@@ -441,11 +631,12 @@ export default function App() {
             />
           )}
 
-          {tab === 'settings' && (
+          {tab === 'settings' && !showBulkImport && (
             <Settings
               isDark={isDark}
               onToggleTheme={toggleTheme}
               onImportComplete={refresh}
+              onBulkImport={() => setShowBulkImport(true)}
               onClearComplete={refresh}
               showToast={showToast}
               onLogout={handleLogout}
@@ -454,6 +645,19 @@ export default function App() {
               onSettingsChange={handleSettingsChange}
               userProfile={userProfile}
               onProfileChange={handleProfileChange}
+            />
+          )}
+
+          {tab === 'settings' && showBulkImport && (
+            <BulkImport
+              existingContacts={contacts}
+              onComplete={async (count) => {
+                setShowBulkImport(false);
+                await refresh();
+                showToast(`${count} contact${count !== 1 ? 's' : ''} imported`);
+              }}
+              onCancel={() => setShowBulkImport(false)}
+              isDark={isDark}
             />
           )}
         </AnimatePresence>

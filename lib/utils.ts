@@ -1,4 +1,4 @@
-import type { Contact, ActiveFilter, SortOrder, Job, Education } from './types';
+import type { Contact, ActiveFilter, SortOrder, Job, Education, PlannedInteraction } from './types';
 
 export const DEFAULT_TAGS = [
   'finance', 'tech', 'vc', 'startup', 'consulting', 'legal',
@@ -20,8 +20,29 @@ export function filterContacts(contacts: Contact[], filter: ActiveFilter): Conta
     result = result.filter((c) => c.classification === filter.classification);
   }
 
-  if (filter.tag) {
-    result = result.filter((c) => c.tags.includes(filter.tag!));
+  // Multi-tag AND filter
+  if (filter.tags.length > 0) {
+    result = result.filter((c) => filter.tags.every((t) => c.tags.includes(t)));
+  }
+
+  // Field-specific filters (from NetworkView taps)
+  if (filter.homeLocation) {
+    const loc = filter.homeLocation.toLowerCase();
+    result = result.filter((c) => c.homeLocation.trim().toLowerCase() === loc);
+  }
+  if (filter.university) {
+    const uni = filter.university.toLowerCase();
+    result = result.filter((c) => {
+      if (c.university.trim().toLowerCase() === uni) return true;
+      return (c.education || []).some((e) => e.university.trim().toLowerCase() === uni);
+    });
+  }
+  if (filter.company) {
+    const comp = filter.company.toLowerCase();
+    result = result.filter((c) => {
+      if (c.company.trim().toLowerCase() === comp) return true;
+      return (c.jobs || []).some((j) => j.company.trim().toLowerCase() === comp);
+    });
   }
 
   if (filter.search.trim()) {
@@ -150,6 +171,7 @@ export function createEmptyContact(): Omit<Contact, 'id' | 'dateAdded' | 'lastUp
     interactions: [],
     education: [],
     jobs: [],
+    plannedInteractions: [],
   };
 }
 
@@ -160,6 +182,50 @@ export function getDisplayJob(contact: Contact): { role: string; company: string
     return { role: current.role, company: current.company };
   }
   return { role: contact.role, company: contact.company };
+}
+
+/** Get contacts with planned interactions due today or overdue */
+export function getPlannedDue(contacts: Contact[]): { contact: Contact; planned: PlannedInteraction }[] {
+  const today = new Date().toISOString().slice(0, 10);
+  const results: { contact: Contact; planned: PlannedInteraction }[] = [];
+  for (const c of contacts) {
+    for (const p of (c.plannedInteractions || [])) {
+      if (!p.completed && p.date <= today) {
+        results.push({ contact: c, planned: p });
+      }
+    }
+  }
+  return results.sort((a, b) => a.planned.date.localeCompare(b.planned.date));
+}
+
+/** Get contacts with planned interactions coming up (for reminders) */
+export function getUpcomingPlanned(contacts: Contact[], daysAhead = 1): { contact: Contact; planned: PlannedInteraction }[] {
+  const today = new Date();
+  const ahead = new Date(today);
+  ahead.setDate(ahead.getDate() + daysAhead);
+  const aheadStr = ahead.toISOString().slice(0, 10);
+  const todayStr = today.toISOString().slice(0, 10);
+  const results: { contact: Contact; planned: PlannedInteraction }[] = [];
+  for (const c of contacts) {
+    for (const p of (c.plannedInteractions || [])) {
+      if (!p.completed && p.date > todayStr && p.date <= aheadStr) {
+        results.push({ contact: c, planned: p });
+      }
+    }
+  }
+  return results;
+}
+
+/** Check if there's any active filter beyond defaults */
+export function hasActiveFilters(filter: ActiveFilter): boolean {
+  return (
+    filter.classification !== 'all' ||
+    filter.tags.length > 0 ||
+    !!filter.search.trim() ||
+    !!filter.homeLocation ||
+    !!filter.university ||
+    !!filter.company
+  );
 }
 
 /** Get the display university from a contact, preferring the primary education entry */

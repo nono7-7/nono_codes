@@ -7,6 +7,7 @@ import {
   deleteDoc,
   enableIndexedDbPersistence,
 } from 'firebase/firestore';
+import type { PlannedInteraction } from './types';
 import { app } from './firebase';
 import type { Contact } from './types';
 import { getAllContacts, saveContact } from './db';
@@ -69,6 +70,48 @@ export function mergeContacts(local: Contact[], remote: Contact[]): Contact[] {
   }
 
   return Array.from(map.values());
+}
+
+/**
+ * Write a planned interaction to Firestore so the daily cron job can
+ * send email reminders 2 days before and on the day of the event.
+ * This is independent of cloud sync — it works even if cloudSyncEnabled is false.
+ */
+export async function savePlannedNotification(
+  uid: string,
+  userEmail: string,
+  contactName: string,
+  planned: PlannedInteraction,
+): Promise<void> {
+  const db = getDB();
+  const ref = doc(db, 'notifications', `${uid}_${planned.id}`);
+  await setDoc(ref, {
+    uid,
+    userEmail,
+    contactName,
+    plannedId: planned.id,
+    date: planned.date,
+    description: planned.description,
+    completed: planned.completed,
+    createdAt: new Date().toISOString(),
+  });
+}
+
+/** Sync the user's email notification preference to Firestore so the cron can read it */
+export async function syncEmailPreference(uid: string, enabled: boolean): Promise<void> {
+  const db = getDB();
+  const ref = doc(db, 'users', uid, 'settings', 'app');
+  await setDoc(ref, { emailNotificationsEnabled: enabled }, { merge: true });
+}
+
+/** Mark a planned notification as completed so no more emails are sent */
+export async function completePlannedNotification(
+  uid: string,
+  plannedId: string,
+): Promise<void> {
+  const db = getDB();
+  const ref = doc(db, 'notifications', `${uid}_${plannedId}`);
+  await setDoc(ref, { completed: true }, { merge: true });
 }
 
 export async function fullSync(uid: string): Promise<Contact[]> {

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Pencil, Trash2, MapPin, Phone, Mail, ExternalLink, Cake, Clock, GraduationCap, Briefcase, Star } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowLeft, Pencil, Trash2, MapPin, Phone, Mail, ExternalLink, Cake, Clock, GraduationCap, Briefcase, Star, CalendarClock, Plus, Check, X } from 'lucide-react';
+import { nanoid } from 'nanoid';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Contact } from '@/lib/types';
 import { buildHowMetSentence, capitalizeTag, getDisplayJob, getDisplayEducation } from '@/lib/utils';
 import InteractionLog from './InteractionLog';
@@ -15,6 +16,8 @@ export default function ContactDetail({
   onDelete,
   onLogInteraction,
   onDeleteInteraction,
+  onAddPlanned,
+  onCompletePlanned,
   isDark,
 }: {
   contact: Contact;
@@ -23,9 +26,14 @@ export default function ContactDetail({
   onDelete: () => void;
   onLogInteraction: (date: string, note: string) => void;
   onDeleteInteraction?: (interactionId: string) => void;
+  onAddPlanned?: (date: string, description: string) => void;
+  onCompletePlanned?: (plannedId: string) => void;
   isDark: boolean;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showPlanForm, setShowPlanForm] = useState(false);
+  const [planDate, setPlanDate] = useState('');
+  const [planDesc, setPlanDesc] = useState('');
 
   const howMet = buildHowMetSentence(contact);
   const hasContactInfo = contact.phone || contact.email || contact.linkedinUrl || contact.birthday;
@@ -267,6 +275,119 @@ export default function ContactDetail({
             isDark={isDark}
           />
         </div>
+
+        {/* Planned Interactions */}
+        {onAddPlanned && (
+          <div className={sectionClass}>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-[family-name:var(--font-outfit)] text-xs font-semibold text-muted uppercase tracking-wider">
+                Planned
+              </h3>
+              <button
+                onClick={() => setShowPlanForm(!showPlanForm)}
+                className="flex items-center gap-1 text-[11px] text-accent font-medium"
+              >
+                <Plus size={14} />
+                Plan
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {showPlanForm && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="overflow-hidden mb-3"
+                >
+                  <div className="space-y-2">
+                    <input
+                      type="date"
+                      value={planDate}
+                      onChange={(e) => setPlanDate(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-lg text-sm outline-none border ${
+                        isDark ? 'bg-dark-bg border-dark-border text-white' : 'bg-light-bg border-light-border text-dark-bg'
+                      }`}
+                    />
+                    <input
+                      type="text"
+                      value={planDesc}
+                      onChange={(e) => setPlanDesc(e.target.value)}
+                      placeholder="Coffee, call, dinner..."
+                      className={`w-full px-3 py-2 rounded-lg text-sm outline-none border ${
+                        isDark ? 'bg-dark-bg border-dark-border text-white placeholder:text-muted' : 'bg-light-bg border-light-border text-dark-bg placeholder:text-muted'
+                      }`}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (planDate && planDesc.trim()) {
+                            onAddPlanned(planDate, planDesc.trim());
+                            setPlanDate('');
+                            setPlanDesc('');
+                            setShowPlanForm(false);
+                          }
+                        }}
+                        disabled={!planDate || !planDesc.trim()}
+                        className={`flex-1 py-2 rounded-lg text-xs font-semibold font-[family-name:var(--font-outfit)] transition-transform ${
+                          planDate && planDesc.trim()
+                            ? 'bg-accent text-dark-bg active:scale-[0.98]'
+                            : 'bg-muted/20 text-muted cursor-not-allowed'
+                        }`}
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setShowPlanForm(false)}
+                        className={`px-4 py-2 rounded-lg text-xs font-medium ${isDark ? 'text-muted-light' : 'text-muted'}`}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {(contact.plannedInteractions || []).filter((p) => !p.completed).length === 0 && !showPlanForm ? (
+              <p className="text-sm text-muted italic">No upcoming plans.</p>
+            ) : (
+              <div className="space-y-2">
+                {[...(contact.plannedInteractions || [])]
+                  .filter((p) => !p.completed)
+                  .sort((a, b) => a.date.localeCompare(b.date))
+                  .map((p) => {
+                    const today = new Date().toISOString().slice(0, 10);
+                    const isToday = p.date === today;
+                    const isOverdue = p.date < today;
+                    return (
+                      <div key={p.id} className="flex items-start gap-2.5">
+                        <CalendarClock size={13} className={`mt-0.5 shrink-0 ${isToday ? 'text-blue-400' : isOverdue ? 'text-red-400' : 'text-muted'}`} />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-muted">
+                            {new Date(p.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            {isToday && <span className="text-blue-400 font-medium ml-1">Today</span>}
+                            {isOverdue && <span className="text-red-400 font-medium ml-1">Overdue</span>}
+                          </p>
+                          <p className="text-sm mt-0.5">{p.description}</p>
+                        </div>
+                        {onCompletePlanned && (
+                          <button
+                            onClick={() => onCompletePlanned(p.id)}
+                            className="w-6 h-6 flex items-center justify-center rounded-full bg-accent/15 text-accent shrink-0 active:scale-[0.9] transition-transform mt-0.5"
+                            title="Mark complete & log interaction"
+                          >
+                            <Check size={12} strokeWidth={3} />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Tags */}
         {contact.tags.length > 0 && (
