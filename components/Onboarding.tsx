@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlus, Search, Globe, Bell, QrCode, ArrowRight,
-  MessageCircle, CalendarClock, FileSpreadsheet, MapPin, Tag, Check, AtSign,
+  MessageCircle, CalendarClock, FileSpreadsheet, MapPin, Tag, Check, AtSign, Cloud, Smartphone, Monitor,
 } from 'lucide-react';
 
 // Example card/row classes that adapt to dark/light
@@ -266,13 +266,53 @@ const slides = [
     ),
   },
 
-  // ── 9. All Set ──────────────────────────────────────────────────
+  // ── 9. Cloud Sync ───────────────────────────────────────────────
+  {
+    icon: Cloud,
+    color: 'bg-accent/15',
+    title: 'Always In Sync',
+    description:
+      'Cloud sync is on by default. Your contacts and profile stay identical across every device you log into — phone, laptop, or tablet. Turn it off any time in Settings.',
+    example: (
+      <div className="mt-4 space-y-2.5 text-xs">
+        <div className={`${card} px-3 py-2.5 flex items-center gap-3`}>
+          <Smartphone size={14} className="text-accent shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium">iPhone</p>
+            <p className="text-muted text-[10px]">Add a contact → saved instantly</p>
+          </div>
+          <Cloud size={12} className="text-accent" />
+        </div>
+        <div className="flex items-center justify-center">
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="w-px h-3 bg-accent/30" />
+            <p className="text-[10px] text-accent font-medium">syncs automatically</p>
+            <div className="w-px h-3 bg-accent/30" />
+          </div>
+        </div>
+        <div className={`${card} px-3 py-2.5 flex items-center gap-3`}>
+          <Monitor size={14} className="text-accent shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium">Laptop</p>
+            <p className="text-muted text-[10px]">Log in → all contacts appear</p>
+          </div>
+          <Cloud size={12} className="text-accent" />
+        </div>
+        <div className={`${mutedCard} px-3 py-2 flex items-center gap-2`}>
+          <Check size={11} className="text-accent shrink-0" strokeWidth={3} />
+          <p className="text-muted text-[10px]">Contacts &amp; profile info sync · toggle off anytime in Settings</p>
+        </div>
+      </div>
+    ),
+  },
+
+  // ── 10. All Set ──────────────────────────────────────────────────
   {
     icon: ArrowRight,
     color: 'bg-accent/15',
     title: "You're All Set",
     description:
-      'Your data syncs across devices when cloud sync is on. Start building your network — it only takes seconds to add someone.',
+      'Start building your network — it only takes seconds to add someone.',
     example: (
       <div className="mt-6 space-y-2.5 text-xs text-left">
         {[
@@ -281,7 +321,7 @@ const slides = [
           'Plan future meetings with email reminders',
           'Import existing contacts from CSV / XLSX',
           'Share your card via QR code',
-          'Sync across devices with cloud sync',
+          'Everything synced across all your devices',
         ].map((tip) => (
           <div key={tip} className="flex items-start gap-2.5">
             <div className="w-4 h-4 rounded-full bg-accent/20 flex items-center justify-center shrink-0 mt-0.5">

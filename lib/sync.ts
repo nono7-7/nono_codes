@@ -3,10 +3,11 @@ import {
   collection,
   doc,
   getDocs,
+  getDoc,
   setDoc,
   deleteDoc,
 } from 'firebase/firestore';
-import type { PlannedInteraction } from './types';
+import type { PlannedInteraction, UserProfile } from './types';
 import { app } from './firebase';
 import type { Contact } from './types';
 import { getAllContacts, saveContact } from './db';
@@ -135,4 +136,29 @@ export async function forceUploadAll(uid: string, contacts: Contact[]): Promise<
   for (const contact of contacts) {
     await syncToCloud(uid, contact);
   }
+}
+
+/**
+ * Sync the user's profile to Firestore so it appears on all devices.
+ * photoUrl is excluded because base64 images can exceed Firestore's 1MB document limit.
+ * The photo stays device-local; everything else syncs.
+ */
+export async function syncProfileToCloud(uid: string, profile: UserProfile): Promise<void> {
+  const db = getDB();
+  const ref = doc(db, 'users', uid, 'settings', 'profile');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { photoUrl: _photo, ...profileWithoutPhoto } = profile;
+  await setDoc(ref, profileWithoutPhoto, { merge: true });
+}
+
+/**
+ * Pull the user's profile from Firestore.
+ * Returns null if no profile exists in the cloud yet.
+ */
+export async function pullProfileFromCloud(uid: string): Promise<Partial<UserProfile> | null> {
+  const db = getDB();
+  const ref = doc(db, 'users', uid, 'settings', 'profile');
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  return snap.data() as Partial<UserProfile>;
 }

@@ -20,7 +20,7 @@ import ReconnectBanner from '@/components/ReconnectBanner';
 import PlannedBanner from '@/components/PlannedBanner';
 import BulkImport from '@/components/BulkImport';
 import SyncIndicator, { type SyncStatus } from '@/components/SyncIndicator';
-import { fullSync, forceUploadAll, syncToCloud, deleteFromCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference } from '@/lib/sync';
+import { fullSync, forceUploadAll, syncToCloud, deleteFromCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud } from '@/lib/sync';
 import { decodeSharedContact } from '@/lib/share';
 import type { NetworkFilterAction } from '@/components/NetworkView';
 
@@ -135,9 +135,18 @@ export default function App() {
         if (settings.cloudSyncEnabled) {
           setSyncStatus('syncing');
           try {
-            const merged = await fullSync(user.uid);
+            const [merged, cloudProfile] = await Promise.all([
+              fullSync(user.uid),
+              pullProfileFromCloud(user.uid),
+            ]);
             if (!cancelled) {
               setContacts(merged);
+              // Merge cloud profile into local: cloud wins for all fields except photoUrl
+              if (cloudProfile) {
+                const mergedProfile = { ...profile, ...cloudProfile, photoUrl: profile.photoUrl };
+                setUserProfile(mergedProfile);
+                await saveUserProfile(mergedProfile);
+              }
               setSyncStatus('idle');
             }
           } catch (e) {
@@ -315,24 +324,38 @@ export default function App() {
     async (newProfile: UserProfile) => {
       setUserProfile(newProfile);
       await saveUserProfile(newProfile);
+      if (user && appSettings.cloudSyncEnabled) {
+        syncProfileToCloud(user.uid, newProfile).catch(() => {});
+      }
     },
-    []
+    [user, appSettings.cloudSyncEnabled]
   );
 
-  // Force-upload all local contacts to Firestore, then pull back (bidirectional sync)
+  // Force-upload all local contacts + profile to Firestore, then pull back (bidirectional sync)
   const handleForceSync = useCallback(async () => {
     if (!user) throw new Error('Not logged in');
     setSyncStatus('syncing');
     try {
-      await forceUploadAll(user.uid, contacts);
-      const merged = await fullSync(user.uid);
+      await Promise.all([
+        forceUploadAll(user.uid, contacts),
+        syncProfileToCloud(user.uid, userProfile),
+      ]);
+      const [merged, cloudProfile] = await Promise.all([
+        fullSync(user.uid),
+        pullProfileFromCloud(user.uid),
+      ]);
       setContacts(merged);
+      if (cloudProfile) {
+        const mergedProfile = { ...userProfile, ...cloudProfile, photoUrl: userProfile.photoUrl };
+        setUserProfile(mergedProfile);
+        await saveUserProfile(mergedProfile);
+      }
       setSyncStatus('idle');
     } catch (e) {
       setSyncStatus('error');
-      throw e; // re-throw so Settings can show the error state
+      throw e;
     }
-  }, [user, contacts]);
+  }, [user, contacts, userProfile]);
 
   const handleLogout = useCallback(async () => {
     await logoutUser();
