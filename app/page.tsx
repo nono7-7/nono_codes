@@ -532,13 +532,25 @@ export default function App() {
     [contacts, refresh, showToast]
   );
 
-  // Request notification permission on first load
+  // Request notification permission then immediately register FCM token
   useEffect(() => {
     if (appState !== 'app') return;
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-  }, [appState]);
+    if (!user) return;
+    if (!('Notification' in window)) return;
+    (async () => {
+      let permission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
+      if (permission === 'granted') {
+        const token = await getFCMToken();
+        if (token) {
+          setCurrentFCMToken(token);
+          storePushToken(user.uid, token).catch(() => {});
+        }
+      }
+    })();
+  }, [appState, user]);
 
   // Subscribe to FCM push notifications when logged in
   useEffect(() => {
