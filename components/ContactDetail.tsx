@@ -24,7 +24,7 @@ export default function ContactDetail({
   onBack: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onLogInteraction: (date: string, note: string) => void;
+  onLogInteraction: (date: string, note: string, type?: import('@/lib/types').InteractionType, duration?: string, initiator?: 'you' | 'them') => void;
   onDeleteInteraction?: (interactionId: string) => void;
   onAddPlanned?: (date: string, description: string) => void;
   onCompletePlanned?: (plannedId: string) => void;
@@ -270,7 +270,7 @@ export default function ContactDetail({
         <div className={sectionClass}>
           <InteractionLog
             interactions={contact.interactions}
-            onAdd={onLogInteraction}
+            onAdd={(date, note, type, duration, initiator) => onLogInteraction(date, note, type, duration, initiator)}
             onDelete={onDeleteInteraction}
             isDark={isDark}
           />

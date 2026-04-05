@@ -1,7 +1,12 @@
+export type InteractionType = 'coffee' | 'call' | 'event' | 'linkedin' | 'message' | 'other';
+
 export interface Interaction {
   id: string;
   date: string;       // YYYY-MM-DD
   note: string;
+  type?: InteractionType;
+  duration?: string;
+  initiator?: 'you' | 'them';
 }
 
 export interface PlannedInteraction {

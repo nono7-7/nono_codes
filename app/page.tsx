@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { nanoid } from 'nanoid';
-import type { Tab, Contact, ActiveFilter, SortOrder, AppSettings, UserProfile } from '@/lib/types';
+import type { Tab, Contact, ActiveFilter, SortOrder, AppSettings, UserProfile, InteractionType } from '@/lib/types';
 import { initDB, getAllContacts, getContact as dbGetContact, saveContact, deleteContact as dbDelete, getAppSettings, saveAppSettings, getUserProfile, saveUserProfile, setDBUser } from '@/lib/db';
 import { auth, onAuthStateChanged, logoutUser, type User } from '@/lib/firebase';
 import BottomNav from '@/components/BottomNav';
@@ -275,14 +275,14 @@ export default function App() {
   );
 
   const handleLogInteraction = useCallback(
-    async (contactId: string, date: string, note: string) => {
+    async (contactId: string, date: string, note: string, type?: InteractionType, duration?: string, initiator?: 'you' | 'them') => {
       const contact = contacts.find((c) => c.id === contactId);
       if (!contact) return;
       const updated: Contact = {
         ...contact,
         interactions: [
           ...contact.interactions,
-          { id: nanoid(), date, note },
+          { id: nanoid(), date, note, type, duration, initiator },
         ],
         lastContacted: date,
         lastUpdated: new Date().toISOString(),
@@ -719,7 +719,7 @@ export default function App() {
                   onBack={() => setScreen({ type: 'list' })}
                   onEdit={() => setScreen({ type: 'form', contact: screen.contact })}
                   onDelete={() => handleDelete(screen.contact.id)}
-                  onLogInteraction={(date, note) => handleLogInteraction(screen.contact.id, date, note)}
+                  onLogInteraction={(date, note, type, duration, initiator) => handleLogInteraction(screen.contact.id, date, note, type, duration, initiator)}
                   onDeleteInteraction={(interactionId) => handleDeleteInteraction(screen.contact.id, interactionId)}
                   onAddPlanned={(date, desc) => handleAddPlanned(screen.contact.id, date, desc)}
                   onCompletePlanned={(plannedId) => handleCompletePlanned(screen.contact.id, plannedId)}
