@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import {
   Download, Upload, Trash2, Moon, Sun, LogOut, Bell, Cloud,
-  Camera, QrCode, Plus, X, Star, Link2, Phone, Mail, MapPin, Cake, GraduationCap, Briefcase, FileSpreadsheet, AtSign, RefreshCw, CheckCircle, AlertCircle,
+  Camera, QrCode, Plus, X, Star, Link2, Phone, Mail, MapPin, Cake, GraduationCap, Briefcase, FileSpreadsheet, AtSign, RefreshCw, CheckCircle, AlertCircle, Share2, Copy,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { exportContacts, importContacts, clearAll } from '@/lib/db';
@@ -66,6 +66,7 @@ export default function Settings({
   onEnableNotifications?: () => Promise<boolean>;
 }) {
   const [clearStep, setClearStep] = useState(0);
+  const [inviteCopied, setInviteCopied] = useState(false);
   const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
   const [notifState, setNotifState] = useState<'idle' | 'requesting' | 'granted' | 'denied'>(() => {
     if (typeof window === 'undefined' || !('Notification' in window)) return 'denied';
@@ -427,6 +428,31 @@ export default function Settings({
             <span className="block">My QR Code</span>
             <span className="text-[11px] text-muted font-normal block mt-0.5">
               Let others scan to add you as a contact
+            </span>
+          </div>
+        </button>
+
+        {/* INVITE */}
+        <button
+          type="button"
+          onClick={async () => {
+            const url = 'https://nono-codes.vercel.app';
+            const text = 'I use InTouch to stay on top of my network — give it a try:';
+            if (navigator.share) {
+              await navigator.share({ title: 'InTouch', text, url }).catch(() => {});
+            } else {
+              await navigator.clipboard.writeText(`${text} ${url}`).catch(() => {});
+              setInviteCopied(true);
+              setTimeout(() => setInviteCopied(false), 2500);
+            }
+          }}
+          className={`${btnCls} !text-accent mb-6`}
+        >
+          {inviteCopied ? <Copy size={18} className="text-accent" /> : <Share2 size={18} className="text-accent" />}
+          <div>
+            <span className="block">{inviteCopied ? 'Link copied!' : 'Invite a Friend'}</span>
+            <span className="text-[11px] text-muted font-normal block mt-0.5">
+              Share InTouch with someone in your network
             </span>
           </div>
         </button>
