@@ -157,7 +157,10 @@ export default function AuthScreen({ isDark }: { isDark: boolean }) {
 
             {/* Reset sent */}
             {resetSent && (
-              <p className="text-accent text-xs px-1">Reset link sent! Check your email.</p>
+              <div className="px-1 space-y-1">
+                <p className="text-accent text-xs">Reset link sent! Click the link in the email to reset your password.</p>
+                <p className="text-muted text-xs">Can't find it? Check your spam or junk folder.</p>
+              </div>
             )}
 
             {/* Submit */}
