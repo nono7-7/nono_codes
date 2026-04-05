@@ -100,7 +100,7 @@ const slides = [
     color: 'bg-blue-500/15',
     title: 'Plan & Get Reminded',
     description:
-      'Schedule a future interaction with a date. InTouch sends you a push notification 2 days before and on the day — then prompts you to log how it went. Notification reminders are on by default and can be changed in Settings.',
+      'Schedule a future interaction with a date. InTouch sends you a push notification 2 days before and on the day — then prompts you to log how it went. Tap the calendar icon to add it to your iOS or Google Calendar instantly.',
     example: (
       <div className="mt-4 space-y-2 text-xs">
         <div className={`${blueCard} px-3 py-2.5 flex items-start gap-2.5`}>
@@ -122,7 +122,7 @@ const slides = [
         </div>
         <div className={`${mutedCard} px-3 py-2 flex items-center gap-2`}>
           <Bell size={11} className="text-muted shrink-0" />
-          <p className="text-muted text-[10px]">Push reminders 2 days before &amp; day of &middot; toggle in Settings</p>
+          <p className="text-muted text-[10px]">Push reminders 2 days before &amp; day of &middot; tap 🗓 to add to your calendar</p>
         </div>
       </div>
     ),
@@ -328,7 +328,7 @@ const slides = [
         {[
           'Add contacts as you meet people',
           'Log interactions to track relationships',
-          'Plan future meetings with push notification reminders',
+          'Plan meetings — push reminders + one-tap calendar export',
           'Import existing contacts from CSV / XLSX',
           'Share your card via QR code',
           'Everything synced across all your devices',

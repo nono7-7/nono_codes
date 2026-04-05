@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Search, Plus, MapPin, Mail, Phone, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Contact, ActiveFilter, SortOrder } from '@/lib/types';
@@ -32,20 +32,9 @@ export default function ContactList({
   syncStatus?: SyncStatus;
   isDark: boolean;
 }) {
-  const [letterFilter, setLetterFilter] = useState<string | null>(null);
-
   const topTags = useMemo(() => getTopTags(contacts), [contacts]);
   const filtered = useMemo(() => sortContacts(filterContacts(contacts, filter), sortOrder), [contacts, filter, sortOrder]);
-
-  const displayed = useMemo(() => {
-    if (!letterFilter) return filtered;
-    return filtered.filter((c) => c.name.trim().toUpperCase().startsWith(letterFilter));
-  }, [filtered, letterFilter]);
-
-  const availableLetters = useMemo(() => {
-    const letters = new Set(filtered.map((c) => c.name.trim().toUpperCase()[0]).filter(Boolean));
-    return [...letters].sort();
-  }, [filtered]);
+  const displayed = filtered;
 
   const hasAnyFilter = hasActiveFilters(filter);
 
@@ -106,51 +95,22 @@ export default function ContactList({
       <div className="mb-4">
         <FilterChips
           filter={filter}
-          onFilterChange={(f) => { onFilterChange(f); setLetterFilter(null); }}
+          onFilterChange={onFilterChange}
           topTags={topTags}
           isDark={isDark}
         />
       </div>
 
-      {/* A–Z letter filter — shown when sort is A–Z */}
-      {sortOrder === 'name' && availableLetters.length > 1 && (
-        <div className="flex gap-1.5 overflow-x-auto hide-scrollbar pb-1 mb-3">
-          <button
-            onClick={() => setLetterFilter(null)}
-            className={`shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold font-[family-name:var(--font-outfit)] transition-colors ${
-              !letterFilter
-                ? 'bg-accent text-dark-bg'
-                : isDark ? 'bg-dark-card text-muted-light' : 'bg-light-border text-muted'
-            }`}
-          >
-            All
-          </button>
-          {availableLetters.map((letter) => (
-            <button
-              key={letter}
-              onClick={() => setLetterFilter(letterFilter === letter ? null : letter)}
-              className={`shrink-0 w-8 py-1 rounded-lg text-xs font-semibold font-[family-name:var(--font-outfit)] transition-colors ${
-                letterFilter === letter
-                  ? 'bg-accent text-dark-bg'
-                  : isDark ? 'bg-dark-card text-muted-light' : 'bg-light-border text-muted'
-              }`}
-            >
-              {letter}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Count + Sort */}
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs text-muted font-[family-name:var(--font-outfit)]">
-          {hasAnyFilter || letterFilter
+          {hasAnyFilter
             ? `${displayed.length} result${displayed.length !== 1 ? 's' : ''}`
             : `${contacts.length} connection${contacts.length !== 1 ? 's' : ''}`}
         </p>
         <SortSelector
           value={sortOrder}
-          onChange={(s) => { onSortChange(s); setLetterFilter(null); }}
+          onChange={onSortChange}
           isDark={isDark}
         />
       </div>
@@ -166,7 +126,7 @@ export default function ContactList({
               isDark
                 ? 'bg-dark-card border-dark-border hover:border-muted/30'
                 : 'bg-light-card border-light-border hover:border-muted/30'
-            } ${contact.classification === 'inner' ? 'border-l-[3px] border-l-accent' : ''}`}
+            } ${contact.classification === 'inner' ? 'border-l-2 border-l-accent/50' : ''}`}
           >
             <div className="flex items-start gap-3">
               <Avatar name={contact.name} photoUrl={contact.photoUrl} size="sm" />

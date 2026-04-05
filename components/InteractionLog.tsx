@@ -237,9 +237,13 @@ export default function InteractionLog({
                     </span>
                   )}
                 </div>
-                {interaction.note && (
-                  <p className="text-sm mt-0.5">{interaction.note}</p>
-                )}
+                {(() => {
+                  const label = interaction.type ? TYPES.find((t) => t.value === interaction.type)?.label : null;
+                  const text = label
+                    ? interaction.note ? `${label} — ${interaction.note}` : label
+                    : interaction.note;
+                  return text ? <p className="text-sm mt-0.5">{text}</p> : null;
+                })()}
               </div>
               {onDelete && (
                 <button
