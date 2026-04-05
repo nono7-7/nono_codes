@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   // Set VAPID details here (inside handler) so env vars are available at runtime
   webpush.setVapidDetails(
     'mailto:noreply@intouch.app',
-    process.env.VAPID_PUBLIC_KEY!,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
     process.env.VAPID_PRIVATE_KEY!
   );
 
