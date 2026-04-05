@@ -447,23 +447,28 @@ export default function Onboarding({
                 {!isInstalled && (
                   <div>
                     {isIOS ? (
-                      <div className={`${mutedCard} px-3 py-3 text-xs space-y-2`}>
+                      <div className={`${mutedCard} px-3 py-3 text-xs space-y-2.5`}>
                         <p className="font-bold text-sm text-accent flex items-center gap-2">
                           <Download size={14} />
                           Recommended: Add to Home Screen
                         </p>
-                        <p><strong>Step 1 —</strong> In Safari, tap the <strong>Share</strong> button (box with arrow) → tap <strong>Add to Home Screen</strong> → tap <strong>Add</strong>.</p>
-                        <p><strong>Step 2 —</strong> Open the app from your home screen, go to <strong>Settings → Enable push notifications</strong> and tap to allow.</p>
-                        <p className="text-muted">Push notifications only work when InTouch is installed on your home screen.</p>
+                        <p className="text-muted">This allows InTouch to send you push notifications for planned interactions, even when the app is closed.</p>
+                        <div className="space-y-1.5">
+                          <p><strong>Step 1 — In this browser:</strong> Tap the <strong>Share</strong> button (box with arrow at the bottom) → <strong>Add to Home Screen</strong> → <strong>Add</strong>.</p>
+                          <p><strong>Step 2 — In the app:</strong> Open InTouch from your home screen → go to <strong>Settings</strong> → tap <strong>Enable push notifications</strong>.</p>
+                        </div>
                       </div>
                     ) : installPrompt ? (
-                      <div className={`${mutedCard} px-3 py-3 text-xs space-y-2`}>
+                      <div className={`${mutedCard} px-3 py-3 text-xs space-y-2.5`}>
                         <p className="font-bold text-sm text-accent flex items-center gap-2">
                           <Download size={14} />
                           Recommended: Add to Home Screen
                         </p>
-                        <p><strong>Step 1 —</strong> Tap the button below to install InTouch on your home screen.</p>
-                        <p><strong>Step 2 —</strong> Open from your home screen, go to <strong>Settings → Enable push notifications</strong>.</p>
+                        <p className="text-muted">This allows InTouch to send you push notifications for planned interactions, even when the app is closed.</p>
+                        <div className="space-y-1.5">
+                          <p><strong>Step 1 — In this browser:</strong> Tap the button below to install InTouch on your home screen.</p>
+                          <p><strong>Step 2 — In the app:</strong> Open InTouch from your home screen → go to <strong>Settings</strong> → tap <strong>Enable push notifications</strong>.</p>
+                        </div>
                         <button
                           type="button"
                           onClick={async () => {
