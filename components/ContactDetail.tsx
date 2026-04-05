@@ -1,7 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Pencil, Trash2, MapPin, Phone, Mail, ExternalLink, Cake, Clock, GraduationCap, Briefcase, Star, CalendarClock, Plus, Check, X } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, MapPin, Phone, Mail, ExternalLink, Cake, Clock, GraduationCap, Briefcase, Star, CalendarClock, Plus, Check, X, CalendarPlus } from 'lucide-react';
+
+function downloadICS(contactName: string, description: string, date: string) {
+  const dt = date.replace(/-/g, '');
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//InTouch//EN',
+    'BEGIN:VEVENT',
+    `UID:${Date.now()}@intouch`,
+    `DTSTART;VALUE=DATE:${dt}`,
+    `DTEND;VALUE=DATE:${dt}`,
+    `SUMMARY:${description} — ${contactName}`,
+    'DESCRIPTION:Planned interaction from InTouch',
+    'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+  a.download = `${contactName.replace(/\s+/g, '-')}-${date}.ics`;
+  a.click();
+}
 import { nanoid } from 'nanoid';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Contact } from '@/lib/types';
@@ -372,15 +390,24 @@ export default function ContactDetail({
                           </p>
                           <p className="text-sm mt-0.5">{p.description}</p>
                         </div>
-                        {onCompletePlanned && (
+                        <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
                           <button
-                            onClick={() => onCompletePlanned(p.id)}
-                            className="w-6 h-6 flex items-center justify-center rounded-full bg-accent/15 text-accent shrink-0 active:scale-[0.9] transition-transform mt-0.5"
-                            title="Mark complete & log interaction"
+                            onClick={() => downloadICS(contact.name, p.description, p.date)}
+                            className="w-6 h-6 flex items-center justify-center rounded-full text-muted hover:text-accent transition-colors"
+                            title="Add to calendar"
                           >
-                            <Check size={12} strokeWidth={3} />
+                            <CalendarPlus size={13} />
                           </button>
-                        )}
+                          {onCompletePlanned && (
+                            <button
+                              onClick={() => onCompletePlanned(p.id)}
+                              className="w-6 h-6 flex items-center justify-center rounded-full bg-accent/15 text-accent active:scale-[0.9] transition-transform"
+                              title="Mark complete & log interaction"
+                            >
+                              <Check size={12} strokeWidth={3} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}

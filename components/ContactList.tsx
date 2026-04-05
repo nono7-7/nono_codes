@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Search, Plus, MapPin, Mail, Phone, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Contact, ActiveFilter, SortOrder } from '@/lib/types';
@@ -32,8 +32,20 @@ export default function ContactList({
   syncStatus?: SyncStatus;
   isDark: boolean;
 }) {
+  const [letterFilter, setLetterFilter] = useState<string | null>(null);
+
   const topTags = useMemo(() => getTopTags(contacts), [contacts]);
   const filtered = useMemo(() => sortContacts(filterContacts(contacts, filter), sortOrder), [contacts, filter, sortOrder]);
+
+  const displayed = useMemo(() => {
+    if (!letterFilter) return filtered;
+    return filtered.filter((c) => c.name.trim().toUpperCase().startsWith(letterFilter));
+  }, [filtered, letterFilter]);
+
+  const availableLetters = useMemo(() => {
+    const letters = new Set(filtered.map((c) => c.name.trim().toUpperCase()[0]).filter(Boolean));
+    return [...letters].sort();
+  }, [filtered]);
 
   const hasAnyFilter = hasActiveFilters(filter);
 
@@ -76,10 +88,7 @@ export default function ContactList({
 
       {/* Search */}
       <div className="relative mb-3">
-        <Search
-          size={16}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
-        />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
         <input
           type="text"
           value={filter.search}
@@ -97,25 +106,58 @@ export default function ContactList({
       <div className="mb-4">
         <FilterChips
           filter={filter}
-          onFilterChange={onFilterChange}
+          onFilterChange={(f) => { onFilterChange(f); setLetterFilter(null); }}
           topTags={topTags}
           isDark={isDark}
         />
       </div>
 
+      {/* A–Z letter filter — shown when sort is A–Z */}
+      {sortOrder === 'name' && availableLetters.length > 1 && (
+        <div className="flex gap-1.5 overflow-x-auto hide-scrollbar pb-1 mb-3">
+          <button
+            onClick={() => setLetterFilter(null)}
+            className={`shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold font-[family-name:var(--font-outfit)] transition-colors ${
+              !letterFilter
+                ? 'bg-accent text-dark-bg'
+                : isDark ? 'bg-dark-card text-muted-light' : 'bg-light-border text-muted'
+            }`}
+          >
+            All
+          </button>
+          {availableLetters.map((letter) => (
+            <button
+              key={letter}
+              onClick={() => setLetterFilter(letterFilter === letter ? null : letter)}
+              className={`shrink-0 w-8 py-1 rounded-lg text-xs font-semibold font-[family-name:var(--font-outfit)] transition-colors ${
+                letterFilter === letter
+                  ? 'bg-accent text-dark-bg'
+                  : isDark ? 'bg-dark-card text-muted-light' : 'bg-light-border text-muted'
+              }`}
+            >
+              {letter}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Count + Sort */}
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs text-muted font-[family-name:var(--font-outfit)]">
-          {hasAnyFilter
-            ? `${filtered.length} result${filtered.length !== 1 ? 's' : ''}`
+          {hasAnyFilter || letterFilter
+            ? `${displayed.length} result${displayed.length !== 1 ? 's' : ''}`
             : `${contacts.length} connection${contacts.length !== 1 ? 's' : ''}`}
         </p>
-        <SortSelector value={sortOrder} onChange={onSortChange} isDark={isDark} />
+        <SortSelector
+          value={sortOrder}
+          onChange={(s) => { onSortChange(s); setLetterFilter(null); }}
+          isDark={isDark}
+        />
       </div>
 
       {/* Cards */}
       <div className="space-y-2">
-        {filtered.map((contact) => (
+        {displayed.map((contact) => (
           <motion.button
             key={contact.id}
             onClick={() => onSelect(contact)}
@@ -124,7 +166,7 @@ export default function ContactList({
               isDark
                 ? 'bg-dark-card border-dark-border hover:border-muted/30'
                 : 'bg-light-card border-light-border hover:border-muted/30'
-            }`}
+            } ${contact.classification === 'inner' ? 'border-l-[3px] border-l-accent' : ''}`}
           >
             <div className="flex items-start gap-3">
               <Avatar name={contact.name} photoUrl={contact.photoUrl} size="sm" />
@@ -153,31 +195,17 @@ export default function ContactList({
                 {(contact.email || contact.phone) && (
                   <div className="flex items-center gap-2 mt-1.5">
                     {contact.email && (
-                      <a
-                        href={`mailto:${contact.email}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-muted hover:text-accent transition-colors"
-                      >
+                      <a href={`mailto:${contact.email}`} onClick={(e) => e.stopPropagation()} className="text-muted hover:text-accent transition-colors">
                         <Mail size={13} />
                       </a>
                     )}
                     {contact.phone && (
-                      <a
-                        href={`tel:${contact.phone}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-muted hover:text-accent transition-colors"
-                      >
+                      <a href={`tel:${contact.phone}`} onClick={(e) => e.stopPropagation()} className="text-muted hover:text-accent transition-colors">
                         <Phone size={13} />
                       </a>
                     )}
                     {contact.phone && (
-                      <a
-                        href={`https://wa.me/${contact.phone.replace(/\D/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-muted hover:text-accent transition-colors"
-                      >
+                      <a href={`https://wa.me/${contact.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-muted hover:text-accent transition-colors">
                         <MessageCircle size={13} />
                       </a>
                     )}
@@ -216,7 +244,7 @@ export default function ContactList({
         ))}
       </div>
 
-      {filtered.length === 0 && hasAnyFilter && (
+      {displayed.length === 0 && (
         <p className="text-center text-muted text-sm py-12">No contacts match your filters.</p>
       )}
     </div>

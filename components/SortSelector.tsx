@@ -5,7 +5,7 @@ import { ArrowUpDown } from 'lucide-react';
 import type { SortOrder } from '@/lib/types';
 
 const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
-  { value: 'name', label: 'Name' },
+  { value: 'name', label: 'A–Z' },
   { value: 'dateAdded', label: 'Date Added' },
   { value: 'company', label: 'Company' },
   { value: 'lastContacted', label: 'Last Contacted' },
