@@ -443,63 +443,58 @@ export default function Onboarding({
                     : 'Enable notifications'}
                 </button>
 
-                {/* Install to home screen */}
-                {!isInstalled && (
-                  <div>
-                    {isIOS ? (
-                      <div className={`${mutedCard} px-3 py-3 text-xs space-y-2.5`}>
-                        <p className="font-bold text-sm text-accent flex items-center gap-2">
-                          <Download size={14} />
-                          Recommended: Add to Home Screen
-                        </p>
-                        <p className="text-muted">This allows InTouch to send you push notifications for planned interactions, even when the app is closed.</p>
-                        <div className="space-y-1.5">
+                {/* Install to home screen — always shown, style changes if already installed */}
+                <div className={`${isInstalled ? greenCard : mutedCard} px-3 py-3 text-xs space-y-2.5`}>
+                  <p className={`font-bold text-sm flex items-center gap-2 ${isInstalled ? 'text-green-500' : 'text-accent'}`}>
+                    {isInstalled ? <CheckCircle2 size={14} /> : <Download size={14} />}
+                    {isInstalled ? 'Added to Home Screen ✓' : 'Recommended: Add to Home Screen'}
+                  </p>
+                  <p className="text-muted">This allows InTouch to send you push notifications for planned interactions, even when the app is closed.</p>
+                  {!isInstalled && (
+                    <div className="space-y-1.5">
+                      {isIOS ? (
+                        <>
                           <p><strong>Step 1 — In this browser:</strong> Tap the <strong>Share</strong> button (box with arrow at the bottom) → <strong>Add to Home Screen</strong> → <strong>Add</strong>.</p>
                           <p><strong>Step 2 — In the app:</strong> Open InTouch from your home screen → go to <strong>Settings</strong> → tap <strong>Enable push notifications</strong>.</p>
-                        </div>
-                      </div>
-                    ) : installPrompt ? (
-                      <div className={`${mutedCard} px-3 py-3 text-xs space-y-2.5`}>
-                        <p className="font-bold text-sm text-accent flex items-center gap-2">
-                          <Download size={14} />
-                          Recommended: Add to Home Screen
-                        </p>
-                        <p className="text-muted">This allows InTouch to send you push notifications for planned interactions, even when the app is closed.</p>
-                        <div className="space-y-1.5">
+                        </>
+                      ) : installPrompt ? (
+                        <>
                           <p><strong>Step 1 — In this browser:</strong> Tap the button below to install InTouch on your home screen.</p>
                           <p><strong>Step 2 — In the app:</strong> Open InTouch from your home screen → go to <strong>Settings</strong> → tap <strong>Enable push notifications</strong>.</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            if (!installPrompt) return;
-                            await installPrompt.prompt();
-                            const { outcome } = await installPrompt.userChoice;
-                            if (outcome === 'accepted') {
-                              setInstallDone(true);
-                              onInstall?.();
-                            }
-                          }}
-                          disabled={installDone}
-                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                            installDone
-                              ? 'bg-green-500/15 border border-green-500/30 text-green-500'
-                              : 'bg-accent/15 border border-accent/30 text-accent active:scale-[0.98]'
-                          }`}
-                        >
-                          {installDone ? <CheckCircle2 size={18} /> : <Download size={18} />}
-                          {installDone ? 'Added to home screen' : 'Add to home screen'}
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
-                )}
-                {isInstalled && (
-                  <div className={`${greenCard} px-3 py-2.5 flex items-center gap-2 text-xs`}>
-                    <CheckCircle2 size={14} className="text-green-500 shrink-0" />
-                    <span className="text-green-500 font-medium">Installed on home screen ✓ — enable notifications above</span>
-                  </div>
-                )}
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!installPrompt) return;
+                              await installPrompt.prompt();
+                              const { outcome } = await installPrompt.userChoice;
+                              if (outcome === 'accepted') {
+                                setInstallDone(true);
+                                onInstall?.();
+                              }
+                            }}
+                            disabled={installDone}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                              installDone
+                                ? 'bg-green-500/15 border border-green-500/30 text-green-500'
+                                : 'bg-accent/15 border border-accent/30 text-accent active:scale-[0.98]'
+                            }`}
+                          >
+                            {installDone ? <CheckCircle2 size={18} /> : <Download size={18} />}
+                            {installDone ? 'Added to home screen' : 'Add to home screen'}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <p><strong>Step 1 — In this browser:</strong> Use your browser menu to add InTouch to your home screen.</p>
+                          <p><strong>Step 2 — In the app:</strong> Open InTouch from your home screen → go to <strong>Settings</strong> → tap <strong>Enable push notifications</strong>.</p>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {isInstalled && (
+                    <p className="text-green-500 font-medium">Now go to <strong>Settings → Enable push notifications</strong> to activate reminders.</p>
+                  )}
+                </div>
 
                 <p className="text-[10px] text-muted text-center">You can change notification settings anytime in Settings</p>
               </div>
