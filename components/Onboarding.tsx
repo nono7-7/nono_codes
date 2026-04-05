@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlus, Search, Globe, Bell, QrCode, ArrowRight,
-  MessageCircle, CalendarClock, FileSpreadsheet, MapPin, Tag, Check, AtSign, Cloud, Smartphone, Monitor, Download, CheckCircle2,
+  MessageCircle, CalendarClock, FileSpreadsheet, MapPin, Tag, Check, Cloud, Smartphone, Monitor, Download, CheckCircle2,
 } from 'lucide-react';
 
 // Example card/row classes that adapt to dark/light
@@ -100,7 +100,7 @@ const slides = [
     color: 'bg-blue-500/15',
     title: 'Plan & Get Reminded',
     description:
-      'Schedule a future interaction with a date. InTouch sends you an email reminder 2 days before and on the day — then prompts you to log how it went. Email reminders are on by default and can be changed in Settings.',
+      'Schedule a future interaction with a date. InTouch sends you a push notification 2 days before and on the day — then prompts you to log how it went. Notification reminders are on by default and can be changed in Settings.',
     example: (
       <div className="mt-4 space-y-2 text-xs">
         <div className={`${blueCard} px-3 py-2.5 flex items-start gap-2.5`}>
@@ -121,8 +121,8 @@ const slides = [
           </div>
         </div>
         <div className={`${mutedCard} px-3 py-2 flex items-center gap-2`}>
-          <AtSign size={11} className="text-muted shrink-0" />
-          <p className="text-muted text-[10px]">Email reminders 2 days before &amp; day of &middot; toggle in Settings</p>
+          <Bell size={11} className="text-muted shrink-0" />
+          <p className="text-muted text-[10px]">Push reminders 2 days before &amp; day of &middot; toggle in Settings</p>
         </div>
       </div>
     ),
@@ -272,7 +272,7 @@ const slides = [
     color: 'bg-amber-500/15',
     title: 'Get Notified. Stay Ready.',
     description:
-      'Enable notifications to get reminders for planned interactions — even when the app is closed. For the best experience, add InTouch to your home screen.',
+      'Enable push notifications to get reminders for planned interactions — even when the app is closed. Must be installed on your home screen for full support on iOS.',
     example: null, // rendered dynamically in the component
   },
 
@@ -328,7 +328,7 @@ const slides = [
         {[
           'Add contacts as you meet people',
           'Log interactions to track relationships',
-          'Plan future meetings with email reminders',
+          'Plan future meetings with push notification reminders',
           'Import existing contacts from CSV / XLSX',
           'Share your card via QR code',
           'Everything synced across all your devices',

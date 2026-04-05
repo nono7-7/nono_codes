@@ -498,9 +498,9 @@ export default function Settings({
             >
               <AtSign size={18} className="text-muted" />
               <div className="flex-1">
-                <span className="block">Email reminders</span>
+                <span className="block">Notification reminders</span>
                 <span className="text-[11px] text-muted font-normal block mt-0.5">
-                  Get emailed 2 days before &amp; day of planned interactions
+                  Get notified 2 days before &amp; day of planned interactions
                 </span>
               </div>
               <div className={`w-10 h-6 rounded-full relative transition-colors ${appSettings.emailNotificationsEnabled ? 'bg-accent' : isDark ? 'bg-dark-border' : 'bg-light-border'}`}>
