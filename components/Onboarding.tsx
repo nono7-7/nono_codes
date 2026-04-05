@@ -375,8 +375,8 @@ export default function Onboarding({
       window.matchMedia('(display-mode: standalone)').matches ||
       (navigator as { standalone?: boolean }).standalone === true
     );
-    if (Notification.permission === 'granted') setNotifState('granted');
-    if (Notification.permission === 'denied') setNotifState('denied');
+    if ('Notification' in window && Notification.permission === 'granted') setNotifState('granted');
+    if ('Notification' in window && Notification.permission === 'denied') setNotifState('denied');
   }, []);
 
   const isLast = step === slides.length - 1;
