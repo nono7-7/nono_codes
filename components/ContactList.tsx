@@ -138,7 +138,7 @@ export default function ContactList({
                   const dj = getDisplayJob(contact);
                   return (dj.role || dj.company) ? (
                     <p className="text-xs text-muted mt-0.5 truncate">
-                      {dj.role}{dj.role && dj.company && ' @ '}{dj.company}
+                      {dj.company}{dj.company && dj.role && ' | '}{dj.role}
                     </p>
                   ) : null;
                 })()}
