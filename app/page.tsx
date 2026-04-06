@@ -142,6 +142,8 @@ export default function App() {
         if (cancelled) return;
         setAppSettings(settings);
         setUserProfile(profile);
+        // Show IndexedDB contacts immediately so the UI is never blank while sync runs
+        setContacts(all);
 
         // Cloud sync: pull from Firestore and merge with local data.
         // This runs after settings are loaded so we can check the real cloudSyncEnabled value.
@@ -187,6 +189,37 @@ export default function App() {
     }
 
     return () => { cancelled = true; };
+  }, [appState, user]);
+
+  // Re-sync when iOS PWA comes back to the foreground (visibility change)
+  // This handles the case where Firebase auth token was refreshed in the background
+  // and the contacts/sync state is stale.
+  useEffect(() => {
+    if (appState !== 'app' || !user) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const handleVisibilityChange = async () => {
+      if (document.hidden) return;
+      // Small delay to let Firebase finish re-authenticating after iOS resume
+      timer = setTimeout(async () => {
+        try {
+          const settings = await getAppSettings();
+          if (!settings.cloudSyncEnabled) return;
+          setSyncStatus('syncing');
+          const merged = await fullSync(user.uid);
+          setContacts(merged);
+          setSyncStatus('idle');
+        } catch {
+          setSyncStatus('error');
+        }
+      }, 1500);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (timer) clearTimeout(timer);
+    };
   }, [appState, user]);
 
   // Handle ?import= URL param for shared contacts

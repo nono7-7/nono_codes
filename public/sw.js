@@ -1,4 +1,4 @@
-const CACHE_NAME = 'intouch-v1';
+const CACHE_NAME = 'intouch-v2';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
@@ -24,6 +24,16 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+
+  // Only cache same-origin requests — never cache Firebase, Firestore, Google APIs,
+  // or any other cross-origin request. Caching those breaks auth token refresh and
+  // causes stale Firestore data to be served in place of live cloud data.
+  if (url.origin !== self.location.origin) return;
+
+  // Don't cache Next.js API routes — they must always hit the network.
+  if (url.pathname.startsWith('/api/')) return;
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
