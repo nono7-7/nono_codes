@@ -236,7 +236,7 @@ export default function App() {
     if (shared) {
       const prefilled = {
         ...shared,
-        id: '',
+        id: nanoid(),
         classification: 'wider' as const,
         howMet: '', whereMet: '', eventOrContext: '', dateMet: '',
         nationality: '', notes: '', birthday: '',

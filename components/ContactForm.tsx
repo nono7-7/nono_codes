@@ -74,7 +74,7 @@ export default function ContactForm({
     const now = new Date().toISOString();
     const saved: Contact = {
       ...form,
-      id: contact?.id ?? nanoid(),
+      id: contact?.id || nanoid(),
       dateAdded: contact?.dateAdded ?? now,
       lastUpdated: now,
     };
