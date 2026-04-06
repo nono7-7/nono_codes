@@ -303,7 +303,7 @@ export default function App() {
         const tombstone = { ...contact, deleted: true as const, lastUpdated: new Date().toISOString() };
         await saveContact(tombstone);
         if (appSettings.cloudSyncEnabled && user) {
-          syncToCloud(user.uid, tombstone).catch((e) => {
+          await syncToCloud(user.uid, tombstone).catch((e) => {
             console.error('Cloud delete error:', e);
           });
         }
@@ -331,6 +331,9 @@ export default function App() {
         lastUpdated: new Date().toISOString(),
       };
       await saveContact(updated);
+      if (appSettings.cloudSyncEnabled && user) {
+        syncToCloud(user.uid, updated).catch((e) => console.error('Cloud sync error:', e));
+      }
       await refresh();
       // Update detail view if we're looking at this contact
       setScreen((prev) =>
@@ -339,7 +342,7 @@ export default function App() {
           : prev
       );
     },
-    [contacts, refresh]
+    [contacts, refresh, appSettings.cloudSyncEnabled, user]
   );
 
   const handleDeleteInteraction = useCallback(
@@ -352,6 +355,9 @@ export default function App() {
         lastUpdated: new Date().toISOString(),
       };
       await saveContact(updated);
+      if (appSettings.cloudSyncEnabled && user) {
+        syncToCloud(user.uid, updated).catch((e) => console.error('Cloud sync error:', e));
+      }
       await refresh();
       setScreen((prev) =>
         prev.type === 'detail' && prev.contact.id === contactId
@@ -359,7 +365,7 @@ export default function App() {
           : prev
       );
     },
-    [contacts, refresh]
+    [contacts, refresh, appSettings.cloudSyncEnabled, user]
   );
 
   const handleMarkContacted = useCallback(
