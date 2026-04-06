@@ -274,10 +274,17 @@ export default function App() {
     async (contact: Contact) => {
       await saveContact(contact);
       if (appSettings.cloudSyncEnabled && user) {
-        syncToCloud(user.uid, contact).catch((e) => {
+        // Await the cloud write so the contact is guaranteed in Firestore before
+        // the user closes the browser — critical when adding via shared QR link in
+        // Safari so the PWA can pull the contact down on next sync.
+        setSyncStatus('syncing');
+        try {
+          await syncToCloud(user.uid, contact);
+          setSyncStatus('idle');
+        } catch (e) {
           console.error('Cloud sync error:', e);
           setSyncStatus('error');
-        });
+        }
       }
       await refresh();
       setScreen({ type: 'list' });
