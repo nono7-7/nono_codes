@@ -228,12 +228,12 @@ export default function NetworkView({
   );
 
   const byCompany = useMemo(
-    () => buildBreakdown(contacts, (c) => [c.company]),
+    () => buildBreakdown(contacts, (c) => [c.company, ...(c.jobs || []).map((j) => j.company)]),
     [contacts]
   );
 
   const byUniversity = useMemo(
-    () => buildBreakdown(contacts, (c) => [c.university]),
+    () => buildBreakdown(contacts, (c) => [c.university, ...(c.education || []).map((e) => e.university)]),
     [contacts]
   );
 
@@ -253,7 +253,7 @@ export default function NetworkView({
   );
 
   const byRole = useMemo(
-    () => buildBreakdown(contacts, (c) => [c.role]),
+    () => buildBreakdown(contacts, (c) => [c.role, ...(c.jobs || []).map((j) => j.role)]),
     [contacts]
   );
 
