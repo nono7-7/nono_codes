@@ -194,7 +194,7 @@ function buildBreakdown(
 /* ── Main Component ────────────────────────────────────── */
 
 export type NetworkFilterAction = {
-  field: 'homeLocation' | 'company' | 'university' | 'tag' | 'search';
+  field: 'homeLocation' | 'company' | 'university' | 'role' | 'tag' | 'search';
   value: string;
 };
 
@@ -348,9 +348,8 @@ export default function NetworkView({
       <BreakdownSection
         title="By Role"
         entries={byRole}
-        onTap={(v) => onFilter({ field: 'search', value: v })}
+        onTap={(v) => onFilter({ field: 'role', value: v })}
         isDark={isDark}
-        defaultOpen={false}
       />
 
       <BreakdownSection

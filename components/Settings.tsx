@@ -264,28 +264,41 @@ export default function Settings({
         {/* ABOUT */}
         <h3 className={`${sectionHeader} mt-5`}>About</h3>
         <div className="space-y-2 mb-5">
-          {[
-            { icon: MapPin, field: 'mainLocation' as const, placeholder: 'Main location (e.g. London)', shareKey: 'shareLocation' as const },
-            { icon: Cake, field: 'birthday' as const, placeholder: 'Birthday (YYYY-MM-DD)', shareKey: 'shareBirthday' as const },
-          ].map(({ icon: Icon, field, placeholder, shareKey }) => (
-            <div key={field} className="flex items-center gap-2">
-              <Icon size={15} className="text-muted flex-shrink-0" />
-              <input
-                type="text"
-                value={userProfile[field]}
-                onChange={(e) => onProfileChange({ ...userProfile, [field]: e.target.value })}
-                placeholder={placeholder}
-                className={`${inputCls} flex-1`}
+          {/* Location */}
+          <div className="flex items-center gap-2">
+            <MapPin size={15} className="text-muted flex-shrink-0" />
+            <input
+              type="text"
+              value={userProfile.mainLocation}
+              onChange={(e) => onProfileChange({ ...userProfile, mainLocation: e.target.value })}
+              placeholder="Main location (e.g. London)"
+              className={`${inputCls} flex-1`}
+            />
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-[10px] text-muted">QR</span>
+              <Toggle
+                on={userProfile.shareLocation}
+                onChange={(v) => onProfileChange({ ...userProfile, shareLocation: v })}
               />
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <span className="text-[10px] text-muted">QR</span>
-                <Toggle
-                  on={userProfile[shareKey]}
-                  onChange={(v) => onProfileChange({ ...userProfile, [shareKey]: v })}
-                />
-              </div>
             </div>
-          ))}
+          </div>
+          {/* Birthday — calendar picker */}
+          <div className="flex items-center gap-2">
+            <Cake size={15} className="text-muted flex-shrink-0" />
+            <input
+              type="date"
+              value={userProfile.birthday}
+              onChange={(e) => onProfileChange({ ...userProfile, birthday: e.target.value })}
+              className={`${inputCls} flex-1`}
+            />
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-[10px] text-muted">QR</span>
+              <Toggle
+                on={userProfile.shareBirthday}
+                onChange={(v) => onProfileChange({ ...userProfile, shareBirthday: v })}
+              />
+            </div>
+          </div>
         </div>
 
         {/* EDUCATION */}
@@ -308,14 +321,14 @@ export default function Settings({
               <div className="flex items-start gap-2">
                 <GraduationCap size={14} className="text-muted mt-2.5 flex-shrink-0" />
                 <div className="flex-1 space-y-1.5">
-                  <input
-                    type="text"
-                    value={edu.university}
-                    onChange={(e) => updateEducation(edu.id, { university: e.target.value })}
-                    placeholder="University"
-                    className={`${inputCls} py-1.5 text-xs`}
-                  />
                   <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      value={edu.university}
+                      onChange={(e) => updateEducation(edu.id, { university: e.target.value })}
+                      placeholder="University"
+                      className={`${inputCls} py-1.5 text-xs flex-1`}
+                    />
                     <input
                       type="text"
                       value={edu.program}
@@ -323,14 +336,14 @@ export default function Settings({
                       placeholder="Programme"
                       className={`${inputCls} py-1.5 text-xs flex-1`}
                     />
-                    <input
-                      type="text"
-                      value={edu.gradYear}
-                      onChange={(e) => updateEducation(edu.id, { gradYear: e.target.value })}
-                      placeholder="Year"
-                      className={`${inputCls} py-1.5 text-xs w-16`}
-                    />
                   </div>
+                  <input
+                    type="text"
+                    value={edu.gradYear}
+                    onChange={(e) => updateEducation(edu.id, { gradYear: e.target.value })}
+                    placeholder="Graduation year"
+                    className={`${inputCls} py-1.5 text-xs w-full`}
+                  />
                 </div>
                 <button
                   type="button"

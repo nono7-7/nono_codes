@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, GraduationCap, Briefcase, X } from 'lucide-react';
+import { MapPin, GraduationCap, Briefcase, X, CalendarClock, MessageCircle, UserCheck } from 'lucide-react';
 import type { ActiveFilter } from '@/lib/types';
 import { capitalizeTag } from '@/lib/utils';
 
@@ -53,6 +53,13 @@ export default function FilterChips({
       onRemove: () => onFilterChange({ ...filter, company: null }),
     });
   }
+  if (filter.role) {
+    fieldChips.push({
+      label: filter.role,
+      icon: <UserCheck size={11} />,
+      onRemove: () => onFilterChange({ ...filter, role: null }),
+    });
+  }
 
   const toggleTag = (tag: string) => {
     const isActive = filter.tags.includes(tag);
@@ -86,6 +93,24 @@ export default function FilterChips({
           <X size={12} />
         </button>
       ))}
+
+      {/* Smart activity filters */}
+      <button
+        onClick={() => onFilterChange({ ...filter, hasUpcomingPlan: !filter.hasUpcomingPlan })}
+        className={`${chipBase} ${filter.hasUpcomingPlan ? activeStyle : inactiveStyle}`}
+      >
+        <CalendarClock size={12} />
+        Upcoming
+        {filter.hasUpcomingPlan && <X size={12} />}
+      </button>
+      <button
+        onClick={() => onFilterChange({ ...filter, hasInteractions: !filter.hasInteractions })}
+        className={`${chipBase} ${filter.hasInteractions ? activeStyle : inactiveStyle}`}
+      >
+        <MessageCircle size={12} />
+        Interacted
+        {filter.hasInteractions && <X size={12} />}
+      </button>
 
       {topTags.map((tag) => {
         const isActive = filter.tags.includes(tag);

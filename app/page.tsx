@@ -88,6 +88,9 @@ export default function App() {
     homeLocation: null,
     university: null,
     company: null,
+    role: null,
+    hasUpcomingPlan: false,
+    hasInteractions: false,
   });
 
   // Auth listener
@@ -477,10 +480,14 @@ export default function App() {
       homeLocation: null,
       university: null,
       company: null,
+      role: null,
+      hasUpcomingPlan: false,
+      hasInteractions: false,
     };
     if (action.field === 'homeLocation') base.homeLocation = action.value;
     else if (action.field === 'university') base.university = action.value;
     else if (action.field === 'company') base.company = action.value;
+    else if (action.field === 'role') base.role = action.value;
     else if (action.field === 'tag') base.tags = [action.value];
     else base.search = action.value;
     setFilter(base);

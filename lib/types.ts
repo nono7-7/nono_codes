@@ -75,6 +75,9 @@ export type ActiveFilter = {
   homeLocation: string | null;
   university: string | null;
   company: string | null;
+  role: string | null;
+  hasUpcomingPlan: boolean;
+  hasInteractions: boolean;
 };
 
 export interface Education {

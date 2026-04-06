@@ -44,6 +44,24 @@ export function filterContacts(contacts: Contact[], filter: ActiveFilter): Conta
       return (c.jobs || []).some((j) => j.company.trim().toLowerCase() === comp);
     });
   }
+  if (filter.role) {
+    const role = filter.role.toLowerCase();
+    result = result.filter((c) => {
+      if (c.role.trim().toLowerCase() === role) return true;
+      return (c.jobs || []).some((j) => j.role.trim().toLowerCase() === role);
+    });
+  }
+
+  // Smart activity filters
+  if (filter.hasUpcomingPlan) {
+    const today = new Date().toISOString().slice(0, 10);
+    result = result.filter((c) =>
+      (c.plannedInteractions || []).some((p) => !p.completed && p.date >= today)
+    );
+  }
+  if (filter.hasInteractions) {
+    result = result.filter((c) => (c.interactions || []).length > 0);
+  }
 
   if (filter.search.trim()) {
     const q = filter.search.toLowerCase();
@@ -224,7 +242,10 @@ export function hasActiveFilters(filter: ActiveFilter): boolean {
     !!filter.search.trim() ||
     !!filter.homeLocation ||
     !!filter.university ||
-    !!filter.company
+    !!filter.company ||
+    !!filter.role ||
+    filter.hasUpcomingPlan ||
+    filter.hasInteractions
   );
 }
 
