@@ -62,6 +62,9 @@ export function filterContacts(contacts: Contact[], filter: ActiveFilter): Conta
   if (filter.hasInteractions) {
     result = result.filter((c) => (c.interactions || []).length > 0);
   }
+  if (filter.hasReachOut) {
+    result = result.filter((c) => c.reachOut === true);
+  }
 
   if (filter.search.trim()) {
     const q = filter.search.toLowerCase();
@@ -186,6 +189,7 @@ export function createEmptyContact(): Omit<Contact, 'id' | 'dateAdded' | 'lastUp
     reconnectIntervalWeeks: null,
     reconnectDate: '',
     lastContacted: '',
+    reachOut: false,
     interactions: [],
     education: [],
     jobs: [],
@@ -245,7 +249,8 @@ export function hasActiveFilters(filter: ActiveFilter): boolean {
     !!filter.company ||
     !!filter.role ||
     filter.hasUpcomingPlan ||
-    filter.hasInteractions
+    filter.hasInteractions ||
+    filter.hasReachOut
   );
 }
 

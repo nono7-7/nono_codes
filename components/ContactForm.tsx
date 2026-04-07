@@ -424,6 +424,21 @@ export default function ContactForm({
         className={`${inputClass} resize-none`}
       />
 
+      {/* Reach-Out */}
+      <div className={`flex items-center justify-between px-3 py-3 rounded-lg border ${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'}`}>
+        <div className="flex-1 pr-4">
+          <p className="text-sm font-medium">Reach-Out</p>
+          <p className="text-[11px] text-muted mt-0.5">Flag this contact as someone you want to reach out to in the future.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setForm((f) => ({ ...f, reachOut: !f.reachOut }))}
+          className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${form.reachOut ? 'bg-accent' : isDark ? 'bg-dark-border' : 'bg-light-border'}`}
+        >
+          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${form.reachOut ? 'translate-x-4' : 'translate-x-0.5'}`} />
+        </button>
+      </div>
+
       {/* Reconnect Reminder */}
       {sectionLabel('Reconnect Reminder (optional)')}
       <p className="text-[11px] text-muted mb-2 -mt-1">Recurring interval</p>

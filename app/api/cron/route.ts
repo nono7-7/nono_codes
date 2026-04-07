@@ -1,9 +1,13 @@
 /**
- * Vercel Cron Job — Daily Push Notification Reminders
+ * Vercel Cron Job — Hourly Push Notification Reminders
  *
- * Runs once per day at 8am UTC (configured in vercel.json).
- * Queries Firestore for planned interactions due today or in 2 days,
- * then sends native Web Push notifications to all of the user's registered devices.
+ * Runs every hour (configured in vercel.json).
+ * For each user, checks if it is currently 9 AM in their local timezone
+ * (stored in Firestore when they open the app). If yes, sends push
+ * notifications for planned interactions due today or in 2 days.
+ *
+ * Deduplication: each notification doc tracks lastSentDate so a user
+ * never receives the same reminder twice on the same calendar day.
  *
  * Auth: protected by CRON_SECRET env var (set in Vercel dashboard).
  */
@@ -27,6 +31,46 @@ function getAdminDB() {
   return getFirestore();
 }
 
+// ── Timezone helpers ────────────────────────────────────────────────────────
+
+/** Returns the current hour (0–23) in the given IANA timezone */
+function getLocalHour(timezone: string): number {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      hour12: false,
+    }).formatToParts(new Date());
+    const h = parts.find((p) => p.type === 'hour')?.value;
+    return h ? parseInt(h, 10) : -1;
+  } catch {
+    return -1; // invalid timezone string
+  }
+}
+
+/** Returns the current date string (YYYY-MM-DD) in the given IANA timezone */
+function getLocalDateStr(timezone: string): string {
+  try {
+    // en-CA locale formats as YYYY-MM-DD natively
+    return new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(new Date());
+  } catch {
+    return new Date().toISOString().slice(0, 10); // fallback to UTC
+  }
+}
+
+/** Returns a date string offset by `days` in the given timezone */
+function getLocalDateOffset(timezone: string, days: number): string {
+  try {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(d);
+  } catch {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+}
+
 // ── Route handler ───────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   const secret = req.headers.get('authorization');
@@ -34,7 +78,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Set VAPID details here (inside handler) so env vars are available at runtime
   webpush.setVapidDetails(
     'mailto:noreply@intouch.app',
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
@@ -43,62 +86,69 @@ export async function GET(req: NextRequest) {
 
   const db = getAdminDB();
 
-  const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
-  const twoDaysStr = new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-
-  // Query all non-completed notifications due today or in 2 days
+  // Fetch all incomplete notifications
   const snapshot = await db.collection('notifications')
     .where('completed', '==', false)
-    .where('date', 'in', [todayStr, twoDaysStr])
     .get();
 
   if (snapshot.empty) {
-    return NextResponse.json({ sent: 0, message: 'No reminders due' });
+    return NextResponse.json({ sent: 0, message: 'No pending reminders' });
   }
 
-  // Group notifications by uid
-  const byUid: Record<string, {
-    contactName: string;
-    description: string;
-    date: string;
-    daysAway: number;
-  }[]> = {};
-
+  // Group by uid
+  const byUid: Record<string, { ref: FirebaseFirestore.DocumentReference; contactName: string; description: string; date: string; lastSentDate?: string }[]> = {};
   for (const docSnap of snapshot.docs) {
     const data = docSnap.data();
     const uid = data.uid as string;
-
-    // Check if user has notifications enabled
-    const settingsSnap = await db.doc(`users/${uid}/settings/app`).get();
-    const notifsEnabled = settingsSnap.exists
-      ? settingsSnap.data()?.emailNotificationsEnabled !== false
-      : true;
-    if (!notifsEnabled) continue;
-
     if (!byUid[uid]) byUid[uid] = [];
     byUid[uid].push({
+      ref: docSnap.ref,
       contactName: data.contactName,
       description: data.description,
       date: data.date,
-      daysAway: data.date === todayStr ? 0 : 2,
+      lastSentDate: data.lastSentDate,
     });
   }
 
-  // Send push notification to each user's registered devices
   let sent = 0;
-  for (const [uid, items] of Object.entries(byUid)) {
-    // Get all Web Push subscriptions for this user (one per device)
+
+  for (const [uid, allItems] of Object.entries(byUid)) {
+    // Get user settings: timezone + notifications enabled
+    const settingsSnap = await db.doc(`users/${uid}/settings/app`).get();
+    const settings = settingsSnap.exists ? settingsSnap.data()! : {};
+
+    const notifsEnabled = settings.emailNotificationsEnabled !== false;
+    if (!notifsEnabled) continue;
+
+    const timezone: string = (settings.timezone as string) || 'UTC';
+    const localHour = getLocalHour(timezone);
+
+    // Only send during the 9 AM hour in the user's local timezone
+    if (localHour !== 9) continue;
+
+    const localToday = getLocalDateStr(timezone);
+    const localTwoDays = getLocalDateOffset(timezone, 2);
+
+    // Filter: due today or in 2 days, not already sent today
+    const dueItems = allItems.filter(
+      (item) =>
+        (item.date === localToday || item.date === localTwoDays) &&
+        item.lastSentDate !== localToday
+    );
+
+    if (dueItems.length === 0) continue;
+
+    // Get push subscriptions for this user
     const subsSnap = await db.collection(`users/${uid}/pushSubscriptions`).get();
     if (subsSnap.empty) continue;
 
-    // Sort: today first
-    items.sort((a, b) => a.daysAway - b.daysAway);
+    dueItems.sort((a, b) => (a.date === localToday ? -1 : 1) - (b.date === localToday ? -1 : 1));
 
     const title = 'InTouch Reminder';
-    const body = items.length === 1
-      ? `${items[0].contactName}: ${items[0].description} — ${items[0].daysAway === 0 ? 'today' : 'in 2 days'}`
-      : `${items.length} upcoming interactions`;
+    const body =
+      dueItems.length === 1
+        ? `${dueItems[0].contactName}: ${dueItems[0].description} — ${dueItems[0].date === localToday ? 'today' : 'in 2 days'}`
+        : `${dueItems.length} upcoming interactions`;
 
     const payload = JSON.stringify({ title, body });
 
@@ -114,14 +164,21 @@ export async function GET(req: NextRequest) {
         );
         sent++;
       } catch (e: unknown) {
-        // If subscription is expired/invalid (410 Gone), remove it
-        if (typeof e === 'object' && e !== null && 'statusCode' in e && (e as { statusCode: number }).statusCode === 410) {
-          await subDoc.ref.delete();
+        if (
+          typeof e === 'object' &&
+          e !== null &&
+          'statusCode' in e &&
+          (e as { statusCode: number }).statusCode === 410
+        ) {
+          await subDoc.ref.delete(); // expired subscription
         } else {
           console.error(`Push failed for uid ${uid}:`, e);
         }
       }
     }
+
+    // Mark each notification as sent today to prevent duplicate sends
+    await Promise.all(dueItems.map((item) => item.ref.update({ lastSentDate: localToday })));
   }
 
   return NextResponse.json({ sent, message: `Sent push to ${sent} device(s)` });

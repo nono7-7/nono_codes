@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, GraduationCap, Briefcase, X, CalendarClock, MessageCircle, UserCheck } from 'lucide-react';
+import { MapPin, GraduationCap, Briefcase, X, CalendarClock, MessageCircle, UserCheck, ArrowUpRight } from 'lucide-react';
 import type { ActiveFilter } from '@/lib/types';
 import { capitalizeTag } from '@/lib/utils';
 
@@ -110,6 +110,15 @@ export default function FilterChips({
         <MessageCircle size={12} />
         Interacted
         {filter.hasInteractions && <X size={12} />}
+      </button>
+
+      <button
+        onClick={() => onFilterChange({ ...filter, hasReachOut: !filter.hasReachOut })}
+        className={`${chipBase} ${filter.hasReachOut ? activeStyle : inactiveStyle}`}
+      >
+        <ArrowUpRight size={12} />
+        Reach Out
+        {filter.hasReachOut && <X size={12} />}
       </button>
 
       {topTags.map((tag) => {

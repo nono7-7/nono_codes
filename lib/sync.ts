@@ -192,6 +192,16 @@ export async function removePushSubscription(uid: string, subscription: PushSubs
   await deleteDoc(doc(db, 'users', uid, 'pushSubscriptions', subId));
 }
 
+/**
+ * Store the user's IANA timezone (e.g. "Europe/Madrid") in Firestore so the
+ * cron job can send notifications at 9 AM in their local time.
+ */
+export async function storeUserTimezone(uid: string, timezone: string): Promise<void> {
+  const db = getDB();
+  const ref = doc(db, 'users', uid, 'settings', 'app');
+  await setDoc(ref, { timezone }, { merge: true });
+}
+
 /** @deprecated Use storePushSubscription instead. Kept for backwards compat during migration. */
 export async function storePushToken(uid: string, token: string): Promise<void> {
   const db = getDB();

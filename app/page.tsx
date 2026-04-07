@@ -20,7 +20,7 @@ import ReconnectBanner from '@/components/ReconnectBanner';
 import PlannedBanner from '@/components/PlannedBanner';
 import BulkImport from '@/components/BulkImport';
 import SyncIndicator, { type SyncStatus } from '@/components/SyncIndicator';
-import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud, storePushSubscription } from '@/lib/sync';
+import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud, storePushSubscription, storeUserTimezone } from '@/lib/sync';
 import { decodeSharedContact } from '@/lib/share';
 import type { NetworkFilterAction } from '@/components/NetworkView';
 
@@ -91,6 +91,7 @@ export default function App() {
     role: null,
     hasUpcomingPlan: false,
     hasInteractions: false,
+    hasReachOut: false,
   });
 
   // Auth listener
@@ -185,6 +186,12 @@ export default function App() {
         console.error('Init error:', e);
       }
     })();
+
+    // Store user's local timezone so the cron can send at 9 AM their time
+    if (user) {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz) storeUserTimezone(user.uid, tz).catch(() => {});
+    }
 
     // Register service worker
     if ('serviceWorker' in navigator) {
@@ -496,6 +503,7 @@ export default function App() {
       role: null,
       hasUpcomingPlan: false,
       hasInteractions: false,
+      hasReachOut: false,
     };
     if (action.field === 'homeLocation') base.homeLocation = action.value;
     else if (action.field === 'university') base.university = action.value;

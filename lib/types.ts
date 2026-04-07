@@ -52,6 +52,8 @@ export interface Contact {
   jobs: Job[];
   plannedInteractions: PlannedInteraction[];
 
+  reachOut?: boolean; // flagged for future outreach
+
   dateAdded: string;
   lastUpdated: string;
   deleted?: boolean; // soft-delete flag — filtered out from UI but kept for sync
@@ -78,6 +80,7 @@ export type ActiveFilter = {
   role: string | null;
   hasUpcomingPlan: boolean;
   hasInteractions: boolean;
+  hasReachOut: boolean;
 };
 
 export interface Education {
