@@ -433,9 +433,9 @@ export default function ContactForm({
         <button
           type="button"
           onClick={() => setForm((f) => ({ ...f, reachOut: !f.reachOut }))}
-          className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${form.reachOut ? 'bg-accent' : isDark ? 'bg-dark-border' : 'bg-light-border'}`}
+          className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${form.reachOut ? 'bg-accent' : isDark ? 'bg-dark-border' : 'bg-light-border'}`}
         >
-          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${form.reachOut ? 'translate-x-4' : 'translate-x-0.5'}`} />
+          <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.reachOut ? 'translate-x-5' : 'translate-x-0'}`} />
         </button>
       </div>
 
