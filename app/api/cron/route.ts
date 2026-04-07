@@ -121,10 +121,6 @@ export async function GET(req: NextRequest) {
     if (!notifsEnabled) continue;
 
     const timezone: string = (settings.timezone as string) || 'UTC';
-    const localHour = getLocalHour(timezone);
-
-    // Only send during the 9 AM hour in the user's local timezone
-    if (localHour !== 9) continue;
 
     const localToday = getLocalDateStr(timezone);
     const localTwoDays = getLocalDateOffset(timezone, 2);
