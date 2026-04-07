@@ -24,22 +24,6 @@ import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, complet
 import { decodeSharedContact } from '@/lib/share';
 import type { NetworkFilterAction } from '@/components/NetworkView';
 
-/** Schedule a local notification for a future date using setTimeout.
- *  Falls back gracefully if notifications aren't supported or permitted. */
-function scheduleNotification(contactName: string, description: string, dateStr: string) {
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  const target = new Date(dateStr + 'T09:00:00').getTime();
-  const delay = target - Date.now();
-  if (delay > 0 && delay < 2_147_483_647) {
-    // Schedule for the day of the interaction
-    setTimeout(() => {
-      new Notification(`InTouch — ${contactName}`, {
-        body: `Reminder: ${description} today`,
-        icon: '/icons/icon-192.svg',
-      });
-    }, delay);
-  }
-}
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -540,8 +524,6 @@ export default function App() {
           : prev
       );
       showToast('Interaction planned');
-      // Schedule a local notification for the planned date
-      scheduleNotification(contact.name, description, date);
       // Write to Firestore for email reminder (if user has opted in and is logged in)
       if (user?.email && appSettings.emailNotificationsEnabled) {
         savePlannedNotification(user.uid, user.email, contact.name, planned).catch(() => {});
@@ -615,63 +597,6 @@ export default function App() {
     return () => unsub?.();
   }, [appState, showToast]);
 
-  // Fire local notifications for due items (planned, birthdays, reconnects)
-  useEffect(() => {
-    if (appState !== 'app') return;
-    if (!('Notification' in window) || Notification.permission !== 'granted') return;
-
-    const today = new Date().toISOString().slice(0, 10);
-    const mmdd = today.slice(5); // MM-DD
-    const notifiedKey = `intouch-notified-${today}`;
-    const alreadyNotified = sessionStorage.getItem(notifiedKey);
-    if (alreadyNotified) return;
-
-    const notifications: string[] = [];
-
-    // Planned interactions due
-    const due = contacts.flatMap((c) =>
-      (c.plannedInteractions || [])
-        .filter((p) => !p.completed && p.date <= today)
-        .map((p) => `${c.name}: ${p.description}`)
-    );
-    if (due.length > 0) {
-      notifications.push(
-        due.length === 1
-          ? `Planned: ${due[0]}`
-          : `${due.length} planned interactions due`
-      );
-    }
-
-    // Birthdays today
-    const bdays = contacts.filter((c) => c.birthday && c.birthday.slice(5) === mmdd);
-    if (bdays.length > 0) {
-      notifications.push(
-        bdays.length === 1
-          ? `🎂 ${bdays[0].name}'s birthday!`
-          : `🎂 ${bdays.length} birthdays today!`
-      );
-    }
-
-    // Reconnect reminders
-    const reconnects = contacts.filter((c) => {
-      if (c.reconnectDate && c.reconnectDate <= today) return true;
-      if (!c.reconnectIntervalWeeks) return false;
-      const intervalMs = c.reconnectIntervalWeeks * 7 * 24 * 60 * 60 * 1000;
-      const lastDate = c.lastContacted ? new Date(c.lastContacted).getTime() : 0;
-      return Date.now() - lastDate > intervalMs;
-    });
-    if (reconnects.length > 0) {
-      notifications.push(`${reconnects.length} reconnect reminder${reconnects.length > 1 ? 's' : ''}`);
-    }
-
-    if (notifications.length > 0) {
-      new Notification('InTouch', {
-        body: notifications.join('\n'),
-        icon: '/icons/icon-192.svg',
-      });
-      sessionStorage.setItem(notifiedKey, '1');
-    }
-  }, [appState, contacts]);
 
   const handleEnableNotifications = useCallback(async (): Promise<boolean> => {
     try {
