@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { X, Bell, Download, CheckCircle2, Share2, MoreVertical } from 'lucide-react';
+import { X, Bell, Download, CheckCircle2, MoreVertical, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -65,12 +65,16 @@ export default function NotificationHelpModal({
             <div className={`mx-auto mb-4 w-10 h-1 rounded-full ${isDark ? 'bg-dark-border' : 'bg-gray-200'}`} />
 
             <div className="flex items-center justify-between mb-4">
+              <button type="button" onClick={onClose} className={`flex items-center gap-1.5 text-sm font-medium px-2 py-1 rounded-lg ${isDark ? 'text-muted hover:text-primary' : 'text-muted hover:text-primary'}`}>
+                <ArrowLeft size={16} />
+                Back
+              </button>
               <div className="flex items-center gap-2">
-                <Bell size={18} className="text-accent" />
-                <h2 className="font-semibold text-base">How to get push notifications</h2>
+                <Bell size={16} className="text-accent" />
+                <h2 className="font-semibold text-sm">Push notifications setup</h2>
               </div>
               <button type="button" onClick={onClose} className="p-1 text-muted">
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
@@ -95,7 +99,7 @@ export default function NotificationHelpModal({
                   <div className={`rounded-lg p-3 space-y-3 text-[13px] ${innerCard}`}>
                     <div className="flex items-start gap-2.5">
                       <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</div>
-                      <p>In <strong>Safari</strong>, tap the <strong>Share</strong> button <Share2 size={12} className="inline mx-0.5 -mt-0.5" /> at the bottom of the screen.</p>
+                      <p>In <strong>Safari</strong>, tap the <strong>Share</strong> button <svg width="12" height="14" viewBox="0 0 12 14" fill="none" className="inline mx-0.5 -mt-0.5 align-middle" xmlns="http://www.w3.org/2000/svg"><path d="M6 9V1M6 1L3 4M6 1L9 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M1 7v5a1 1 0 001 1h8a1 1 0 001-1V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> at the bottom of the screen.</p>
                     </div>
                     <div className="flex items-start gap-2.5">
                       <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</div>
@@ -180,9 +184,17 @@ export default function NotificationHelpModal({
               )}
             </div>
 
-            <p className="text-[11px] text-muted text-center">
-              Reminders are sent at 9 AM for interactions due today or in 2 days.
+            <p className="text-[11px] text-muted text-center mb-4">
+              Reminders are sent at 9 AM UTC for interactions due today or in 2 days.
             </p>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className={`w-full py-3 rounded-xl text-sm font-semibold border transition-colors ${isDark ? 'border-dark-border text-muted hover:text-primary' : 'border-light-border text-muted hover:text-primary'}`}
+            >
+              Close
+            </button>
           </motion.div>
         </motion.div>
       )}
