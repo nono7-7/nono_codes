@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import {
   Download, Upload, Trash2, Moon, Sun, LogOut, Bell, Cloud,
-  Camera, QrCode, Plus, X, Star, Link2, Phone, Mail, MapPin, Cake, GraduationCap, Briefcase, FileSpreadsheet, AtSign, RefreshCw, CheckCircle, AlertCircle, Share2, Copy,
+  Camera, QrCode, Plus, X, Star, Link2, Phone, Mail, MapPin, Cake, GraduationCap, Briefcase, FileSpreadsheet, AtSign, RefreshCw, CheckCircle, AlertCircle, Share2, Copy, HelpCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { exportContacts, importContacts, clearAll } from '@/lib/db';
@@ -12,6 +12,12 @@ import type { AppSettings, UserProfile, Education, Job } from '@/lib/types';
 import Avatar from './Avatar';
 import UserQRModal from './UserQRModal';
 import ImageCropModal from './ImageCropModal';
+import NotificationHelpModal from './NotificationHelpModal';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 // Small inline toggle used for per-field QR sharing
 function Toggle({
@@ -49,6 +55,8 @@ export default function Settings({
   onProfileChange,
   onForceSync,
   onEnableNotifications,
+  installPrompt,
+  onInstall,
 }: {
   isDark: boolean;
   onToggleTheme: () => void;
@@ -64,9 +72,12 @@ export default function Settings({
   onProfileChange: (profile: UserProfile) => void;
   onForceSync?: () => Promise<void>;
   onEnableNotifications?: () => Promise<boolean>;
+  installPrompt?: BeforeInstallPromptEvent | null;
+  onInstall?: () => void;
 }) {
   const [clearStep, setClearStep] = useState(0);
   const [inviteCopied, setInviteCopied] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
   const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
   const [notifState, setNotifState] = useState<'idle' | 'requesting' | 'granted' | 'denied'>(() => {
     if (typeof window === 'undefined' || !('Notification' in window)) return 'denied';
@@ -488,35 +499,45 @@ export default function Settings({
         <div className="space-y-2 mb-6">
           {/* Push notifications */}
           {onEnableNotifications && (
-            <button
-              type="button"
-              disabled={notifState === 'granted' || notifState === 'requesting' || notifState === 'denied'}
-              onClick={async () => {
-                setNotifState('requesting');
-                const ok = await onEnableNotifications();
-                setNotifState(ok ? 'granted' : 'denied');
-                if (ok) showToast('Notifications enabled');
-              }}
-              className={btnCls}
-            >
-              {notifState === 'granted'
-                ? <CheckCircle size={18} className="text-green-500" />
-                : notifState === 'denied'
-                ? <Bell size={18} className="text-muted" />
-                : <Bell size={18} className="text-accent" />}
-              <div className="flex-1">
-                <span className={`block ${notifState === 'granted' ? 'text-green-500' : notifState === 'denied' ? 'text-muted' : 'text-accent'}`}>
-                  {notifState === 'granted' ? 'Push notifications enabled' : notifState === 'requesting' ? 'Enabling…' : notifState === 'denied' ? 'Notifications blocked' : 'Enable push notifications'}
-                </span>
-                <span className="text-[11px] text-muted font-normal block mt-0.5">
-                  {notifState === 'granted'
-                    ? "You'll be notified for planned interactions"
-                    : notifState === 'denied'
-                    ? 'Enable in your device Settings → browser → Notifications'
-                    : 'Get notified even when the app is closed'}
-                </span>
-              </div>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={notifState === 'granted' || notifState === 'requesting' || notifState === 'denied'}
+                onClick={async () => {
+                  setNotifState('requesting');
+                  const ok = await onEnableNotifications();
+                  setNotifState(ok ? 'granted' : 'denied');
+                  if (ok) showToast('Notifications enabled');
+                }}
+                className={`${btnCls} flex-1`}
+              >
+                {notifState === 'granted'
+                  ? <CheckCircle size={18} className="text-green-500" />
+                  : notifState === 'denied'
+                  ? <Bell size={18} className="text-muted" />
+                  : <Bell size={18} className="text-accent" />}
+                <div className="flex-1">
+                  <span className={`block ${notifState === 'granted' ? 'text-green-500' : notifState === 'denied' ? 'text-muted' : 'text-accent'}`}>
+                    {notifState === 'granted' ? 'Push notifications enabled' : notifState === 'requesting' ? 'Enabling…' : notifState === 'denied' ? 'Notifications blocked' : 'Enable push notifications'}
+                  </span>
+                  <span className="text-[11px] text-muted font-normal block mt-0.5">
+                    {notifState === 'granted'
+                      ? "You'll be notified for planned interactions"
+                      : notifState === 'denied'
+                      ? 'Enable in your device Settings → browser → Notifications'
+                      : 'Get notified even when the app is closed'}
+                  </span>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowHelpModal(true)}
+                className={`flex-shrink-0 p-2.5 rounded-xl border transition-colors ${isDark ? 'bg-dark-card border-dark-border text-muted hover:text-primary' : 'bg-white border-light-border text-muted hover:text-primary'}`}
+                title="How to set up push notifications"
+              >
+                <HelpCircle size={18} />
+              </button>
+            </div>
           )}
           <button
             type="button"
@@ -662,6 +683,15 @@ export default function Settings({
           />
         )}
       </AnimatePresence>
+
+      <NotificationHelpModal
+        isOpen={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
+        isDark={isDark}
+        installPrompt={installPrompt}
+        onInstall={onInstall}
+        onEnableNotifications={onEnableNotifications}
+      />
     </>
   );
 }

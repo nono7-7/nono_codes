@@ -20,6 +20,7 @@ import ReconnectBanner from '@/components/ReconnectBanner';
 import PlannedBanner from '@/components/PlannedBanner';
 import BulkImport from '@/components/BulkImport';
 import SyncIndicator, { type SyncStatus } from '@/components/SyncIndicator';
+import NotificationHelpModal from '@/components/NotificationHelpModal';
 import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud, storePushSubscription, storeUserTimezone } from '@/lib/sync';
 import { decodeSharedContact } from '@/lib/share';
 import type { NetworkFilterAction } from '@/components/NetworkView';
@@ -57,6 +58,8 @@ export default function App() {
   });
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showNotifNudge, setShowNotifNudge] = useState(false);
+  const [showNotifHelpModal, setShowNotifHelpModal] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: '', photoUrl: '', phone: '', email: '', linkedinUrl: '',
     birthday: '', mainLocation: '', education: [], jobs: [],
@@ -614,6 +617,11 @@ export default function App() {
   const handleOnboardingComplete = () => {
     if (user) localStorage.setItem(`intouch-onboarded-${user.uid}`, 'true');
     setAppState('app');
+    // Show nudge banner if notifications not yet granted
+    const nudgeDismissed = localStorage.getItem('intouch-notif-nudge-dismissed');
+    if (!nudgeDismissed && (!('Notification' in window) || Notification.permission !== 'granted')) {
+      setTimeout(() => setShowNotifNudge(true), 1500);
+    }
   };
 
   // ── Loading splash ──
@@ -662,6 +670,38 @@ export default function App() {
             >
               {screen.type === 'list' && (
                 <>
+                  {/* Notification nudge banner */}
+                  <AnimatePresence>
+                    {showNotifNudge && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        className={`mx-3 mb-2 rounded-xl px-4 py-3 flex items-center gap-3 border ${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'}`}
+                      >
+                        <span className="text-lg">🔔</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium leading-tight">Enable push notifications</p>
+                          <p className="text-[11px] text-muted mt-0.5">Get reminded about planned interactions even when the app is closed.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => { setShowNotifNudge(false); setShowNotifHelpModal(true); }}
+                          className="text-accent text-xs font-semibold flex-shrink-0"
+                        >
+                          Set up
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setShowNotifNudge(false); localStorage.setItem('intouch-notif-nudge-dismissed', '1'); }}
+                          className="text-muted flex-shrink-0 ml-1"
+                        >
+                          ✕
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <PlannedBanner
                     contacts={contacts}
                     dismissed={plannedDismissed}
@@ -755,6 +795,8 @@ export default function App() {
               onProfileChange={handleProfileChange}
               onForceSync={handleForceSync}
               onEnableNotifications={handleEnableNotifications}
+              installPrompt={installPrompt}
+              onInstall={() => setInstallPrompt(null)}
             />
           )}
 
@@ -775,6 +817,15 @@ export default function App() {
 
       <BottomNav active={tab} onChange={handleTabChange} isDark={isDark} />
       <Toast message={toast ?? ''} visible={!!toast} />
+
+      <NotificationHelpModal
+        isOpen={showNotifHelpModal}
+        onClose={() => setShowNotifHelpModal(false)}
+        isDark={isDark}
+        installPrompt={installPrompt}
+        onInstall={() => setInstallPrompt(null)}
+        onEnableNotifications={handleEnableNotifications}
+      />
     </div>
   );
 }
