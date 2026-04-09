@@ -14,6 +14,7 @@ import UserQRModal from './UserQRModal';
 import ImageCropModal from './ImageCropModal';
 import NotificationHelpModal from './NotificationHelpModal';
 import VCardImport from './VCardImport';
+import LinkedInImport from './LinkedInImport';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -80,6 +81,7 @@ export default function Settings({
   const [inviteCopied, setInviteCopied] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showVCardImport, setShowVCardImport] = useState(false);
+  const [showLinkedInImport, setShowLinkedInImport] = useState(false);
   const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
   const [notifState, setNotifState] = useState<'idle' | 'requesting' | 'granted' | 'denied'>(() => {
     if (typeof window === 'undefined' || !('Notification' in window)) return 'denied';
@@ -631,6 +633,13 @@ export default function Settings({
               <span className="text-[11px] text-muted font-normal block mt-0.5">Import from spreadsheets with smart mapping</span>
             </div>
           </button>
+          <button type="button" onClick={() => setShowLinkedInImport(true)} className={btnCls}>
+            <Link2 size={18} className="text-[#0A66C2]" />
+            <div>
+              <span className="block">Import from LinkedIn</span>
+              <span className="text-[11px] text-muted font-normal block mt-0.5">Update existing contacts or add new connections</span>
+            </div>
+          </button>
           <button
             type="button"
             onClick={handleClear}
@@ -697,6 +706,31 @@ export default function Settings({
                 showToast(`${count} contact${count !== 1 ? 's' : ''} imported`);
               }}
               onCancel={() => setShowVCardImport(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showLinkedInImport && (
+          <motion.div
+            className={`fixed inset-0 z-[60] flex flex-col ${isDark ? 'bg-dark-bg' : 'bg-light-bg'}`}
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+          >
+            <LinkedInImport
+              isDark={isDark}
+              onComplete={(updated, added) => {
+                setShowLinkedInImport(false);
+                onImportComplete();
+                const parts = [];
+                if (updated > 0) parts.push(`${updated} updated`);
+                if (added > 0) parts.push(`${added} added`);
+                showToast(parts.length > 0 ? parts.join(', ') : 'No changes made');
+              }}
+              onCancel={() => setShowLinkedInImport(false)}
             />
           </motion.div>
         )}
