@@ -21,6 +21,7 @@ import PlannedBanner from '@/components/PlannedBanner';
 import BulkImport from '@/components/BulkImport';
 import SyncIndicator, { type SyncStatus } from '@/components/SyncIndicator';
 import NotificationHelpModal from '@/components/NotificationHelpModal';
+import WhatsNew, { shouldShowWhatsNew, dismissWhatsNew } from '@/components/WhatsNew';
 import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud, storePushSubscription, storeUserTimezone } from '@/lib/sync';
 import { decodeSharedContact } from '@/lib/share';
 import type { NetworkFilterAction } from '@/components/NetworkView';
@@ -60,6 +61,7 @@ export default function App() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showNotifNudge, setShowNotifNudge] = useState(false);
   const [showNotifHelpModal, setShowNotifHelpModal] = useState(false);
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: '', photoUrl: '', phone: '', email: '', linkedinUrl: '',
     birthday: '', mainLocation: '', education: [], jobs: [],
@@ -97,7 +99,12 @@ export default function App() {
       setUser(firebaseUser);
       if (firebaseUser) {
         const onboarded = localStorage.getItem(`intouch-onboarded-${firebaseUser.uid}`);
-        setAppState(onboarded ? 'app' : 'onboarding');
+        if (onboarded) {
+          setAppState('app');
+          setTimeout(() => { if (shouldShowWhatsNew()) setShowWhatsNew(true); }, 800);
+        } else {
+          setAppState('onboarding');
+        }
       } else {
         setAppState('auth');
       }
@@ -622,6 +629,8 @@ export default function App() {
     if (!nudgeDismissed && (!('Notification' in window) || Notification.permission !== 'granted')) {
       setTimeout(() => setShowNotifNudge(true), 1500);
     }
+    // New users just finished onboarding — pre-dismiss What's New so they don't see it immediately
+    dismissWhatsNew();
   };
 
   // ── Loading splash ──
@@ -825,6 +834,12 @@ export default function App() {
         installPrompt={installPrompt}
         onInstall={() => setInstallPrompt(null)}
         onEnableNotifications={handleEnableNotifications}
+      />
+
+      <WhatsNew
+        isOpen={showWhatsNew}
+        onClose={() => setShowWhatsNew(false)}
+        isDark={isDark}
       />
     </div>
   );
