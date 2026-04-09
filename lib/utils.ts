@@ -200,8 +200,11 @@ export function createEmptyContact(): Omit<Contact, 'id' | 'dateAdded' | 'lastUp
 /** Get the display role/company from a contact, preferring current job from jobs array */
 export function getDisplayJob(contact: Contact): { role: string; company: string } {
   if (contact.jobs && contact.jobs.length > 0) {
-    const current = contact.jobs.find((j: Job) => j.isCurrent) ?? contact.jobs[0];
-    return { role: current.role, company: current.company };
+    const current = contact.jobs.find((j: Job) => j.isCurrent);
+    if (current) return { role: current.role, company: current.company };
+    // No isCurrent job — prefer top-level fields if set (they may have been updated externally)
+    if (contact.role || contact.company) return { role: contact.role, company: contact.company };
+    return { role: contact.jobs[0].role, company: contact.jobs[0].company };
   }
   return { role: contact.role, company: contact.company };
 }
