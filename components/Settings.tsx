@@ -6,13 +6,14 @@ import {
   Camera, QrCode, Plus, X, Star, Link2, Phone, Mail, MapPin, Cake, GraduationCap, Briefcase, FileSpreadsheet, AtSign, RefreshCw, CheckCircle, AlertCircle, Share2, Copy, HelpCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { exportContacts, importContacts, clearAll } from '@/lib/db';
+import { exportContacts, clearAll } from '@/lib/db';
 import { nanoid } from 'nanoid';
 import type { AppSettings, UserProfile, Education, Job } from '@/lib/types';
 import Avatar from './Avatar';
 import UserQRModal from './UserQRModal';
 import ImageCropModal from './ImageCropModal';
 import NotificationHelpModal from './NotificationHelpModal';
+import VCardImport from './VCardImport';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -78,6 +79,7 @@ export default function Settings({
   const [clearStep, setClearStep] = useState(0);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showVCardImport, setShowVCardImport] = useState(false);
   const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
   const [notifState, setNotifState] = useState<'idle' | 'requesting' | 'granted' | 'denied'>(() => {
     if (typeof window === 'undefined' || !('Notification' in window)) return 'denied';
@@ -153,24 +155,6 @@ export default function Settings({
     showToast('Contacts exported');
   };
 
-  const handleImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const count = await importContacts(text);
-        onImportComplete();
-        showToast(`${count} contact${count !== 1 ? 's' : ''} imported`);
-      } catch {
-        showToast('Invalid file format');
-      }
-    };
-    input.click();
-  };
 
   const handleClear = async () => {
     if (clearStep === 0) {
@@ -633,9 +617,12 @@ export default function Settings({
             <Download size={18} className="text-muted" />
             <span>Export contacts</span>
           </button>
-          <button type="button" onClick={handleImport} className={btnCls}>
+          <button type="button" onClick={() => setShowVCardImport(true)} className={btnCls}>
             <Upload size={18} className="text-muted" />
-            <span>Import contacts (JSON)</span>
+            <div>
+              <span className="block">Import phone contacts</span>
+              <span className="text-[11px] text-muted font-normal block mt-0.5">Import from iPhone, Android or Google Contacts (.vcf)</span>
+            </div>
           </button>
           <button type="button" onClick={onBulkImport} className={btnCls}>
             <FileSpreadsheet size={18} className="text-accent" />
@@ -692,6 +679,28 @@ export default function Settings({
         onInstall={onInstall}
         onEnableNotifications={onEnableNotifications}
       />
+
+      <AnimatePresence>
+        {showVCardImport && (
+          <motion.div
+            className={`fixed inset-0 z-50 flex flex-col ${isDark ? 'bg-dark-bg' : 'bg-light-bg'}`}
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+          >
+            <VCardImport
+              isDark={isDark}
+              onComplete={(count) => {
+                setShowVCardImport(false);
+                onImportComplete();
+                showToast(`${count} contact${count !== 1 ? 's' : ''} imported`);
+              }}
+              onCancel={() => setShowVCardImport(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
