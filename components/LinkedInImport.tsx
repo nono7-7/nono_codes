@@ -160,18 +160,19 @@ export default function LinkedInImport({
             {/* How to export */}
             <div className={`rounded-xl p-4 ${stepCard}`}>
               <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">How to get your Connections.csv</p>
+
               <div className={`rounded-lg p-3 space-y-2.5 text-[13px] ${card}`}>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</div>
-                  <p>Go to <strong>linkedin.com</strong> → click your profile picture → <strong>Settings &amp; Privacy</strong>.</p>
+                  <p>On <strong>linkedin.com</strong>, click your profile picture → <strong>Settings &amp; Privacy</strong>.</p>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</div>
-                  <p>Click <strong>Data Privacy</strong> → <strong>Get a copy of your data</strong>.</p>
+                  <p>Go to <strong>Data Privacy → Get a copy of your data</strong>.</p>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</div>
-                  <p>Select <strong>Connections</strong> only → click <strong>Request archive</strong>. LinkedIn emails you a link — usually within a few minutes.</p>
+                  <p>Select <strong>"Larger data archive"</strong> (first option) and click <strong>Request archive</strong>. LinkedIn emails you a download link — usually within a few hours.</p>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">4</div>
