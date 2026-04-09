@@ -170,32 +170,6 @@ export default function VCardImport({
             <p className={`text-[11px] text-center ${muted}`}>
               Fields imported: name, phone, email, company, job title, birthday, address, notes.
             </p>
-
-            {error && (
-              <div className="flex items-center gap-2 text-red-500 text-sm px-1">
-                <AlertTriangle size={14} />
-                {error}
-              </div>
-            )}
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".vcf,text/vcard"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleFile(file);
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-accent/15 border border-accent/30 text-accent text-sm font-semibold active:scale-[0.98] transition-all"
-            >
-              <Upload size={18} />
-              Choose .vcf file
-            </button>
           </>
         )}
 
@@ -268,21 +242,51 @@ export default function VCardImport({
         )}
       </div>
 
-      {/* Footer button */}
-      {step === 'preview' && (
-        <div className={`px-4 py-4 border-t ${isDark ? 'border-dark-border' : 'border-light-border'}`}>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={readyCount === 0}
-            className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
-              readyCount === 0
-                ? 'opacity-40 bg-accent/10 border border-accent/20 text-accent cursor-not-allowed'
-                : 'bg-accent/15 border border-accent/30 text-accent active:scale-[0.98]'
-            }`}
-          >
-            Import {readyCount} contact{readyCount !== 1 ? 's' : ''}
-          </button>
+      {/* Sticky footer — always above bottom nav */}
+      {(step === 'instructions' || step === 'preview') && (
+        <div className={`px-4 pt-3 pb-6 border-t ${isDark ? 'border-dark-border' : 'border-light-border'}`}>
+          {step === 'instructions' && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".vcf,text/vcard"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFile(file);
+                }}
+              />
+              {error && (
+                <div className="flex items-center gap-2 text-red-500 text-sm mb-2">
+                  <AlertTriangle size={14} />
+                  {error}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-accent/15 border border-accent/30 text-accent text-sm font-semibold active:scale-[0.98] transition-all"
+              >
+                <Upload size={18} />
+                Choose .vcf file
+              </button>
+            </>
+          )}
+          {step === 'preview' && (
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={readyCount === 0}
+              className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
+                readyCount === 0
+                  ? 'opacity-40 bg-accent/10 border border-accent/20 text-accent cursor-not-allowed'
+                  : 'bg-accent/15 border border-accent/30 text-accent active:scale-[0.98]'
+              }`}
+            >
+              Import {readyCount} contact{readyCount !== 1 ? 's' : ''}
+            </button>
+          )}
         </div>
       )}
     </div>
