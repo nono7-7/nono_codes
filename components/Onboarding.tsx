@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlus, Search, Globe, Bell, QrCode, ArrowRight,
   MessageCircle, CalendarClock, FileSpreadsheet, MapPin, Tag, Check, Cloud, Smartphone, Monitor, Download, CheckCircle2,
+  Link2, RefreshCw, UserPlus as UserPlusIcon,
 } from 'lucide-react';
 
 // Example card/row classes that adapt to dark/light
@@ -316,7 +317,69 @@ const slides = [
     ),
   },
 
-  // ── 10. All Set ──────────────────────────────────────────────────
+  // ── 10. LinkedIn Import & Network Refresh ───────────────────────
+  {
+    icon: Link2,
+    color: 'bg-blue-500/15',
+    title: 'LinkedIn Connections Import & Network Refresh',
+    description:
+      'Sync your LinkedIn to keep contacts current and grow your network — in two ways.',
+    example: (
+      <div className="mt-4 space-y-2.5 text-xs text-left">
+        {/* Network Refresh */}
+        <div className={`${blueCard} p-3 space-y-2`}>
+          <div className="flex items-center gap-2">
+            <RefreshCw size={12} className="text-blue-400 shrink-0" />
+            <p className="font-semibold text-sm text-blue-400">Network Refresh</p>
+          </div>
+          <p className="text-muted">For contacts <span className="font-medium text-white/80">already in InTouch</span> — when someone changes jobs on LinkedIn, their new role is added automatically and the old one is kept as career history.</p>
+          <div className="space-y-1">
+            <div className={`${mutedCard} px-2.5 py-1.5 flex items-center gap-2`}>
+              <span className="flex-1 text-muted line-through text-[11px]">VP @ Goldman Sachs</span>
+              <span className="text-[10px] text-muted">prev.</span>
+            </div>
+            <div className={`${blueCard} px-2.5 py-1.5 flex items-center gap-2`}>
+              <span className="flex-1 text-blue-400 font-medium text-[11px]">Partner @ Blackstone</span>
+              <Check size={9} className="text-blue-400" strokeWidth={3} />
+            </div>
+          </div>
+        </div>
+
+        {/* Connections Import */}
+        <div className={`${card} p-3 space-y-2`}>
+          <div className="flex items-center gap-2">
+            <UserPlusIcon size={12} className="text-accent shrink-0" />
+            <p className="font-semibold text-sm text-accent">Connections Import</p>
+          </div>
+          <p className="text-muted">For LinkedIn connections <span className="font-medium text-white/80">not yet in InTouch</span> — you see the full list and choose exactly who to add.</p>
+          <div className="space-y-1">
+            {[
+              { name: 'Alice Dupont', info: 'Analyst @ Morgan Stanley', checked: true },
+              { name: 'Tom Reyes', info: 'VC @ Sequoia', checked: true },
+              { name: 'Jan Kowalski', info: 'Consultant @ BCG', checked: false },
+            ].map((c) => (
+              <div key={c.name} className={`px-2.5 py-1.5 rounded-lg flex items-center gap-2 ${c.checked ? `${card}` : `${mutedCard} opacity-40`}`}>
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${c.checked ? 'border-accent bg-accent' : 'border-muted/40'}`}>
+                  {c.checked && <Check size={8} strokeWidth={3} className="text-white" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-[11px] truncate">{c.name}</p>
+                  <p className="text-muted text-[10px] truncate">{c.info}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className={`${mutedCard} px-3 py-2 flex items-center gap-2`}>
+          <Check size={10} className="text-accent shrink-0" strokeWidth={3} />
+          <p className="text-muted text-[10px]">Find it in <span className="text-accent font-medium">Settings → LinkedIn Connections Import / Network Refresh</span></p>
+        </div>
+      </div>
+    ),
+  },
+
+  // ── 11. All Set ──────────────────────────────────────────────────
   {
     icon: ArrowRight,
     color: 'bg-accent/15',
@@ -330,6 +393,7 @@ const slides = [
           'Log interactions to track relationships',
           'Plan meetings — push reminders + one-tap calendar export',
           'Import existing contacts from CSV / XLSX',
+          'Refresh from LinkedIn — auto-update jobs & add new connections',
           'Share your card via QR code',
           'Everything synced across all your devices',
         ].map((tip) => (
