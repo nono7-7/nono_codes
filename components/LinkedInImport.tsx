@@ -24,6 +24,7 @@ export default function LinkedInImport({
   const [skippedNew, setSkippedNew] = useState<Set<number>>(new Set());
   const [showNewSection, setShowNewSection] = useState(true);
   const [showUpdateSection, setShowUpdateSection] = useState(true);
+  const [sortOrder, setSortOrder] = useState<'recent' | 'az'>('recent');
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -270,7 +271,6 @@ export default function LinkedInImport({
                   {showNewSection ? <ChevronUp size={16} className={muted} /> : <ChevronDown size={16} className={muted} />}
                 </button>
 
-                {/* Select all / Deselect all */}
                 <AnimatePresence>
                   {showNewSection && (
                     <motion.div
@@ -279,53 +279,81 @@ export default function LinkedInImport({
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="flex justify-end mb-2">
+                      {/* Sort + Select all row */}
+                      <div className="flex items-center justify-between mb-2">
+                        {/* Sort toggle */}
+                        <div className={`flex rounded-lg overflow-hidden border text-[11px] font-medium ${isDark ? 'border-dark-border' : 'border-light-border'}`}>
+                          {(['recent', 'az'] as const).map((s) => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => setSortOrder(s)}
+                              className={`px-2.5 py-1 transition-colors ${
+                                sortOrder === s
+                                  ? 'bg-accent text-dark-bg'
+                                  : isDark ? 'bg-dark-card text-muted' : 'bg-white text-muted'
+                              }`}
+                            >
+                              {s === 'recent' ? 'Most Recent' : 'A – Z'}
+                            </button>
+                          ))}
+                        </div>
+                        {/* Select all / Deselect all */}
                         <button
                           type="button"
                           onClick={() => {
                             if (skippedNew.size === 0) {
-                              // deselect all
                               setSkippedNew(new Set(result.newContacts.map((_, i) => i)));
                             } else {
-                              // select all
                               setSkippedNew(new Set());
                             }
                           }}
-                          className={`text-[11px] font-medium text-accent`}
+                          className="text-[11px] font-medium text-accent"
                         >
                           {skippedNew.size === 0 ? 'Deselect all' : 'Select all'}
                         </button>
                       </div>
+
                       <div className="space-y-1.5">
-                        {result.newContacts.map((c, i) => {
-                          const isSkipped = skippedNew.has(i);
-                          return (
-                            <button
-                              key={i}
-                              type="button"
-                              onClick={() => toggleNew(i)}
-                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${
-                                isSkipped
-                                  ? isDark ? 'bg-dark-bg border-dark-border opacity-40' : 'bg-gray-50 border-light-border opacity-40'
-                                  : isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'
-                              }`}
-                            >
-                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                                isSkipped
-                                  ? isDark ? 'border-dark-border' : 'border-gray-300'
-                                  : 'border-accent bg-accent'
-                              }`}>
-                                {!isSkipped && <Check size={11} strokeWidth={3} className="text-white" />}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">{c.name}</p>
-                                <p className={`text-[11px] truncate ${muted}`}>
-                                  {[c.company, c.role].filter(Boolean).join(' · ') || c.email || 'No details'}
-                                </p>
-                              </div>
-                            </button>
-                          );
-                        })}
+                        {[...result.newContacts.map((c, i) => ({ c, i }))]
+                          .sort((a, b) => {
+                            if (sortOrder === 'az') return a.c.name.localeCompare(b.c.name);
+                            // Most recent: parse connectedOn date (e.g. "07 Apr 2026")
+                            const parseDate = (d: string) => d ? new Date(d).getTime() : 0;
+                            return parseDate(b.c.connectedOn) - parseDate(a.c.connectedOn);
+                          })
+                          .map(({ c, i }) => {
+                            const isSkipped = skippedNew.has(i);
+                            return (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => toggleNew(i)}
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${
+                                  isSkipped
+                                    ? isDark ? 'bg-dark-bg border-dark-border opacity-40' : 'bg-gray-50 border-light-border opacity-40'
+                                    : isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'
+                                }`}
+                              >
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                                  isSkipped
+                                    ? isDark ? 'border-dark-border' : 'border-gray-300'
+                                    : 'border-accent bg-accent'
+                                }`}>
+                                  {!isSkipped && <Check size={11} strokeWidth={3} className="text-white" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{c.name}</p>
+                                  <p className={`text-[11px] truncate ${muted}`}>
+                                    {[c.company, c.role].filter(Boolean).join(' · ') || c.email || 'No details'}
+                                  </p>
+                                </div>
+                                {sortOrder === 'recent' && c.connectedOn && (
+                                  <p className={`text-[10px] shrink-0 ${muted}`}>{c.connectedOn}</p>
+                                )}
+                              </button>
+                            );
+                          })}
                       </div>
                     </motion.div>
                   )}
