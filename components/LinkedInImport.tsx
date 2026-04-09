@@ -21,7 +21,6 @@ export default function LinkedInImport({
 }) {
   const [step, setStep] = useState<Step>('instructions');
   const [result, setResult] = useState<LinkedInUpdateResult | null>(null);
-  const [skippedUpdates, setSkippedUpdates] = useState<Set<string>>(new Set());
   const [skippedNew, setSkippedNew] = useState<Set<number>>(new Set());
   const [showNewSection, setShowNewSection] = useState(true);
   const [showUpdateSection, setShowUpdateSection] = useState(true);
@@ -43,22 +42,11 @@ export default function LinkedInImport({
       const existing = await getAllContacts();
       const matched = matchLinkedIn(contacts, existing);
       setResult(matched);
-      // Pre-select all new contacts and all updates
       setSkippedNew(new Set());
-      setSkippedUpdates(new Set());
       setStep('review');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not read file. Make sure it is a LinkedIn Connections CSV.');
     }
-  };
-
-  const toggleUpdate = (contactId: string) => {
-    setSkippedUpdates((prev) => {
-      const next = new Set(prev);
-      if (next.has(contactId)) next.delete(contactId);
-      else next.add(contactId);
-      return next;
-    });
   };
 
   const toggleNew = (i: number) => {
@@ -77,23 +65,26 @@ export default function LinkedInImport({
     let updated = 0;
     let added = 0;
 
-    // Apply updates
+    // Apply ALL updates automatically (no per-item toggle for updates)
     for (const u of result.updates) {
-      if (skippedUpdates.has(u.existing.id)) continue;
       const updatedContact: Contact = { ...u.existing };
       for (const change of u.changes) {
         if (change.field === 'company') {
           updatedContact.company = change.to;
           if (updatedContact.jobs?.length) {
             const primaryIdx = updatedContact.jobs.findIndex((j) => j.isCurrent);
-            if (primaryIdx >= 0) updatedContact.jobs[primaryIdx] = { ...updatedContact.jobs[primaryIdx], company: change.to };
+            if (primaryIdx >= 0) {
+              updatedContact.jobs[primaryIdx] = { ...updatedContact.jobs[primaryIdx], company: change.to };
+            }
           }
         }
         if (change.field === 'role') {
           updatedContact.role = change.to;
           if (updatedContact.jobs?.length) {
             const primaryIdx = updatedContact.jobs.findIndex((j) => j.isCurrent);
-            if (primaryIdx >= 0) updatedContact.jobs[primaryIdx] = { ...updatedContact.jobs[primaryIdx], role: change.to };
+            if (primaryIdx >= 0) {
+              updatedContact.jobs[primaryIdx] = { ...updatedContact.jobs[primaryIdx], role: change.to };
+            }
           }
         }
       }
@@ -102,7 +93,7 @@ export default function LinkedInImport({
       updated++;
     }
 
-    // Add new contacts
+    // Add selected new contacts
     for (let i = 0; i < result.newContacts.length; i++) {
       if (skippedNew.has(i)) continue;
       await saveContact(linkedInToContact(result.newContacts[i]));
@@ -113,9 +104,9 @@ export default function LinkedInImport({
     setTimeout(() => onComplete(updated, added), 800);
   };
 
-  const readyUpdates = (result?.updates.length ?? 0) - skippedUpdates.size;
   const readyNew = (result?.newContacts.length ?? 0) - skippedNew.size;
-  const totalReady = readyUpdates + readyNew;
+  const totalUpdates = result?.updates.length ?? 0;
+  const hasAnything = totalUpdates > 0 || readyNew > 0;
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -124,7 +115,7 @@ export default function LinkedInImport({
         <button type="button" onClick={onCancel} className={`p-1 ${muted}`}>
           <ArrowLeft size={20} />
         </button>
-        <h2 className="font-semibold text-base flex-1">Import from LinkedIn</h2>
+        <h2 className="font-semibold text-base flex-1">LinkedIn Network Refresh</h2>
         <button type="button" onClick={onCancel} className={`p-1 ${muted}`}>
           <X size={18} />
         </button>
@@ -132,11 +123,11 @@ export default function LinkedInImport({
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
 
-        {/* Instructions */}
+        {/* ── Instructions ── */}
         {step === 'instructions' && (
           <>
             <p className={`text-sm leading-relaxed ${muted}`}>
-              Import your LinkedIn connections to update existing contacts or selectively add new ones. First, export your connections from LinkedIn.
+              Upload your LinkedIn connections export to automatically refresh existing contacts and selectively add new ones.
             </p>
 
             <div className={`rounded-xl p-4 ${stepCard}`}>
@@ -144,7 +135,7 @@ export default function LinkedInImport({
               <div className={`rounded-lg p-3 space-y-2.5 text-[13px] ${card}`}>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</div>
-                  <p>Go to <strong>linkedin.com</strong> → click your profile picture → <strong>Settings & Privacy</strong>.</p>
+                  <p>Go to <strong>linkedin.com</strong> → click your profile picture → <strong>Settings &amp; Privacy</strong>.</p>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</div>
@@ -152,18 +143,20 @@ export default function LinkedInImport({
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</div>
-                  <p>Select <strong>Connections</strong> only → click <strong>Request archive</strong>. LinkedIn will email you a download link (usually within a few minutes).</p>
+                  <p>Select <strong>Connections</strong> only → click <strong>Request archive</strong>. LinkedIn emails you a download link — usually within a few minutes.</p>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">4</div>
-                  <p>Download the zip, open it, find <strong>Connections.csv</strong> and upload it below.</p>
+                  <p>Download the zip → open it → find <strong>Connections.csv</strong> → upload it below.</p>
                 </div>
               </div>
             </div>
 
-            <p className={`text-[11px] text-center ${muted}`}>
-              Fields imported: name, email, company, job title. You choose which contacts to add or update.
-            </p>
+            <div className={`rounded-xl px-4 py-3 text-[12px] leading-relaxed space-y-1 ${stepCard}`}>
+              <p className="font-semibold text-accent text-[11px] uppercase tracking-wide mb-1">What happens</p>
+              <p className={muted}><span className="font-medium">Existing contacts</span> — company &amp; role are refreshed automatically if LinkedIn shows a change.</p>
+              <p className={muted}><span className="font-medium">New connections</span> — you choose which ones to add.</p>
+            </div>
 
             {error && (
               <div className="flex items-center gap-2 text-red-500 text-sm px-1">
@@ -174,10 +167,10 @@ export default function LinkedInImport({
           </>
         )}
 
-        {/* Review */}
+        {/* ── Review ── */}
         {step === 'review' && result && (
           <>
-            {/* Updates section */}
+            {/* Updates — auto-applied, shown as info */}
             {result.updates.length > 0 && (
               <div>
                 <button
@@ -188,10 +181,13 @@ export default function LinkedInImport({
                   <div className="flex items-center gap-2">
                     <RefreshCw size={15} className="text-accent" />
                     <p className="text-sm font-semibold">
-                      Updates for existing contacts ({result.updates.length - skippedUpdates.size}/{result.updates.length})
+                      {result.updates.length} contact{result.updates.length !== 1 ? 's' : ''} will be refreshed
                     </p>
                   </div>
-                  {showUpdateSection ? <ChevronUp size={16} className={muted} /> : <ChevronDown size={16} className={muted} />}
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-[10px] font-medium ${muted}`}>auto</span>
+                    {showUpdateSection ? <ChevronUp size={16} className={muted} /> : <ChevronDown size={16} className={muted} />}
+                  </div>
                 </button>
                 <AnimatePresence>
                   {showUpdateSection && (
@@ -201,47 +197,37 @@ export default function LinkedInImport({
                       exit={{ height: 0, opacity: 0 }}
                       className="space-y-1.5 overflow-hidden"
                     >
-                      {result.updates.map((u) => {
-                        const isSkipped = skippedUpdates.has(u.existing.id);
-                        return (
-                          <button
-                            key={u.existing.id}
-                            type="button"
-                            onClick={() => toggleUpdate(u.existing.id)}
-                            className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${
-                              isSkipped
-                                ? isDark ? 'bg-dark-bg border-dark-border opacity-40' : 'bg-gray-50 border-light-border opacity-40'
-                                : isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'
-                            }`}
-                          >
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors mt-0.5 ${
-                              isSkipped
-                                ? isDark ? 'border-dark-border' : 'border-gray-300'
-                                : 'border-accent bg-accent'
-                            }`}>
-                              {!isSkipped && <Check size={11} strokeWidth={3} className="text-white" />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{u.existing.name}</p>
-                              {u.changes.map((c, i) => (
-                                <p key={i} className={`text-[11px] ${muted} mt-0.5`}>
-                                  <span className="capitalize">{c.field}</span>:{' '}
-                                  <span className="line-through">{c.from || '—'}</span>
-                                  {' → '}
-                                  <span className="text-accent font-medium">{c.to}</span>
-                                </p>
-                              ))}
-                            </div>
-                          </button>
-                        );
-                      })}
+                      {result.updates.map((u) => (
+                        <div
+                          key={u.existing.id}
+                          className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-xl border text-left ${
+                            isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'
+                          }`}
+                        >
+                          {/* Auto-apply indicator */}
+                          <div className="w-5 h-5 rounded-full border-2 border-accent bg-accent flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Check size={11} strokeWidth={3} className="text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{u.existing.name}</p>
+                            {u.changes.map((c, i) => (
+                              <p key={i} className={`text-[11px] ${muted} mt-0.5`}>
+                                <span className="capitalize">{c.field}</span>:{' '}
+                                <span className="line-through opacity-60">{c.from || '—'}</span>
+                                {' → '}
+                                <span className="text-accent font-medium">{c.to}</span>
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
             )}
 
-            {/* New contacts section */}
+            {/* New contacts — toggleable */}
             {result.newContacts.length > 0 && (
               <div>
                 <button
@@ -252,48 +238,69 @@ export default function LinkedInImport({
                   <div className="flex items-center gap-2">
                     <UserPlus size={15} className="text-accent" />
                     <p className="text-sm font-semibold">
-                      Add new contacts ({result.newContacts.length - skippedNew.size}/{result.newContacts.length})
+                      Add new connections ({result.newContacts.length - skippedNew.size}/{result.newContacts.length})
                     </p>
                   </div>
                   {showNewSection ? <ChevronUp size={16} className={muted} /> : <ChevronDown size={16} className={muted} />}
                 </button>
+
+                {/* Select all / Deselect all */}
                 <AnimatePresence>
                   {showNewSection && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="space-y-1.5 overflow-hidden"
+                      className="overflow-hidden"
                     >
-                      {result.newContacts.map((c, i) => {
-                        const isSkipped = skippedNew.has(i);
-                        return (
-                          <button
-                            key={i}
-                            type="button"
-                            onClick={() => toggleNew(i)}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${
-                              isSkipped
-                                ? isDark ? 'bg-dark-bg border-dark-border opacity-40' : 'bg-gray-50 border-light-border opacity-40'
-                                : isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'
-                            }`}
-                          >
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                              isSkipped
-                                ? isDark ? 'border-dark-border' : 'border-gray-300'
-                                : 'border-accent bg-accent'
-                            }`}>
-                              {!isSkipped && <Check size={11} strokeWidth={3} className="text-white" />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{c.name}</p>
-                              <p className={`text-[11px] truncate ${muted}`}>
-                                {[c.company, c.role].filter(Boolean).join(' · ') || c.email || 'No details'}
-                              </p>
-                            </div>
-                          </button>
-                        );
-                      })}
+                      <div className="flex justify-end mb-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (skippedNew.size === 0) {
+                              // deselect all
+                              setSkippedNew(new Set(result.newContacts.map((_, i) => i)));
+                            } else {
+                              // select all
+                              setSkippedNew(new Set());
+                            }
+                          }}
+                          className={`text-[11px] font-medium text-accent`}
+                        >
+                          {skippedNew.size === 0 ? 'Deselect all' : 'Select all'}
+                        </button>
+                      </div>
+                      <div className="space-y-1.5">
+                        {result.newContacts.map((c, i) => {
+                          const isSkipped = skippedNew.has(i);
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => toggleNew(i)}
+                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${
+                                isSkipped
+                                  ? isDark ? 'bg-dark-bg border-dark-border opacity-40' : 'bg-gray-50 border-light-border opacity-40'
+                                  : isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'
+                              }`}
+                            >
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                                isSkipped
+                                  ? isDark ? 'border-dark-border' : 'border-gray-300'
+                                  : 'border-accent bg-accent'
+                              }`}>
+                                {!isSkipped && <Check size={11} strokeWidth={3} className="text-white" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{c.name}</p>
+                                <p className={`text-[11px] truncate ${muted}`}>
+                                  {[c.company, c.role].filter(Boolean).join(' · ') || c.email || 'No details'}
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -322,7 +329,7 @@ export default function LinkedInImport({
             <div className="w-12 h-12 rounded-full bg-green-500/15 flex items-center justify-center">
               <Check size={24} className="text-green-500" />
             </div>
-            <p className="text-sm font-medium">Import complete</p>
+            <p className="text-sm font-medium">All done!</p>
           </div>
         )}
       </div>
@@ -348,7 +355,7 @@ export default function LinkedInImport({
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-accent/15 border border-accent/30 text-accent text-sm font-semibold active:scale-[0.98] transition-all"
               >
                 <Upload size={18} />
-                Choose Connections.csv
+                Upload Connections.csv
               </button>
             </>
           )}
@@ -356,18 +363,20 @@ export default function LinkedInImport({
             <button
               type="button"
               onClick={handleSave}
-              disabled={totalReady === 0}
+              disabled={!hasAnything}
               className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
-                totalReady === 0
+                !hasAnything
                   ? 'opacity-40 bg-accent/10 border border-accent/20 text-accent cursor-not-allowed'
                   : 'bg-accent/15 border border-accent/30 text-accent active:scale-[0.98]'
               }`}
             >
-              {readyUpdates > 0 && readyNew > 0
-                ? `Update ${readyUpdates} · Add ${readyNew}`
-                : readyUpdates > 0
-                ? `Update ${readyUpdates} contact${readyUpdates !== 1 ? 's' : ''}`
-                : `Add ${readyNew} contact${readyNew !== 1 ? 's' : ''}`}
+              {totalUpdates > 0 && readyNew > 0
+                ? `Refresh ${totalUpdates} · Add ${readyNew}`
+                : totalUpdates > 0
+                ? `Refresh ${totalUpdates} contact${totalUpdates !== 1 ? 's' : ''}`
+                : readyNew > 0
+                ? `Add ${readyNew} contact${readyNew !== 1 ? 's' : ''}`
+                : 'Nothing selected'}
             </button>
           )}
         </div>

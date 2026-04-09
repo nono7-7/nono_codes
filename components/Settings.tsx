@@ -636,8 +636,8 @@ export default function Settings({
           <button type="button" onClick={() => setShowLinkedInImport(true)} className={btnCls}>
             <Link2 size={18} className="text-[#0A66C2]" />
             <div>
-              <span className="block">Import from LinkedIn</span>
-              <span className="text-[11px] text-muted font-normal block mt-0.5">Update existing contacts or add new connections</span>
+              <span className="block">LinkedIn Network Refresh</span>
+              <span className="text-[11px] text-muted font-normal block mt-0.5">Refresh existing contacts &amp; add new connections</span>
             </div>
           </button>
           <button
