@@ -125,6 +125,12 @@ const SYNONYMS: Record<string, MappableField> = {
   'circle': 'classification',
   'tier': 'classification',
   'network tier': 'classification',
+  'network': 'classification',
+  'network type': 'classification',
+  'networktype': 'classification',
+  'inner or wider': 'classification',
+  'inner/wider': 'classification',
+  'contact type': 'classification',
 
   // how met
   'how met': 'howMet',
@@ -162,6 +168,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^[\+]?[\d\s\-().]{7,}$/;
 const LINKEDIN_RE = /linkedin\.com\/in\//i;
 const DATE_RE = /^\d{4}[-/]\d{2}[-/]\d{2}$/;
+const CLASSIFICATION_VALUES = new Set(['inner', 'wider', 'inner circle', 'wider circle']);
 
 /**
  * Detect field from value patterns. Returns null if no strong pattern found.
@@ -184,6 +191,9 @@ function detectFieldFromValues(values: string[]): { field: MappableField; confid
 
   const dateRatio = ratio((v) => DATE_RE.test(v));
   if (dateRatio > 0.5) return { field: 'birthday', confidence: 0.4 }; // low — could be any date
+
+  const classificationRatio = ratio((v) => CLASSIFICATION_VALUES.has(v.toLowerCase().trim()));
+  if (classificationRatio > 0.5) return { field: 'classification', confidence: 0.85 };
 
   return null;
 }
@@ -332,7 +342,7 @@ export const ALL_MAPPABLE_FIELDS: { value: MappableField | null; label: string }
   { value: 'birthday', label: 'Birthday' },
   { value: 'notes', label: 'Notes' },
   { value: 'tags', label: 'Tags' },
-  { value: 'classification', label: 'Classification' },
+  { value: 'classification', label: 'Classification (inner / wider)' },
   { value: 'howMet', label: 'How Met' },
   { value: 'whereMet', label: 'Where Met' },
   { value: 'eventOrContext', label: 'Event / Context' },

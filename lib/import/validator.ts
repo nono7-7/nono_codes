@@ -186,6 +186,7 @@ export function rowToContact(mapped: Record<string, string>): Contact {
   if (mapped.classification) {
     const cl = mapped.classification.toLowerCase().trim();
     if (cl === 'inner' || cl === 'inner circle') classification = 'inner';
+    else if (cl === 'wider' || cl === 'wider circle') classification = 'wider';
   }
 
   // Parse reconnect weeks
