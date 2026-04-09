@@ -67,46 +67,26 @@ export default function LinkedInImport({
 
     // Apply ALL updates automatically (no per-item toggle for updates)
     for (const u of result.updates) {
-      const updatedContact: Contact = { ...u.existing, jobs: u.existing.jobs ? [...u.existing.jobs] : [] };
+      // Unmark all existing jobs as no longer current, preserving history
+      const previousJobs = (u.existing.jobs ?? []).map((j) =>
+        j.isCurrent ? { ...j, isCurrent: false } : j
+      );
 
-      // Find the job to update: prefer isCurrent, else the one matching old company, else first job
-      const getJobIdx = () => {
-        let idx = updatedContact.jobs.findIndex((j) => j.isCurrent);
-        if (idx >= 0) return idx;
-        // fall back: match by old company name
-        const oldCompany = u.changes.find(c => c.field === 'company')?.from || u.existing.company || '';
-        idx = updatedContact.jobs.findIndex((j) => j.company?.toLowerCase() === oldCompany.toLowerCase());
-        if (idx >= 0) return idx;
-        // fall back: first job
-        return updatedContact.jobs.length > 0 ? 0 : -1;
+      // Add the new LinkedIn position as the current job
+      const newJob = {
+        id: Math.random().toString(36).slice(2),
+        company: u.linkedin.company,
+        role: u.linkedin.role,
+        isCurrent: true,
       };
 
-      for (const change of u.changes) {
-        if (change.field === 'company') {
-          updatedContact.company = change.to;
-          const idx = getJobIdx();
-          if (idx >= 0) {
-            updatedContact.jobs[idx] = { ...updatedContact.jobs[idx], company: change.to, isCurrent: true };
-          }
-        }
-        if (change.field === 'role') {
-          updatedContact.role = change.to;
-          const idx = getJobIdx();
-          if (idx >= 0) {
-            updatedContact.jobs[idx] = { ...updatedContact.jobs[idx], role: change.to, isCurrent: true };
-          }
-        }
-      }
-
-      // If still no isCurrent job and LinkedIn has company/role, add a new current job
-      if (!updatedContact.jobs.some(j => j.isCurrent) && (u.linkedin.company || u.linkedin.role)) {
-        updatedContact.jobs.push({
-          id: Math.random().toString(36).slice(2),
-          company: u.linkedin.company,
-          role: u.linkedin.role,
-          isCurrent: true,
-        });
-      }
+      const updatedContact: Contact = {
+        ...u.existing,
+        // Update top-level fields with whatever LinkedIn has for this change
+        company: u.changes.find(c => c.field === 'company')?.to ?? u.existing.company,
+        role: u.changes.find(c => c.field === 'role')?.to ?? u.existing.role,
+        jobs: [...previousJobs, newJob],
+      };
       // Backfill LinkedIn URL if not already set
       if (!updatedContact.linkedinUrl && u.linkedin.linkedinUrl) {
         updatedContact.linkedinUrl = u.linkedin.linkedinUrl;
