@@ -22,6 +22,7 @@ export default function LinkedInImport({
   const [step, setStep] = useState<Step>('instructions');
   const [result, setResult] = useState<LinkedInUpdateResult | null>(null);
   const [skippedNew, setSkippedNew] = useState<Set<number>>(new Set());
+  const [skippedUpdates, setSkippedUpdates] = useState<Set<number>>(new Set());
   const [showNewSection, setShowNewSection] = useState(true);
   const [showUpdateSection, setShowUpdateSection] = useState(true);
   const [sortOrder, setSortOrder] = useState<'recent' | 'az'>('recent');
@@ -66,8 +67,10 @@ export default function LinkedInImport({
     let updated = 0;
     let added = 0;
 
-    // Apply ALL updates automatically (no per-item toggle for updates)
-    for (const u of result.updates) {
+    // Apply selected updates
+    for (let idx = 0; idx < result.updates.length; idx++) {
+      if (skippedUpdates.has(idx)) continue;
+      const u = result.updates[idx];
       // Unmark all existing jobs as no longer current, preserving history
       const previousJobs = (u.existing.jobs ?? []).map((j) =>
         j.isCurrent ? { ...j, isCurrent: false } : j
@@ -109,8 +112,8 @@ export default function LinkedInImport({
   };
 
   const readyNew = (result?.newContacts.length ?? 0) - skippedNew.size;
-  const totalUpdates = result?.updates.length ?? 0;
-  const hasAnything = totalUpdates > 0 || readyNew > 0;
+  const readyUpdates = (result?.updates.length ?? 0) - skippedUpdates.size;
+  const hasAnything = readyUpdates > 0 || readyNew > 0;
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -197,7 +200,7 @@ export default function LinkedInImport({
         {/* ── Review ── */}
         {step === 'review' && result && (
           <>
-            {/* Updates — auto-applied, shown as info */}
+            {/* Updates — toggleable per-item, all selected by default */}
             {result.updates.length > 0 && (
               <div>
                 <button
@@ -208,13 +211,10 @@ export default function LinkedInImport({
                   <div className="flex items-center gap-2">
                     <RefreshCw size={15} className="text-accent" />
                     <p className="text-sm font-semibold">
-                      {result.updates.length} contact{result.updates.length !== 1 ? 's' : ''} will be refreshed
+                      Refresh contacts ({readyUpdates}/{result.updates.length})
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className={`text-[10px] font-medium ${muted}`}>auto</span>
-                    {showUpdateSection ? <ChevronUp size={16} className={muted} /> : <ChevronDown size={16} className={muted} />}
-                  </div>
+                  {showUpdateSection ? <ChevronUp size={16} className={muted} /> : <ChevronDown size={16} className={muted} />}
                 </button>
                 <AnimatePresence>
                   {showUpdateSection && (
@@ -222,32 +222,64 @@ export default function LinkedInImport({
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="space-y-1.5 overflow-hidden"
+                      className="overflow-hidden"
                     >
-                      {result.updates.map((u) => (
-                        <div
-                          key={u.existing.id}
-                          className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-xl border text-left ${
-                            isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'
-                          }`}
+                      {/* Select all / Deselect all */}
+                      <div className="flex justify-end mb-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (skippedUpdates.size === 0) {
+                              setSkippedUpdates(new Set(result.updates.map((_, i) => i)));
+                            } else {
+                              setSkippedUpdates(new Set());
+                            }
+                          }}
+                          className="text-[11px] font-medium text-accent"
                         >
-                          {/* Auto-apply indicator */}
-                          <div className="w-5 h-5 rounded-full border-2 border-accent bg-accent flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <Check size={11} strokeWidth={3} className="text-white" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{u.existing.name}</p>
-                            {u.changes.map((c, i) => (
-                              <p key={i} className={`text-[11px] ${muted} mt-0.5`}>
-                                <span className="capitalize">{c.field}</span>:{' '}
-                                <span className="line-through opacity-60">{c.from || '—'}</span>
-                                {' → '}
-                                <span className="text-accent font-medium">{c.to}</span>
-                              </p>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                          {skippedUpdates.size === 0 ? 'Deselect all' : 'Select all'}
+                        </button>
+                      </div>
+                      <div className="space-y-1.5">
+                        {result.updates.map((u, idx) => {
+                          const isSkipped = skippedUpdates.has(idx);
+                          return (
+                            <button
+                              key={u.existing.id}
+                              type="button"
+                              onClick={() => setSkippedUpdates((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(idx)) next.delete(idx); else next.add(idx);
+                                return next;
+                              })}
+                              className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${
+                                isSkipped
+                                  ? isDark ? 'bg-dark-bg border-dark-border opacity-40' : 'bg-gray-50 border-light-border opacity-40'
+                                  : isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'
+                              }`}
+                            >
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
+                                isSkipped
+                                  ? isDark ? 'border-dark-border' : 'border-gray-300'
+                                  : 'border-accent bg-accent'
+                              }`}>
+                                {!isSkipped && <Check size={11} strokeWidth={3} className="text-white" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{u.existing.name}</p>
+                                {u.changes.map((c, i) => (
+                                  <p key={i} className={`text-[11px] ${muted} mt-0.5`}>
+                                    <span className="capitalize">{c.field}</span>:{' '}
+                                    <span className="line-through opacity-60">{c.from || '—'}</span>
+                                    {' → '}
+                                    <span className="text-accent font-medium">{c.to}</span>
+                                  </p>
+                                ))}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -424,10 +456,10 @@ export default function LinkedInImport({
                   : 'bg-accent/15 border border-accent/30 text-accent active:scale-[0.98]'
               }`}
             >
-              {totalUpdates > 0 && readyNew > 0
-                ? `Refresh ${totalUpdates} · Add ${readyNew}`
-                : totalUpdates > 0
-                ? `Refresh ${totalUpdates} contact${totalUpdates !== 1 ? 's' : ''}`
+              {readyUpdates > 0 && readyNew > 0
+                ? `Refresh ${readyUpdates} · Add ${readyNew}`
+                : readyUpdates > 0
+                ? `Refresh ${readyUpdates} contact${readyUpdates !== 1 ? 's' : ''}`
                 : readyNew > 0
                 ? `Add ${readyNew} contact${readyNew !== 1 ? 's' : ''}`
                 : 'Nothing selected'}
