@@ -107,31 +107,34 @@ export default function VCardImport({
             <div className={`rounded-xl p-4 ${stepCard}`}>
               <div className="flex items-center gap-2 mb-3">
                 <Smartphone size={16} className="text-accent" />
-                <p className="text-sm font-semibold">iPhone (Recommended: iCloud.com)</p>
+                <p className="text-sm font-semibold">iPhone</p>
               </div>
-              <p className={`text-xs mb-3 leading-relaxed ${muted}`}>
-                Using iCloud.com lets you <strong>select only the contacts you want</strong> — rather than exporting your entire address book.
-              </p>
-              <div className={`rounded-lg p-3 space-y-2.5 text-[13px] ${card}`}>
+
+              {/* Option A: Mac/PC */}
+              <p className={`text-xs font-semibold mb-1.5 text-accent`}>Option A — Mac or PC (recommended, select specific contacts)</p>
+              <div className={`rounded-lg p-3 space-y-2.5 text-[13px] mb-3 ${card}`}>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</div>
-                  <p>Open <strong>iCloud.com</strong> in Safari on your iPhone (or any browser on desktop) and sign in with your Apple ID.</p>
+                  <p>On a <strong>Mac or PC</strong>, open <strong>iCloud.com</strong> in a browser and sign in with your Apple ID. Click <strong>Contacts</strong>.</p>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</div>
-                  <p>Tap <strong>Contacts</strong>. Select the contacts you want by tapping them (hold <strong>Cmd</strong> on Mac to select multiple, or use <strong>Select All</strong> from the gear icon).</p>
+                  <p>Select the contacts you want. Hold <strong>Cmd</strong> (Mac) or <strong>Ctrl</strong> (Windows) while clicking to select multiple. Click the first, then Ctrl+click each additional one.</p>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</div>
-                  <p>Tap the <strong>gear icon</strong> (⚙) at the bottom-left → <strong>Export vCard</strong>. A .vcf file will download.</p>
+                  <p>Click the <strong>share/export button</strong> (↑ icon) at the top right → <strong>Export vCard</strong>. A .vcf file will download.</p>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">4</div>
-                  <p>Come back here and tap <strong>Choose .vcf file</strong> below to upload it.</p>
+                  <p>Open InTouch on that same computer, come back here and tap <strong>Choose .vcf file</strong> to upload it.</p>
                 </div>
               </div>
-              <div className={`mt-3 rounded-lg px-3 py-2 text-xs ${muted} ${isDark ? 'bg-dark-card' : 'bg-white'} border ${isDark ? 'border-dark-border' : 'border-light-border'}`}>
-                <strong>Alternatively</strong> — on iPhone, go to the <strong>Contacts app</strong> → tap a contact → <strong>Share Contact</strong> → <strong>AirDrop / Save to Files</strong> to export one contact at a time as a .vcf.
+
+              {/* Option B: iPhone only */}
+              <p className={`text-xs font-semibold mb-1.5 text-accent`}>Option B — iPhone only (one contact at a time)</p>
+              <div className={`rounded-lg px-3 py-2.5 text-[13px] ${card}`}>
+                <p>Go to the <strong>Contacts app</strong> → tap a contact → <strong>Share Contact</strong> → <strong>Save to Files</strong>. Repeat for each contact, then upload the .vcf files here one by one.</p>
               </div>
             </div>
 
