@@ -21,6 +21,7 @@ export interface LinkedInContact {
   company: string;
   role: string;
   connectedOn: string;
+  linkedinUrl: string;
 }
 
 export interface LinkedInUpdateResult {
@@ -75,6 +76,7 @@ export async function parseLinkedInFile(file: File): Promise<LinkedInContact[]> 
       company: get(row, 'company'),
       role: get(row, 'position'),
       connectedOn: get(row, 'connected on'),
+      linkedinUrl: get(row, 'url'),
     });
   }
 
@@ -146,7 +148,7 @@ export function linkedInToContact(li: LinkedInContact): Contact {
     dateMet: '',
     homeLocation: '',
     nationality: '',
-    linkedinUrl: '',
+    linkedinUrl: li.linkedinUrl,
     phone: '',
     email: li.email,
     notes: '',

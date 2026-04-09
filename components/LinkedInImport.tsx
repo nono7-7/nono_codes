@@ -88,6 +88,10 @@ export default function LinkedInImport({
           }
         }
       }
+      // Backfill LinkedIn URL if not already set
+      if (!updatedContact.linkedinUrl && u.linkedin.linkedinUrl) {
+        updatedContact.linkedinUrl = u.linkedin.linkedinUrl;
+      }
       updatedContact.lastUpdated = new Date().toISOString();
       await saveContact(updatedContact);
       updated++;
