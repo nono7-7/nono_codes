@@ -683,7 +683,7 @@ export default function Settings({
       <AnimatePresence>
         {showVCardImport && (
           <motion.div
-            className={`fixed inset-0 z-50 flex flex-col ${isDark ? 'bg-dark-bg' : 'bg-light-bg'}`}
+            className={`fixed inset-0 z-[60] flex flex-col ${isDark ? 'bg-dark-bg' : 'bg-light-bg'}`}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
