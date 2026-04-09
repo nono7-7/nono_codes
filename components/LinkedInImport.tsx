@@ -115,7 +115,7 @@ export default function LinkedInImport({
         <button type="button" onClick={onCancel} className={`p-1 ${muted}`}>
           <ArrowLeft size={20} />
         </button>
-        <h2 className="font-semibold text-base flex-1">LinkedIn Network Refresh</h2>
+        <h2 className="font-semibold text-base flex-1">LinkedIn Connections Import</h2>
         <button type="button" onClick={onCancel} className={`p-1 ${muted}`}>
           <X size={18} />
         </button>
@@ -126,12 +126,40 @@ export default function LinkedInImport({
         {/* ── Instructions ── */}
         {step === 'instructions' && (
           <>
-            <p className={`text-sm leading-relaxed ${muted}`}>
-              Upload your LinkedIn connections export to automatically refresh existing contacts and selectively add new ones.
-            </p>
+            {/* What this does — two modes explained */}
+            <div className="space-y-2.5">
+              <div className={`rounded-xl p-3.5 ${stepCard}`}>
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <RefreshCw size={14} className="text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold mb-0.5">Network Refresh</p>
+                    <p className={`text-[12px] leading-relaxed ${muted}`}>
+                      For people <span className="font-medium">already in InTouch</span> — if their company or job title has changed on LinkedIn, InTouch updates it automatically. No review needed; changes are applied in one tap so your contacts always reflect where people actually work.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
+              <div className={`rounded-xl p-3.5 ${stepCard}`}>
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <UserPlus size={14} className="text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold mb-0.5">Connections Import</p>
+                    <p className={`text-[12px] leading-relaxed ${muted}`}>
+                      For LinkedIn connections <span className="font-medium">not yet in InTouch</span> — you see the full list and choose exactly who to add. Useful after a conference, a new job, or whenever you want to bring a batch of LinkedIn contacts into your network.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* How to export */}
             <div className={`rounded-xl p-4 ${stepCard}`}>
-              <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">How to export from LinkedIn</p>
+              <p className="text-xs font-bold text-accent uppercase tracking-wide mb-3">How to get your Connections.csv</p>
               <div className={`rounded-lg p-3 space-y-2.5 text-[13px] ${card}`}>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</div>
@@ -143,19 +171,13 @@ export default function LinkedInImport({
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</div>
-                  <p>Select <strong>Connections</strong> only → click <strong>Request archive</strong>. LinkedIn emails you a download link — usually within a few minutes.</p>
+                  <p>Select <strong>Connections</strong> only → click <strong>Request archive</strong>. LinkedIn emails you a link — usually within a few minutes.</p>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">4</div>
                   <p>Download the zip → open it → find <strong>Connections.csv</strong> → upload it below.</p>
                 </div>
               </div>
-            </div>
-
-            <div className={`rounded-xl px-4 py-3 text-[12px] leading-relaxed space-y-1 ${stepCard}`}>
-              <p className="font-semibold text-accent text-[11px] uppercase tracking-wide mb-1">What happens</p>
-              <p className={muted}><span className="font-medium">Existing contacts</span> — company &amp; role are refreshed automatically if LinkedIn shows a change.</p>
-              <p className={muted}><span className="font-medium">New connections</span> — you choose which ones to add.</p>
             </div>
 
             {error && (
