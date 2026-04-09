@@ -332,7 +332,7 @@ const slides = [
             <RefreshCw size={12} className="text-blue-400 shrink-0" />
             <p className="font-semibold text-sm text-blue-400">Network Refresh</p>
           </div>
-          <p className="text-muted">For contacts <span className="font-medium text-white/80">already in InTouch</span> — when someone changes jobs on LinkedIn, their new role is added automatically and the old one is kept as career history.</p>
+          <p className="text-muted">For contacts <span className="font-medium text-accent">already in InTouch</span> — when someone changes jobs on LinkedIn, their new role is added automatically and the old one is kept as career history.</p>
           <div className="space-y-1">
             <div className={`${mutedCard} px-2.5 py-1.5 flex items-center gap-2`}>
               <span className="flex-1 text-muted line-through text-[11px]">VP @ Goldman Sachs</span>
@@ -351,7 +351,7 @@ const slides = [
             <UserPlusIcon size={12} className="text-accent shrink-0" />
             <p className="font-semibold text-sm text-accent">Connections Import</p>
           </div>
-          <p className="text-muted">For LinkedIn connections <span className="font-medium text-white/80">not yet in InTouch</span> — you see the full list and choose exactly who to add.</p>
+          <p className="text-muted">For LinkedIn connections <span className="font-medium text-accent">not yet in InTouch</span> — you see the full list and choose exactly who to add.</p>
           <div className="space-y-1">
             {[
               { name: 'Alice Dupont', info: 'Analyst @ Morgan Stanley', checked: true },

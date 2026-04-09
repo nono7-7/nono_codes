@@ -6,14 +6,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 // ─────────────────────────────────────────────────────────────
 // BUMP THIS VERSION + UPDATE features[] WHEN ANNOUNCING A NEW FEATURE
 // ─────────────────────────────────────────────────────────────
-export const WHATS_NEW_VERSION = '1.0';
+export const WHATS_NEW_VERSION = '1.1';
 
 const features = [
-  'Import phone contacts directly from your iPhone or Android via vCard (.vcf)',
-  'Reach-Out filter — flag contacts you want to follow up with',
-  'Smart filter chips: Upcoming, Interacted, Reach Out',
+  'LinkedIn Connections Import — selectively add new LinkedIn connections to InTouch',
+  'LinkedIn Network Refresh — auto-updates company & role when contacts change jobs, with full career history preserved',
+  'Autofill suggestions for role & company in Settings profile',
+  'Import phone contacts via vCard (.vcf) from iPhone, Android or Google Contacts',
   'Push notifications at 9 AM UTC for planned interactions',
-  'Network breakdown by Firm, Role, and University',
 ];
 // ─────────────────────────────────────────────────────────────
 
