@@ -15,6 +15,7 @@ import ImageCropModal from './ImageCropModal';
 import NotificationHelpModal from './NotificationHelpModal';
 import VCardImport from './VCardImport';
 import LinkedInImport from './LinkedInImport';
+import AutoSuggestInput from './AutoSuggestInput';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -59,6 +60,7 @@ export default function Settings({
   onEnableNotifications,
   installPrompt,
   onInstall,
+  suggestionPools,
 }: {
   isDark: boolean;
   onToggleTheme: () => void;
@@ -76,6 +78,7 @@ export default function Settings({
   onEnableNotifications?: () => Promise<boolean>;
   installPrompt?: BeforeInstallPromptEvent | null;
   onInstall?: () => void;
+  suggestionPools?: { role: string[]; company: string[] };
 }) {
   const [clearStep, setClearStep] = useState(0);
   const [inviteCopied, setInviteCopied] = useState(false);
@@ -382,19 +385,21 @@ export default function Settings({
                 <Briefcase size={14} className="text-muted mt-2.5 flex-shrink-0" />
                 <div className="flex-1 space-y-1.5">
                   <div className="flex gap-1.5">
-                    <input
-                      type="text"
+                    <AutoSuggestInput
                       value={job.role}
-                      onChange={(e) => updateJob(job.id, { role: e.target.value })}
+                      onChange={(v) => updateJob(job.id, { role: v })}
+                      suggestions={suggestionPools?.role ?? []}
                       placeholder="Role"
-                      className={`${inputCls} py-1.5 text-xs flex-1`}
+                      inputClass={`${inputCls} py-1.5 text-xs flex-1`}
+                      isDark={isDark}
                     />
-                    <input
-                      type="text"
+                    <AutoSuggestInput
                       value={job.company}
-                      onChange={(e) => updateJob(job.id, { company: e.target.value })}
+                      onChange={(v) => updateJob(job.id, { company: v })}
+                      suggestions={suggestionPools?.company ?? []}
                       placeholder="Company"
-                      className={`${inputCls} py-1.5 text-xs flex-1`}
+                      inputClass={`${inputCls} py-1.5 text-xs flex-1`}
+                      isDark={isDark}
                     />
                   </div>
                   <button

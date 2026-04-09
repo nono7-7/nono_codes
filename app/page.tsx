@@ -806,6 +806,7 @@ export default function App() {
               onEnableNotifications={handleEnableNotifications}
               installPrompt={installPrompt}
               onInstall={() => setInstallPrompt(null)}
+              suggestionPools={{ role: suggestionPools.role, company: suggestionPools.company }}
             />
           )}
 
