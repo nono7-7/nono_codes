@@ -19,6 +19,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/web-push": "^3.6.4",
+    "@vercel/analytics": "^2.0.1",
     "autoprefixer": "^10.4.27",
     "firebase": "^12.11.0",
     "firebase-admin": "^13.7.0",
