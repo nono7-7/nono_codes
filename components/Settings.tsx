@@ -451,7 +451,7 @@ export default function Settings({
         <button
           type="button"
           onClick={async () => {
-            const url = 'https://nono-codes.vercel.app';
+            const url = 'https://getintouchcrm.com';
             const text = 'I use InTouch to stay on top of my network — give it a try:';
             if (navigator.share) {
               await navigator.share({ title: 'InTouch', text, url }).catch(() => {});
