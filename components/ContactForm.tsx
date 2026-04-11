@@ -429,7 +429,7 @@ export default function ContactForm({
         <div className="flex items-center justify-between px-3 py-3">
           <div className="flex-1 pr-4">
             <p className="text-sm font-medium">Reach Out</p>
-            <p className="text-[11px] text-muted mt-0.5">Flag this contact so they appear in your Reach Out filter — a quick view of everyone you still need to contact.</p>
+            <p className="text-[11px] text-muted mt-0.5">Flag this person as someone you need to contact. They appear in your <span className="font-medium">Reach Out</span> tab — no automatic notifications unless you set a date below.</p>
           </div>
           <button
             type="button"
@@ -465,7 +465,7 @@ export default function ContactForm({
 
       {/* Reconnect Reminder */}
       {sectionLabel('Reconnect Reminder (optional)')}
-      <p className="text-[11px] text-muted mb-2 -mt-1">Send me a recurring push notification to reconnect with this person</p>
+      <p className="text-[11px] text-muted mb-2 -mt-1">For people you want to stay in regular touch with. Pick an interval and InTouch pushes a notification each time it comes around — no manual action needed.</p>
       <div className={`flex flex-wrap gap-2`}>
         {[
           { label: 'None', value: null },
