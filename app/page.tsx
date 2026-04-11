@@ -20,6 +20,7 @@ import BirthdayBanner from '@/components/BirthdayBanner';
 import ReconnectBanner from '@/components/ReconnectBanner';
 import PlannedBanner from '@/components/PlannedBanner';
 import BulkImport from '@/components/BulkImport';
+import PhotoScan from '@/components/PhotoScan';
 import SyncIndicator, { type SyncStatus } from '@/components/SyncIndicator';
 import NotificationHelpModal from '@/components/NotificationHelpModal';
 import WhatsNew, { shouldShowWhatsNew, dismissWhatsNew } from '@/components/WhatsNew';
@@ -46,6 +47,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('contacts');
   const [screen, setScreen] = useState<Screen>({ type: 'list' });
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [showPhotoScan, setShowPhotoScan] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isDark, setIsDark] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -807,12 +809,13 @@ export default function App() {
             />
           )}
 
-          {tab === 'settings' && !showBulkImport && (
+          {tab === 'settings' && !showBulkImport && !showPhotoScan && (
             <Settings
               isDark={isDark}
               onToggleTheme={toggleTheme}
               onImportComplete={refresh}
               onBulkImport={() => setShowBulkImport(true)}
+              onPhotoScan={() => setShowPhotoScan(true)}
               onClearComplete={refresh}
               showToast={showToast}
               onLogout={handleLogout}
@@ -838,6 +841,19 @@ export default function App() {
                 showToast(`${count} contact${count !== 1 ? 's' : ''} imported`);
               }}
               onCancel={() => setShowBulkImport(false)}
+              isDark={isDark}
+            />
+          )}
+
+          {tab === 'settings' && showPhotoScan && (
+            <PhotoScan
+              existingContacts={contacts}
+              onComplete={async (count) => {
+                setShowPhotoScan(false);
+                await refresh();
+                showToast(`${count} contact${count !== 1 ? 's' : ''} added`);
+              }}
+              onCancel={() => setShowPhotoScan(false)}
               isDark={isDark}
             />
           )}

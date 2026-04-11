@@ -48,6 +48,7 @@ export default function Settings({
   onToggleTheme,
   onImportComplete,
   onBulkImport,
+  onPhotoScan,
   onClearComplete,
   showToast,
   onLogout,
@@ -66,6 +67,7 @@ export default function Settings({
   onToggleTheme: () => void;
   onImportComplete: () => void;
   onBulkImport: () => void;
+  onPhotoScan: () => void;
   onClearComplete: () => void;
   showToast: (msg: string) => void;
   onLogout?: () => void;
@@ -636,6 +638,13 @@ export default function Settings({
             <div>
               <span className="block">Bulk import (CSV / XLSX)</span>
               <span className="text-[11px] text-muted font-normal block mt-0.5">Import from spreadsheets with smart mapping</span>
+            </div>
+          </button>
+          <button type="button" onClick={onPhotoScan} className={btnCls}>
+            <Camera size={18} className="text-accent" />
+            <div>
+              <span className="block">Add Contacts with Photo Scan</span>
+              <span className="text-[11px] text-muted font-normal block mt.0.5">Upload a photo of any contact list — Claude reads and extracts the details</span>
             </div>
           </button>
           <button type="button" onClick={() => setShowLinkedInImport(true)} className={btnCls}>
