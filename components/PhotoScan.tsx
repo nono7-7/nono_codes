@@ -182,9 +182,26 @@ export default function PhotoScan({
           {/* ── Upload ── */}
           {step === 'upload' && (
             <motion.div key="upload" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
-              <p className="text-sm text-muted mb-5 leading-relaxed">
+              <p className="text-sm text-muted mb-4 leading-relaxed">
                 Upload one or more photos of your contact list — handwritten notebook, business cards, or a printed sheet. Claude will extract the information and let you review before saving.
               </p>
+
+              {/* Tips */}
+              <div className={`rounded-xl border px-4 py-3.5 mb-5 space-y-1.5 ${isDark ? 'bg-dark-card border-dark-border' : 'bg-slate-50 border-slate-200'}`}>
+                <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">For best results</p>
+                {[
+                  'Good lighting and a steady shot — avoid blur or shadows over the text',
+                  'Handwriting works, but printed or typed text gives the most accurate results',
+                  'Multiple contacts per photo is fine — Claude extracts each one separately',
+                  'Always review the extracted contacts before saving, as errors can occur',
+                  'Each scan uses the Claude API and costs approximately $0.002–$0.005',
+                ].map((tip) => (
+                  <div key={tip} className="flex items-start gap-2">
+                    <span className="text-accent mt-0.5 shrink-0">·</span>
+                    <p className="text-xs text-muted leading-relaxed">{tip}</p>
+                  </div>
+                ))}
+              </div>
 
               {/* Drop zone */}
               <button
