@@ -153,9 +153,9 @@ export default function ContactDetail({
             </span>
           )}
           {contact.reconnectDate && (
-            <span className="text-xs text-muted flex items-center gap-1">
+            <span className="text-xs text-accent flex items-center gap-1">
               <Clock size={12} />
-              Remind {new Date(contact.reconnectDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              Reach out by {new Date(contact.reconnectDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </span>
           )}
         </div>

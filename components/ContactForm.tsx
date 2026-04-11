@@ -425,23 +425,47 @@ export default function ContactForm({
       />
 
       {/* Reach-Out */}
-      <div className={`flex items-center justify-between px-3 py-3 rounded-lg border ${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'}`}>
-        <div className="flex-1 pr-4">
-          <p className="text-sm font-medium">Reach-Out</p>
-          <p className="text-[11px] text-muted mt-0.5">Flag this contact as someone you want to reach out to in the future.</p>
+      <div className={`rounded-lg border ${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'}`}>
+        <div className="flex items-center justify-between px-3 py-3">
+          <div className="flex-1 pr-4">
+            <p className="text-sm font-medium">Reach Out</p>
+            <p className="text-[11px] text-muted mt-0.5">Flag this contact so they appear in your Reach Out filter — a quick view of everyone you still need to contact.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setForm((f) => ({ ...f, reachOut: !f.reachOut, reconnectDate: f.reachOut ? '' : f.reconnectDate }))}
+            className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${form.reachOut ? 'bg-accent' : isDark ? 'bg-dark-border' : 'bg-light-border'}`}
+          >
+            <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.reachOut ? 'translate-x-5' : 'translate-x-0'}`} />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => setForm((f) => ({ ...f, reachOut: !f.reachOut }))}
-          className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${form.reachOut ? 'bg-accent' : isDark ? 'bg-dark-border' : 'bg-light-border'}`}
-        >
-          <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.reachOut ? 'translate-x-5' : 'translate-x-0'}`} />
-        </button>
+        {form.reachOut && (
+          <div className={`px-3 pb-3 border-t ${isDark ? 'border-dark-border' : 'border-light-border'}`}>
+            <p className="text-[11px] text-muted mt-2.5 mb-2">Set a date (optional) — you'll get a push notification at 9 AM on that day</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={form.reconnectDate || ''}
+                onChange={(e) => set('reconnectDate', e.target.value)}
+                className={`${inputClass} flex-1 ${form.reconnectDate ? '!border-accent' : ''}`}
+              />
+              {form.reconnectDate && (
+                <button
+                  type="button"
+                  onClick={() => set('reconnectDate', '')}
+                  className="text-xs text-muted hover:text-red-400"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Reconnect Reminder */}
       {sectionLabel('Reconnect Reminder (optional)')}
-      <p className="text-[11px] text-muted mb-2 -mt-1">Recurring interval</p>
+      <p className="text-[11px] text-muted mb-2 -mt-1">Send me a recurring push notification to reconnect with this person</p>
       <div className={`flex flex-wrap gap-2`}>
         {[
           { label: 'None', value: null },
@@ -493,25 +517,6 @@ export default function ContactForm({
           />
           <span className="text-xs text-muted">weeks</span>
         </div>
-      </div>
-      {/* Specific date reminder */}
-      <p className="text-[11px] text-muted mb-2 mt-4">Or set a specific date</p>
-      <div className="flex items-center gap-2">
-        <input
-          type="date"
-          value={form.reconnectDate || ''}
-          onChange={(e) => set('reconnectDate', e.target.value)}
-          className={`${inputClass} flex-1 ${form.reconnectDate ? '!border-accent' : ''}`}
-        />
-        {form.reconnectDate && (
-          <button
-            type="button"
-            onClick={() => set('reconnectDate', '')}
-            className="text-xs text-muted hover:text-red-400"
-          >
-            Clear
-          </button>
-        )}
       </div>
 
       {/* Tags */}

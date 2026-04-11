@@ -129,31 +129,24 @@ const slides = [
     ),
   },
 
-  // ── 5. Reconnect Reminders ──────────────────────────────────────
+  // ── 5. Reach Out & Reconnect ────────────────────────────────────
   {
     icon: Bell,
     color: 'bg-accent/15',
-    title: 'Reconnect Reminders',
+    title: 'Reach Out & Reconnect',
     description:
-      'Set a recurring reminder on any contact — every 2, 4, 8, or 12 weeks. When it\'s due, they appear in your Reach Out tab and InTouch sends you a push notification so you never forget.',
+      'Two tools to make sure no one falls through the cracks.',
     example: (
-      <div className="mt-4 space-y-2 text-xs">
-        <div className={`${card} px-3 py-2.5 flex items-center gap-2.5`}>
-          <Bell size={12} className="text-accent shrink-0" />
-          <p className="text-accent font-medium">2 People Due in Reach Out</p>
+      <div className="mt-4 space-y-2.5 text-xs text-left">
+        {/* Reach Out */}
+        <div className={`${card} p-3 space-y-1.5`}>
+          <p className="font-semibold text-sm text-accent">Reach Out filter</p>
+          <p className="text-muted leading-relaxed">Toggle on any contact you know you need to reach out to — they appear in the <span className="font-medium text-accent">Reach Out</span> tab in your contacts list. No notifications. Optionally pick a date and you'll get a push notification at 9 AM that day.</p>
         </div>
-        {[
-          { name: 'Sarah Chen', status: '2w overdue' },
-          { name: 'James Park', status: 'due today' },
-        ].map((c) => (
-          <div key={c.name} className={`${mutedCard} flex items-center justify-between px-3 py-2`}>
-            <span className="text-sm">{c.name}</span>
-            <span className="text-accent font-medium">{c.status}</span>
-          </div>
-        ))}
-        <div className={`${mutedCard} px-3 py-2 flex items-center gap-2`}>
-          <Check size={11} className="text-accent shrink-0" strokeWidth={3} />
-          <p className="text-muted text-[10px]"><span className="text-accent font-medium">Reach Out</span> = contacts with a due reconnect reminder &middot; <span className="text-accent font-medium">Reconnect Reminders</span> = the recurring schedule you set per contact</p>
+        {/* Reconnect */}
+        <div className={`${card} p-3 space-y-1.5`}>
+          <p className="font-semibold text-sm text-accent">Reconnect Reminder</p>
+          <p className="text-muted leading-relaxed">Set a recurring interval (every 2, 4, 8, or 12 weeks) and InTouch will push-notify you when it's time to reconnect — great for keeping up with people regularly.</p>
         </div>
       </div>
     ),

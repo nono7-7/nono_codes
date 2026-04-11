@@ -97,6 +97,38 @@ export async function syncEmailPreference(uid: string, enabled: boolean): Promis
   await setDoc(ref, { emailNotificationsEnabled: enabled }, { merge: true });
 }
 
+/**
+ * Write a reach-out date notification to Firestore so the cron sends a push
+ * at 9 AM (user's timezone) on the chosen date.
+ */
+export async function saveReachOutNotification(
+  uid: string,
+  contactId: string,
+  contactName: string,
+  date: string,
+): Promise<void> {
+  const db = getDB();
+  const ref = doc(db, 'notifications', `${uid}_reachout_${contactId}`);
+  await setDoc(ref, {
+    uid,
+    contactName,
+    date,
+    description: 'Reach out',
+    completed: false,
+    createdAt: new Date().toISOString(),
+  });
+}
+
+/** Remove the reach-out notification for a contact (date cleared or toggle off) */
+export async function clearReachOutNotification(
+  uid: string,
+  contactId: string,
+): Promise<void> {
+  const db = getDB();
+  const ref = doc(db, 'notifications', `${uid}_reachout_${contactId}`);
+  await setDoc(ref, { completed: true }, { merge: true });
+}
+
 /** Mark a planned notification as completed so no more emails are sent */
 export async function completePlannedNotification(
   uid: string,

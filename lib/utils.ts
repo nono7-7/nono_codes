@@ -108,12 +108,9 @@ export function sortContacts(contacts: Contact[], sortOrder: SortOrder): Contact
 
 export function getOverdueContacts(contacts: Contact[]): Contact[] {
   const now = Date.now();
-  const today = new Date().toISOString().slice(0, 10);
   return contacts
     .filter((c) => {
-      // One-off date reminder: due if today >= reconnectDate
-      if (c.reconnectDate && c.reconnectDate <= today) return true;
-      // Recurring interval reminder
+      // Recurring interval reminder only
       if (!c.reconnectIntervalWeeks) return false;
       const intervalMs = c.reconnectIntervalWeeks * 7 * 24 * 60 * 60 * 1000;
       const lastDate = c.lastContacted ? new Date(c.lastContacted).getTime() : 0;

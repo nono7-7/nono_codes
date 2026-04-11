@@ -23,7 +23,7 @@ import BulkImport from '@/components/BulkImport';
 import SyncIndicator, { type SyncStatus } from '@/components/SyncIndicator';
 import NotificationHelpModal from '@/components/NotificationHelpModal';
 import WhatsNew, { shouldShowWhatsNew, dismissWhatsNew } from '@/components/WhatsNew';
-import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud, storePushSubscription, storeUserTimezone } from '@/lib/sync';
+import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, saveReachOutNotification, clearReachOutNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud, storePushSubscription, storeUserTimezone } from '@/lib/sync';
 import { decodeSharedContact } from '@/lib/share';
 import type { NetworkFilterAction } from '@/components/NetworkView';
 
@@ -288,6 +288,14 @@ export default function App() {
           setSyncStatus('error');
         }
       }
+      // Reach-out date notification — write or clear from Firestore
+      if (user) {
+        if (contact.reachOut && contact.reconnectDate) {
+          saveReachOutNotification(user.uid, contact.id, contact.name, contact.reconnectDate).catch(() => {});
+        } else {
+          clearReachOutNotification(user.uid, contact.id).catch(() => {});
+        }
+      }
       await refresh();
       setScreen({ type: 'list' });
       showToast(contact.dateAdded === contact.lastUpdated ? 'Contact added' : 'Contact updated');
@@ -373,15 +381,9 @@ export default function App() {
   const handleMarkContacted = useCallback(
     async (contactId: string) => {
       const today = new Date().toISOString().slice(0, 10);
-      // Clear one-off reconnectDate when marking as contacted
-      const contact = contacts.find((c) => c.id === contactId);
-      if (contact?.reconnectDate) {
-        const updated = { ...contact, reconnectDate: '', lastUpdated: new Date().toISOString() };
-        await saveContact(updated);
-      }
       await handleLogInteraction(contactId, today, 'Reconnected');
     },
-    [contacts, handleLogInteraction]
+    [handleLogInteraction]
   );
 
   const handleSettingsChange = useCallback(
