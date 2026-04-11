@@ -15,6 +15,7 @@ import Settings from '@/components/Settings';
 import Toast from '@/components/Toast';
 import AuthScreen from '@/components/AuthScreen';
 import Onboarding from '@/components/Onboarding';
+import ProfileSetup from '@/components/ProfileSetup';
 import BirthdayBanner from '@/components/BirthdayBanner';
 import ReconnectBanner from '@/components/ReconnectBanner';
 import PlannedBanner from '@/components/PlannedBanner';
@@ -37,7 +38,7 @@ type Screen =
   | { type: 'detail'; contact: Contact }
   | { type: 'form'; contact: Contact | null };
 
-type AppState = 'loading' | 'auth' | 'onboarding' | 'app';
+type AppState = 'loading' | 'auth' | 'onboarding' | 'profile-setup' | 'app';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('loading');
@@ -124,7 +125,7 @@ export default function App() {
   // are loaded from IndexedDB (prevents the race condition where cloudSyncEnabled
   // is still false when the sync effect fires).
   useEffect(() => {
-    if (appState !== 'app' && appState !== 'onboarding') return;
+    if (appState !== 'app' && appState !== 'onboarding' && appState !== 'profile-setup') return;
     if (!user) return;
     let cancelled = false;
 
@@ -594,7 +595,7 @@ export default function App() {
 
   // Listen for push messages forwarded from the service worker (foreground toasts)
   useEffect(() => {
-    if (appState !== 'app' && appState !== 'onboarding') return;
+    if (appState !== 'app' && appState !== 'onboarding' && appState !== 'profile-setup') return;
     if (!('serviceWorker' in navigator)) return;
     let unsub: (() => void) | undefined;
     import('@/lib/messaging').then((mod) => {
@@ -623,14 +624,20 @@ export default function App() {
 
   const handleOnboardingComplete = () => {
     if (user) localStorage.setItem(`intouch-onboarded-${user.uid}`, 'true');
+    // Go to profile setup before entering the app
+    setAppState('profile-setup');
+    // New users just finished onboarding — pre-dismiss What's New so they don't see it immediately
+    dismissWhatsNew();
+  };
+
+  const handleProfileSetupComplete = async (profile: UserProfile) => {
+    await handleProfileChange(profile);
     setAppState('app');
     // Show nudge banner if notifications not yet granted
     const nudgeDismissed = localStorage.getItem('intouch-notif-nudge-dismissed');
     if (!nudgeDismissed && (!('Notification' in window) || Notification.permission !== 'granted')) {
       setTimeout(() => setShowNotifNudge(true), 1500);
     }
-    // New users just finished onboarding — pre-dismiss What's New so they don't see it immediately
-    dismissWhatsNew();
   };
 
   // ── Loading splash ──
@@ -658,6 +665,16 @@ export default function App() {
         installPrompt={installPrompt}
         onInstall={() => setInstallPrompt(null)}
         onEnableNotifications={handleEnableNotifications}
+      />
+    );
+  }
+
+  // ── Profile Setup ──
+  if (appState === 'profile-setup') {
+    return (
+      <ProfileSetup
+        onComplete={handleProfileSetupComplete}
+        isDark={isDark}
       />
     );
   }

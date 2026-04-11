@@ -31,7 +31,7 @@ const slides = [
         <p className="text-muted flex items-center gap-1">
           <MapPin size={10} /> London
         </p>
-        <p className="text-muted italic">Met at GS Banking Academy, Summer 2024</p>
+        <p className="text-muted italic">Met at GS Banking Academy, London 2024</p>
         <div className="flex gap-1.5 flex-wrap pt-0.5">
           {['finance', 'banking', 'ib'].map((t) => (
             <span key={t} className="bg-accent/20 text-accent px-1.5 py-0.5 rounded text-[10px]">
@@ -57,11 +57,11 @@ const slides = [
           <span className="text-accent font-medium">Investment Banking</span>
           <span className="text-muted">+</span>
           <MapPin size={11} className="text-accent" />
-          <span className="text-accent font-medium">Madrid</span>
-          <span className="text-muted ml-auto">4</span>
+          <span className="text-accent font-medium">London</span>
+          <span className="text-muted ml-auto">7</span>
         </div>
         <div className={`${mutedCard} px-3 py-2 text-muted`}>
-          Search &quot;IE&quot; &rarr; all IE Business School contacts
+          Search &quot;Target&quot; &rarr; all Target University contacts
         </div>
         <div className={`${mutedCard} px-3 py-2 text-muted`}>
           Search &quot;Goldman&quot; &rarr; everyone at Goldman Sachs
@@ -80,8 +80,8 @@ const slides = [
     example: (
       <div className="mt-4 space-y-2 text-xs">
         {[
-          { date: 'Mar 2025', note: 'Coffee at IE campus — discussed VC internship' },
-          { date: 'Jan 2025', note: 'Connected at GS Alumni drinks in London' },
+          { date: 'Mar 2025', note: 'Coffee in Mayfair — discussed VC internship prospects' },
+          { date: 'Jan 2025', note: 'Met at GS Alumni drinks in London' },
         ].map((item, i) => (
           <div key={i} className={`${blueCard} px-3 py-2.5 flex items-start gap-2.5`}>
             <MessageCircle size={12} className="text-blue-400 mt-0.5 shrink-0" />
@@ -133,14 +133,14 @@ const slides = [
   {
     icon: Bell,
     color: 'bg-accent/15',
-    title: 'Never Lose Touch',
+    title: 'Reconnect Reminders',
     description:
-      'Set a recurring reminder on any contact — every 2, 4, 8, or 12 weeks — or pick a specific date. InTouch tells you when it\'s time to reach out.',
+      'Set a recurring reminder on any contact — every 2, 4, 8, or 12 weeks. When it\'s due, they appear in your Reach Out tab and InTouch sends you a push notification so you never forget.',
     example: (
-      <div className="mt-4 space-y-1.5 text-xs">
+      <div className="mt-4 space-y-2 text-xs">
         <div className={`${card} px-3 py-2.5 flex items-center gap-2.5`}>
           <Bell size={12} className="text-accent shrink-0" />
-          <p className="text-accent font-medium">2 People to Reconnect With</p>
+          <p className="text-accent font-medium">2 People Due in Reach Out</p>
         </div>
         {[
           { name: 'Sarah Chen', status: '2w overdue' },
@@ -151,6 +151,10 @@ const slides = [
             <span className="text-accent font-medium">{c.status}</span>
           </div>
         ))}
+        <div className={`${mutedCard} px-3 py-2 flex items-center gap-2`}>
+          <Check size={11} className="text-accent shrink-0" strokeWidth={3} />
+          <p className="text-muted text-[10px]"><span className="text-accent font-medium">Reach Out</span> = contacts with a due reconnect reminder &middot; <span className="text-accent font-medium">Reconnect Reminders</span> = the recurring schedule you set per contact</p>
+        </div>
       </div>
     ),
   },
@@ -381,27 +385,26 @@ const slides = [
 
   // ── 11. All Set ──────────────────────────────────────────────────
   {
-    icon: ArrowRight,
+    icon: CheckCircle2,
     color: 'bg-accent/15',
     title: "You're All Set",
     description:
-      'Start building your network — it only takes seconds to add someone.',
+      "Everything you need to stay on top of your network — in one place.",
     example: (
-      <div className="mt-6 space-y-2.5 text-xs text-left">
+      <div className="mt-5 space-y-2 text-xs text-left">
         {[
-          'Add contacts as you meet people',
-          'Log interactions to track relationships',
-          'Plan meetings — push reminders + one-tap calendar export',
-          'Import existing contacts from CSV / XLSX',
-          'Refresh from LinkedIn — auto-update jobs & add new connections',
-          'Share your card via QR code',
-          'Everything synced across all your devices',
+          'Add contacts the moment you meet them',
+          'Log every conversation, coffee, or call',
+          'Plan meetings with push reminders and one-tap calendar export',
+          'Import contacts from CSV, Excel, or LinkedIn',
+          'Share your card instantly with a QR code',
+          'Stays in sync across all your devices',
         ].map((tip) => (
           <div key={tip} className="flex items-start gap-2.5">
             <div className="w-4 h-4 rounded-full bg-accent/20 flex items-center justify-center shrink-0 mt-0.5">
               <Check size={9} className="text-accent" strokeWidth={3} />
             </div>
-            <span className="text-sm">{tip}</span>
+            <span className="text-sm leading-snug">{tip}</span>
           </div>
         ))}
       </div>
@@ -465,18 +468,18 @@ export default function Onboarding({
           >
             {/* Icon */}
             <div
-              className={`w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center ${slide.color}`}
+              className={`w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center ${slide.color}`}
             >
               <Icon size={28} className="text-accent" />
             </div>
 
             {/* Title */}
-            <h2 className="font-[family-name:var(--font-outfit)] text-xl font-bold tracking-tight mb-3">
+            <h2 className="font-[family-name:var(--font-outfit)] text-xl font-bold tracking-tight mb-2.5">
               {slide.title}
             </h2>
 
             {/* Description */}
-            <p className="text-muted text-sm leading-relaxed">{slide.description}</p>
+            <p className="text-muted text-sm leading-relaxed px-1">{slide.description}</p>
 
             {/* Example — interactive for the notifications slide */}
             {slide.example}
@@ -572,13 +575,13 @@ export default function Onboarding({
         </AnimatePresence>
 
         {/* Progress dots */}
-        <div className="flex items-center justify-center gap-1.5 mt-8 mb-6">
+        <div className="flex items-center justify-center gap-1.5 mt-7 mb-5">
           {slides.map((_, i) => (
             <button
               key={i}
               onClick={() => setStep(i)}
-              className={`h-1.5 rounded-full transition-all ${
-                i === step ? 'w-5 bg-accent' : 'w-1.5 bg-muted/30'
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === step ? 'w-5 bg-accent' : 'w-1.5 bg-muted/25'
               }`}
             />
           ))}
@@ -586,15 +589,17 @@ export default function Onboarding({
 
         {/* Buttons */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={onComplete}
-            className="text-xs text-muted hover:text-accent transition-colors px-3 py-2"
-          >
-            Skip
-          </button>
+          {!isLast && (
+            <button
+              onClick={onComplete}
+              className="text-xs text-muted hover:text-accent transition-colors px-3 py-2 shrink-0"
+            >
+              Skip
+            </button>
+          )}
           <button
             onClick={() => (isLast ? onComplete() : setStep(step + 1))}
-            className="flex-1 py-3 rounded-lg bg-accent text-dark-bg text-sm font-semibold font-[family-name:var(--font-outfit)] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+            className="flex-1 py-3 rounded-xl bg-accent text-dark-bg text-sm font-semibold font-[family-name:var(--font-outfit)] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
           >
             {isLast ? 'Get Started' : 'Next'}
             {!isLast && <ArrowRight size={16} />}
@@ -602,8 +607,8 @@ export default function Onboarding({
         </div>
 
         {/* Step counter */}
-        <p className="text-center text-[11px] text-muted/50 mt-3">
-          {step + 1} of {slides.length}
+        <p className="text-center text-[11px] text-muted/40 mt-3">
+          {step + 1} / {slides.length}
         </p>
       </div>
     </div>
