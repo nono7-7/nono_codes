@@ -184,7 +184,7 @@ export default function ContactList({
               <div className="flex flex-col items-end gap-1.5 shrink-0 self-start pt-0.5">
                 {/* Classification — rounded-full pill (status badge) */}
                 <span
-                  className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                     contact.classification === 'inner'
                       ? 'bg-accent/15 text-accent'
                       : isDark
