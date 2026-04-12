@@ -25,9 +25,29 @@ function contactsRef(uid: string) {
   return collection(getDB(), 'users', uid, 'contacts');
 }
 
+/** Strip undefined values recursively so Firestore never rejects the document */
+function sanitizeForFirestore(obj: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) continue;
+    if (Array.isArray(v)) {
+      out[k] = v.map((item) =>
+        item !== null && typeof item === 'object'
+          ? sanitizeForFirestore(item as Record<string, unknown>)
+          : item
+      );
+    } else if (v !== null && typeof v === 'object') {
+      out[k] = sanitizeForFirestore(v as Record<string, unknown>);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 export async function syncToCloud(uid: string, contact: Contact): Promise<void> {
   const ref = doc(contactsRef(uid), contact.id);
-  await setDoc(ref, contact);
+  await setDoc(ref, sanitizeForFirestore(contact as unknown as Record<string, unknown>));
 }
 
 export async function deleteFromCloud(uid: string, contactId: string): Promise<void> {
@@ -189,10 +209,16 @@ export async function fullSync(uid: string): Promise<Contact[]> {
     await saveContact(contact);
   }
 
-  // Write full merged set to cloud so deletions propagate
-  for (const contact of merged) {
-    await syncToCloud(uid, contact);
-  }
+  // Write full merged set to cloud so deletions propagate.
+  // Run all writes in parallel; individual failures are logged but do not
+  // abort the sync — one corrupted document should never block the rest.
+  await Promise.allSettled(
+    merged.map((contact) =>
+      syncToCloud(uid, contact).catch((e) =>
+        console.warn(`[sync] Failed to write contact ${contact.id} (${contact.name}):`, e)
+      )
+    )
+  );
 
   // Return only non-deleted contacts for the UI
   return merged.filter((c) => !c.deleted);

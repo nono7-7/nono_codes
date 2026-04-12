@@ -41,6 +41,9 @@ function normalizeContact(c: Record<string, unknown>): Contact {
     dateAdded: '',
     lastUpdated: '',
     ...c,
+    // These explicit overrides run AFTER the spread so undefined values from
+    // old/migrated contacts are always replaced with safe defaults.
+    // This is critical because Firestore rejects any document containing undefined.
     photoUrl: (c.photoUrl as string) ?? '',
     reconnectIntervalWeeks: (c.reconnectIntervalWeeks as number | null) ?? null,
     reconnectDate: (c.reconnectDate as string) ?? '',
@@ -50,7 +53,7 @@ function normalizeContact(c: Record<string, unknown>): Contact {
     education: (c.education as Contact['education']) ?? [],
     jobs: (c.jobs as Contact['jobs']) ?? [],
     plannedInteractions: (c.plannedInteractions as Contact['plannedInteractions']) ?? [],
-    // Explicitly preserve the deleted flag — do not let it default to undefined
+    reachOut: (c.reachOut as boolean) ?? false,
     deleted: (c.deleted as boolean) ?? false,
   } as Contact;
 }
