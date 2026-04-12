@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlus, Search, Globe, Bell, QrCode, ArrowRight,
   MessageCircle, CalendarClock, FileSpreadsheet, MapPin, Tag, Check, Cloud, Smartphone, Monitor, Download, CheckCircle2,
-  Link2, RefreshCw, UserPlus as UserPlusIcon,
+  Link2, RefreshCw, UserPlus as UserPlusIcon, Camera, Layers,
 } from 'lucide-react';
 
 // Example card/row classes that adapt to dark/light
@@ -146,7 +146,7 @@ const slides = [
         {/* Reconnect */}
         <div className={`${card} p-3 space-y-1.5`}>
           <p className="font-semibold text-sm text-accent">Reconnect Reminder</p>
-          <p className="text-muted leading-relaxed">Set a recurring interval (every 2, 4, 8, or 12 weeks) and InTouch will push-notify you when it's time to reconnect — great for keeping up with people regularly.</p>
+          <p className="text-muted leading-relaxed">Set a recurring interval — every 2, 4, 8, or 12 weeks, or any custom number of weeks — and InTouch push-notifies you when it's time to reconnect. Great for staying consistently in touch.</p>
         </div>
       </div>
     ),
@@ -181,7 +181,139 @@ const slides = [
     ),
   },
 
-  // ── 7. Bulk Import ──────────────────────────────────────────────
+  // ── 7. QR Code ──────────────────────────────────────────────────
+  {
+    icon: QrCode,
+    color: 'bg-accent/15',
+    title: 'Share Your Card',
+    description:
+      'Generate your personal QR code from Settings. Choose which fields to share — phone, email, LinkedIn, location — and let anyone scan to add you instantly.',
+    example: (
+      <div className="mt-4 flex items-center gap-4 justify-center">
+        <div className="bg-white p-3 rounded-xl border border-muted/15">
+          <div
+            className="grid gap-[2px]"
+            style={{ gridTemplateColumns: 'repeat(7, 1fr)', width: 84 }}
+          >
+            {[
+              1,1,1,1,1,1,1,
+              1,0,0,0,0,0,1,
+              1,0,1,0,1,0,1,
+              1,0,0,1,0,0,1,
+              1,0,1,0,1,0,1,
+              1,0,0,0,0,0,1,
+              1,1,1,1,1,1,1,
+            ].map((v, i) => (
+              <div key={i} className={`w-3 h-3 rounded-[1px] ${v ? 'bg-zinc-900' : 'bg-white'}`} />
+            ))}
+          </div>
+        </div>
+        <div className="text-xs text-left space-y-2">
+          {['Name', 'Phone', 'Email', 'LinkedIn'].map((f) => (
+            <div key={f} className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-accent flex items-center justify-center">
+                <Check size={8} strokeWidth={3} className="text-white" />
+              </div>
+              <span className="text-sm">{f}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+
+  // ── 8. Notifications & Home Screen ──────────────────────────────
+  {
+    icon: Bell,
+    color: 'bg-amber-500/15',
+    title: 'Get Notified. Stay Ready.',
+    description:
+      'Enable push notifications to get reminders for planned interactions — even when the app is closed. Must be installed on your home screen for full support on iOS.',
+    example: null, // rendered dynamically in the component
+  },
+
+  // ── 9. Cloud Sync ────────────────────────────────────────────────
+  {
+    icon: Cloud,
+    color: 'bg-accent/15',
+    title: 'Always In Sync',
+    description:
+      'Cloud sync is on by default. Your contacts and profile stay identical across every device you log into — phone, laptop, or tablet. Turn it off any time in Settings.',
+    example: (
+      <div className="mt-4 space-y-2.5 text-xs">
+        <div className={`${card} px-3 py-2.5 flex items-center gap-3`}>
+          <Smartphone size={14} className="text-accent shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium">iPhone</p>
+            <p className="text-muted text-[10px]">Add a contact → saved instantly</p>
+          </div>
+          <Cloud size={12} className="text-accent" />
+        </div>
+        <div className="flex items-center justify-center">
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="w-px h-3 bg-accent/30" />
+            <p className="text-[10px] text-accent font-medium">syncs automatically</p>
+            <div className="w-px h-3 bg-accent/30" />
+          </div>
+        </div>
+        <div className={`${card} px-3 py-2.5 flex items-center gap-3`}>
+          <Monitor size={14} className="text-accent shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium">Laptop</p>
+            <p className="text-muted text-[10px]">Log in → all contacts appear</p>
+          </div>
+          <Cloud size={12} className="text-accent" />
+        </div>
+        <div className={`${mutedCard} px-3 py-2 flex items-center gap-2`}>
+          <Check size={11} className="text-accent shrink-0" strokeWidth={3} />
+          <p className="text-muted text-[10px]">Contacts &amp; profile sync automatically · use <span className="text-accent font-medium">Sync Now</span> in Settings to force a manual push to all devices</p>
+        </div>
+      </div>
+    ),
+  },
+
+  // ── 10. Already Have Existing Contacts? ──────────────────────────
+  {
+    icon: Layers,
+    color: 'bg-accent/15',
+    title: 'Already Have Contacts Elsewhere?',
+    description:
+      'If your contacts are stored somewhere else, InTouch makes it easy to bring them in. Choose a method below — or skip and add them manually any time.',
+    example: (
+      <div className="mt-4 space-y-2.5 text-xs text-left">
+        <div className={`${card} px-3 py-3 flex items-center gap-3`}>
+          <div className="w-8 h-8 rounded-lg bg-green-500/15 flex items-center justify-center shrink-0">
+            <FileSpreadsheet size={16} className="text-green-500" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm">CSV / Excel Spreadsheet</p>
+            <p className="text-muted text-[11px]">Upload a file — columns are auto-mapped</p>
+          </div>
+        </div>
+        <div className={`${card} px-3 py-3 flex items-center gap-3`}>
+          <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
+            <Link2 size={16} className="text-blue-400" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm">LinkedIn Import</p>
+            <p className="text-muted text-[11px]">Import connections &amp; refresh job titles</p>
+          </div>
+        </div>
+        <div className={`${card} px-3 py-3 flex items-center gap-3`}>
+          <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+            <Camera size={16} className="text-amber-500" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm">Photo Scan</p>
+            <p className="text-muted text-[11px]">Snap a photo of a list or business card</p>
+          </div>
+        </div>
+        <p className="text-[10px] text-muted text-center pt-0.5">All import tools are in <span className="text-accent font-medium">Settings</span></p>
+      </div>
+    ),
+  },
+
+  // ── 11. Bulk Import ──────────────────────────────────────────────
   {
     icon: FileSpreadsheet,
     color: 'bg-green-500/15',
@@ -223,98 +355,7 @@ const slides = [
     ),
   },
 
-  // ── 8. QR Code ──────────────────────────────────────────────────
-  {
-    icon: QrCode,
-    color: 'bg-accent/15',
-    title: 'Share Your Card',
-    description:
-      'Generate your personal QR code from Settings. Choose which fields to share — phone, email, LinkedIn, location — and let anyone scan to add you instantly.',
-    example: (
-      <div className="mt-4 flex items-center gap-4 justify-center">
-        <div className="bg-white p-3 rounded-xl border border-muted/15">
-          <div
-            className="grid gap-[2px]"
-            style={{ gridTemplateColumns: 'repeat(7, 1fr)', width: 84 }}
-          >
-            {[
-              1,1,1,1,1,1,1,
-              1,0,0,0,0,0,1,
-              1,0,1,0,1,0,1,
-              1,0,0,1,0,0,1,
-              1,0,1,0,1,0,1,
-              1,0,0,0,0,0,1,
-              1,1,1,1,1,1,1,
-            ].map((v, i) => (
-              <div key={i} className={`w-3 h-3 rounded-[1px] ${v ? 'bg-zinc-900' : 'bg-white'}`} />
-            ))}
-          </div>
-        </div>
-        <div className="text-xs text-left space-y-2">
-          {['Name', 'Phone', 'Email', 'LinkedIn'].map((f) => (
-            <div key={f} className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-accent flex items-center justify-center">
-                <Check size={8} strokeWidth={3} className="text-white" />
-              </div>
-              <span className="text-sm">{f}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    ),
-  },
-
-  // ── 9. Notifications & Home Screen ──────────────────────────────
-  {
-    icon: Bell,
-    color: 'bg-amber-500/15',
-    title: 'Get Notified. Stay Ready.',
-    description:
-      'Enable push notifications to get reminders for planned interactions — even when the app is closed. Must be installed on your home screen for full support on iOS.',
-    example: null, // rendered dynamically in the component
-  },
-
-  // ── 10. Cloud Sync ───────────────────────────────────────────────
-  {
-    icon: Cloud,
-    color: 'bg-accent/15',
-    title: 'Always In Sync',
-    description:
-      'Cloud sync is on by default. Your contacts and profile stay identical across every device you log into — phone, laptop, or tablet. Turn it off any time in Settings.',
-    example: (
-      <div className="mt-4 space-y-2.5 text-xs">
-        <div className={`${card} px-3 py-2.5 flex items-center gap-3`}>
-          <Smartphone size={14} className="text-accent shrink-0" />
-          <div className="flex-1">
-            <p className="text-sm font-medium">iPhone</p>
-            <p className="text-muted text-[10px]">Add a contact → saved instantly</p>
-          </div>
-          <Cloud size={12} className="text-accent" />
-        </div>
-        <div className="flex items-center justify-center">
-          <div className="flex flex-col items-center gap-0.5">
-            <div className="w-px h-3 bg-accent/30" />
-            <p className="text-[10px] text-accent font-medium">syncs automatically</p>
-            <div className="w-px h-3 bg-accent/30" />
-          </div>
-        </div>
-        <div className={`${card} px-3 py-2.5 flex items-center gap-3`}>
-          <Monitor size={14} className="text-accent shrink-0" />
-          <div className="flex-1">
-            <p className="text-sm font-medium">Laptop</p>
-            <p className="text-muted text-[10px]">Log in → all contacts appear</p>
-          </div>
-          <Cloud size={12} className="text-accent" />
-        </div>
-        <div className={`${mutedCard} px-3 py-2 flex items-center gap-2`}>
-          <Check size={11} className="text-accent shrink-0" strokeWidth={3} />
-          <p className="text-muted text-[10px]">Contacts &amp; profile sync automatically · use <span className="text-accent font-medium">Sync Now</span> in Settings to force a manual push to all devices</p>
-        </div>
-      </div>
-    ),
-  },
-
-  // ── 10. LinkedIn Import & Network Refresh ───────────────────────
+  // ── 12. LinkedIn Import & Network Refresh ────────────────────────
   {
     icon: Link2,
     color: 'bg-blue-500/15',
@@ -376,7 +417,43 @@ const slides = [
     ),
   },
 
-  // ── 11. All Set ──────────────────────────────────────────────────
+  // ── 13. Photo Scan ───────────────────────────────────────────────
+  {
+    icon: Camera,
+    color: 'bg-amber-500/15',
+    title: 'Add Contacts with Photo Scan',
+    description:
+      'Have contacts written in a notebook or on business cards? Take a photo and InTouch uses AI to extract the details — then lets you review and confirm before saving.',
+    example: (
+      <div className="mt-4 space-y-2.5 text-xs text-left">
+        <div className={`${amberCard} p-3 space-y-2`}>
+          <div className="flex items-center gap-2">
+            <Camera size={12} className="text-amber-500 shrink-0" />
+            <p className="font-semibold text-sm text-amber-500">How it works</p>
+          </div>
+          <div className="space-y-1.5">
+            {[
+              'Upload a photo of your contact list or business card',
+              'AI scans for names, phone numbers, emails, and more',
+              'Review extracted contacts and edit if needed',
+              'Confirm to save — duplicates are flagged automatically',
+            ].map((step, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className="text-amber-500 font-bold text-[10px] mt-0.5 w-3 shrink-0">{i + 1}.</span>
+                <p className="text-muted leading-relaxed">{step}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className={`${mutedCard} px-3 py-2 flex items-center gap-2`}>
+          <Check size={10} className="text-accent shrink-0" strokeWidth={3} />
+          <p className="text-muted text-[10px]">Find it in <span className="text-accent font-medium">Settings → Add Contacts with Photo Scan</span></p>
+        </div>
+      </div>
+    ),
+  },
+
+  // ── 14. All Set ──────────────────────────────────────────────────
   {
     icon: CheckCircle2,
     color: 'bg-accent/15',
@@ -389,7 +466,7 @@ const slides = [
           'Add contacts the moment you meet them',
           'Log every conversation, coffee, or call',
           'Plan meetings with push reminders and one-tap calendar export',
-          'Import contacts from CSV, Excel, or LinkedIn',
+          'Import from CSV, LinkedIn, or a photo — your choice',
           'Share your card instantly with a QR code',
           'Stays in sync across all your devices',
         ].map((tip) => (

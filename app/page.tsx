@@ -24,7 +24,7 @@ import PhotoScan from '@/components/PhotoScan';
 import SyncIndicator, { type SyncStatus } from '@/components/SyncIndicator';
 import NotificationHelpModal from '@/components/NotificationHelpModal';
 import WhatsNew, { shouldShowWhatsNew, dismissWhatsNew } from '@/components/WhatsNew';
-import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, saveReachOutNotification, clearReachOutNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud, storePushSubscription, storeUserTimezone } from '@/lib/sync';
+import { fullSync, forceUploadAll, syncToCloud, savePlannedNotification, completePlannedNotification, saveReachOutNotification, clearReachOutNotification, saveReconnectNotification, clearReconnectNotification, syncEmailPreference, syncProfileToCloud, pullProfileFromCloud, storePushSubscription, storeUserTimezone } from '@/lib/sync';
 import { decodeSharedContact } from '@/lib/share';
 import type { NetworkFilterAction } from '@/components/NetworkView';
 
@@ -274,6 +274,14 @@ export default function App() {
     });
   }, []);
 
+  /** Compute the next reconnect due date from lastContacted (or today) + interval weeks */
+  const computeReconnectDueDate = (contact: Contact): string => {
+    const weeks = contact.reconnectIntervalWeeks ?? 0;
+    const base = contact.lastContacted ? new Date(contact.lastContacted) : new Date();
+    base.setDate(base.getDate() + weeks * 7);
+    return base.toISOString().slice(0, 10);
+  };
+
   const handleSave = useCallback(
     async (contact: Contact) => {
       await saveContact(contact);
@@ -296,6 +304,13 @@ export default function App() {
           saveReachOutNotification(user.uid, contact.id, contact.name, contact.reconnectDate).catch(() => {});
         } else {
           clearReachOutNotification(user.uid, contact.id).catch(() => {});
+        }
+        // Reconnect interval notification — write or clear from Firestore
+        if (contact.reconnectIntervalWeeks) {
+          const nextDue = computeReconnectDueDate(contact);
+          saveReconnectNotification(user.uid, contact.id, contact.name, nextDue).catch(() => {});
+        } else {
+          clearReconnectNotification(user.uid, contact.id).catch(() => {});
         }
       }
       await refresh();
@@ -384,8 +399,17 @@ export default function App() {
     async (contactId: string) => {
       const today = new Date().toISOString().slice(0, 10);
       await handleLogInteraction(contactId, today, 'Reconnected');
+      // Push the reconnect notification date forward by the interval
+      if (user) {
+        const contact = contacts.find((c) => c.id === contactId);
+        if (contact?.reconnectIntervalWeeks) {
+          const nextDue = new Date();
+          nextDue.setDate(nextDue.getDate() + contact.reconnectIntervalWeeks * 7);
+          saveReconnectNotification(user.uid, contactId, contact.name, nextDue.toISOString().slice(0, 10)).catch(() => {});
+        }
+      }
     },
-    [handleLogInteraction]
+    [handleLogInteraction, user, contacts]
   );
 
   const handleSettingsChange = useCallback(

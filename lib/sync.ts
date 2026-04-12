@@ -98,6 +98,39 @@ export async function syncEmailPreference(uid: string, enabled: boolean): Promis
 }
 
 /**
+ * Write a reconnect interval notification to Firestore so the cron sends a
+ * push at 9 AM on the computed next-due date.
+ * nextDueDate: YYYY-MM-DD
+ */
+export async function saveReconnectNotification(
+  uid: string,
+  contactId: string,
+  contactName: string,
+  nextDueDate: string,
+): Promise<void> {
+  const db = getDB();
+  const ref = doc(db, 'notifications', `${uid}_reconnect_${contactId}`);
+  await setDoc(ref, {
+    uid,
+    contactName,
+    date: nextDueDate,
+    description: 'Reconnect reminder',
+    completed: false,
+    createdAt: new Date().toISOString(),
+  });
+}
+
+/** Remove the reconnect interval notification when interval is cleared */
+export async function clearReconnectNotification(
+  uid: string,
+  contactId: string,
+): Promise<void> {
+  const db = getDB();
+  const ref = doc(db, 'notifications', `${uid}_reconnect_${contactId}`);
+  await setDoc(ref, { completed: true }, { merge: true });
+}
+
+/**
  * Write a reach-out date notification to Firestore so the cron sends a push
  * at 9 AM (user's timezone) on the chosen date.
  */

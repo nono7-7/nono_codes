@@ -194,7 +194,6 @@ export default function PhotoScan({
                   'Handwriting works, but printed or typed text gives the most accurate results',
                   'Multiple contacts per photo is fine — Claude extracts each one separately',
                   'Always review the extracted contacts before saving, as errors can occur',
-                  'Each scan uses the Claude API and costs approximately $0.002–$0.005',
                 ].map((tip) => (
                   <div key={tip} className="flex items-start gap-2">
                     <span className="text-accent mt-0.5 shrink-0">·</span>

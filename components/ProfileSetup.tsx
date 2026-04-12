@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, ArrowRight, QrCode, GraduationCap, Briefcase, Plus, X, Star } from 'lucide-react';
+import { User, ArrowRight, QrCode, GraduationCap, Briefcase, Plus, X, Star, MapPin, Cake } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import type { UserProfile, Education, Job } from '@/lib/types';
 
@@ -16,6 +16,8 @@ export default function ProfileSetup({ onComplete, isDark }: Props) {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
+  const [birthday, setBirthday] = useState('');
+  const [mainLocation, setMainLocation] = useState('');
   const [education, setEducation] = useState<Education[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
 
@@ -60,8 +62,8 @@ export default function ProfileSetup({ onComplete, isDark }: Props) {
       phone: phone.trim(),
       email: email.trim(),
       linkedinUrl: linkedinUrl.trim(),
-      birthday: '',
-      mainLocation: '',
+      birthday: birthday.trim(),
+      mainLocation: mainLocation.trim(),
       education,
       jobs,
       sharePhone: true,
@@ -146,6 +148,22 @@ export default function ProfileSetup({ onComplete, isDark }: Props) {
             <label className={labelCls}>LinkedIn URL</label>
             <input type="url" placeholder="linkedin.com/in/yourname" value={linkedinUrl}
               onChange={(e) => setLinkedinUrl(e.target.value)} autoComplete="url"
+              className={`${inputBase} ${inputTheme}`} />
+          </div>
+          <div>
+            <label className={`${labelCls} flex items-center gap-1.5`}>
+              <MapPin size={11} className="text-muted" /> Location
+            </label>
+            <input type="text" placeholder="London, UK" value={mainLocation}
+              onChange={(e) => setMainLocation(e.target.value)}
+              className={`${inputBase} ${inputTheme}`} />
+          </div>
+          <div>
+            <label className={`${labelCls} flex items-center gap-1.5`}>
+              <Cake size={11} className="text-muted" /> Birthday
+            </label>
+            <input type="date" value={birthday}
+              onChange={(e) => setBirthday(e.target.value)}
               className={`${inputBase} ${inputTheme}`} />
           </div>
         </div>
