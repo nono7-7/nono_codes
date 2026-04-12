@@ -139,59 +139,19 @@ export default function ContactList({
             )}
             <div className="flex items-center gap-3">
               <Avatar name={contact.name} photoUrl={contact.photoUrl} size="md" />
+              {/* Left: text content */}
               <div className="min-w-0 flex-1">
-                {/* Row 1: name + classification pill — same baseline */}
-                <div className="flex items-center gap-2">
-                  <p className="font-[family-name:var(--font-outfit)] font-semibold text-[14px] leading-snug truncate flex-1 min-w-0">
-                    {contact.name}
-                  </p>
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 leading-snug ${
-                      contact.classification === 'inner'
-                        ? 'bg-accent/15 text-accent'
-                        : isDark
-                        ? 'bg-dark-border text-muted-light'
-                        : 'bg-light-border text-muted'
-                    }`}
-                    style={{ fontWeight: 550 }}
-                  >
-                    {contact.classification === 'inner' ? 'Inner' : 'Wider'}
-                  </span>
-                </div>
-
-                {/* Row 2: company/role + tags — same baseline */}
+                <p className="font-[family-name:var(--font-outfit)] font-semibold text-[14px] leading-snug truncate">
+                  {contact.name}
+                </p>
                 {(() => {
                   const dj = getDisplayJob(contact);
-                  const jobText = dj.company && dj.role
-                    ? `${dj.company} · ${dj.role}`
-                    : dj.company || dj.role;
-                  return (jobText || contact.tags.length > 0) ? (
-                    <div className="flex items-center gap-2 mt-0.5">
-                      {jobText && (
-                        <p className="text-xs text-muted truncate leading-snug flex-1 min-w-0">
-                          {jobText}
-                        </p>
-                      )}
-                      {contact.tags.length > 0 && (
-                        <div className="flex gap-1 shrink-0">
-                          {contact.tags.slice(0, 2).map((tag) => (
-                            <span
-                              key={tag}
-                              className={`text-[10px] px-1.5 py-0.5 rounded-md border-l-[2px] leading-snug ${
-                                isDark
-                                  ? 'bg-zinc-800 text-zinc-400 border-zinc-600'
-                                  : 'bg-slate-100 text-slate-500 border-slate-300'
-                              }`}
-                            >
-                              {capitalizeTag(tag)}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                  return (dj.role || dj.company) ? (
+                    <p className="text-xs text-muted mt-0.5 truncate leading-snug">
+                      {dj.company && dj.role ? `${dj.company} · ${dj.role}` : dj.company || dj.role}
+                    </p>
                   ) : null;
                 })()}
-
                 {(() => {
                   const de = getDisplayEducation(contact);
                   return de ? <p className="text-xs text-muted/70 mt-0.5 truncate">{de}</p> : null;
@@ -219,6 +179,39 @@ export default function ContactList({
                         <MessageCircle size={13} />
                       </a>
                     )}
+                  </div>
+                )}
+              </div>
+              {/* Right: pill aligned to name row, tags aligned to company row */}
+              <div className="shrink-0 self-start flex flex-col items-end">
+                {/* Pill — no top padding, sits at name height */}
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full leading-snug ${
+                    contact.classification === 'inner'
+                      ? 'bg-accent/15 text-accent'
+                      : isDark
+                      ? 'bg-dark-border text-muted-light'
+                      : 'bg-light-border text-muted'
+                  }`}
+                  style={{ fontWeight: 550 }}
+                >
+                  {contact.classification === 'inner' ? 'Inner' : 'Wider'}
+                </span>
+                {/* Tags — mt-0.5 matches the mt-0.5 on the company/role line */}
+                {contact.tags.length > 0 && (
+                  <div className="flex gap-1 mt-0.5">
+                    {contact.tags.slice(0, 2).map((tag) => (
+                      <span
+                        key={tag}
+                        className={`text-[10px] px-1.5 py-0.5 rounded-md border-l-[2px] leading-snug ${
+                          isDark
+                            ? 'bg-zinc-800 text-zinc-400 border-zinc-600'
+                            : 'bg-slate-100 text-slate-500 border-slate-300'
+                        }`}
+                      >
+                        {capitalizeTag(tag)}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
