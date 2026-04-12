@@ -162,9 +162,21 @@ export default function ProfileSetup({ onComplete, isDark }: Props) {
             <label className={`${labelCls} flex items-center gap-1.5`}>
               <Cake size={11} className="text-muted" /> Birthday
             </label>
-            <input type="date" value={birthday}
-              onChange={(e) => setBirthday(e.target.value)}
-              className={`${inputBase} ${inputTheme}`} />
+            <div className="flex items-center gap-2">
+              <input type="date" value={birthday}
+                onChange={(e) => setBirthday(e.target.value)}
+                className={`${inputBase} ${inputTheme} w-auto`}
+                style={{ maxWidth: '180px' }} />
+              {birthday && (
+                <button
+                  type="button"
+                  onClick={() => setBirthday('')}
+                  className="text-xs text-muted hover:text-accent transition-colors shrink-0 px-1 py-1"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

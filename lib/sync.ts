@@ -107,6 +107,7 @@ export async function saveReconnectNotification(
   contactId: string,
   contactName: string,
   nextDueDate: string,
+  intervalWeeks?: number,
 ): Promise<void> {
   const db = getDB();
   const ref = doc(db, 'notifications', `${uid}_reconnect_${contactId}`);
@@ -115,6 +116,8 @@ export async function saveReconnectNotification(
     contactName,
     date: nextDueDate,
     description: 'Reconnect reminder',
+    type: 'reconnect',
+    ...(intervalWeeks != null ? { intervalWeeks } : {}),
     completed: false,
     createdAt: new Date().toISOString(),
   });

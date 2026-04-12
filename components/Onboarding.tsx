@@ -281,27 +281,36 @@ const slides = [
       'If your contacts are stored somewhere else, InTouch makes it easy to bring them in. Choose a method below — or skip and add them manually any time.',
     example: (
       <div className="mt-4 space-y-2.5 text-xs text-left">
-        <div className={`${card} px-3 py-3 flex items-center gap-3`}>
-          <div className="w-8 h-8 rounded-lg bg-green-500/15 flex items-center justify-center shrink-0">
-            <FileSpreadsheet size={16} className="text-green-500" />
+        <div className={`${card} px-3 py-2.5 flex items-center gap-3`}>
+          <div className="w-7 h-7 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
+            <Smartphone size={14} className="text-accent" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm">Phone Contacts (.vcf)</p>
+            <p className="text-muted text-[11px]">Export from iPhone, Android or Google</p>
+          </div>
+        </div>
+        <div className={`${card} px-3 py-2.5 flex items-center gap-3`}>
+          <div className="w-7 h-7 rounded-lg bg-green-500/15 flex items-center justify-center shrink-0">
+            <FileSpreadsheet size={14} className="text-green-500" />
           </div>
           <div>
             <p className="font-semibold text-sm">CSV / Excel Spreadsheet</p>
             <p className="text-muted text-[11px]">Upload a file — columns are auto-mapped</p>
           </div>
         </div>
-        <div className={`${card} px-3 py-3 flex items-center gap-3`}>
-          <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
-            <Link2 size={16} className="text-blue-400" />
+        <div className={`${card} px-3 py-2.5 flex items-center gap-3`}>
+          <div className="w-7 h-7 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
+            <Link2 size={14} className="text-blue-400" />
           </div>
           <div>
             <p className="font-semibold text-sm">LinkedIn Import</p>
             <p className="text-muted text-[11px]">Import connections &amp; refresh job titles</p>
           </div>
         </div>
-        <div className={`${card} px-3 py-3 flex items-center gap-3`}>
-          <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
-            <Camera size={16} className="text-amber-500" />
+        <div className={`${card} px-3 py-2.5 flex items-center gap-3`}>
+          <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+            <Camera size={14} className="text-amber-500" />
           </div>
           <div>
             <p className="font-semibold text-sm">Photo Scan</p>
@@ -313,7 +322,39 @@ const slides = [
     ),
   },
 
-  // ── 11. Bulk Import ──────────────────────────────────────────────
+  // ── 11. Phone Contacts Import ────────────────────────────────────
+  {
+    icon: Smartphone,
+    color: 'bg-accent/15',
+    title: 'Import Phone Contacts',
+    description:
+      'Export contacts from your iPhone, Android, or Google Contacts as a .vcf file and import them all into InTouch at once.',
+    example: (
+      <div className="mt-4 space-y-2.5 text-xs text-left">
+        <div className={`${card} p-3 space-y-2`}>
+          <p className="font-semibold text-sm text-accent flex items-center gap-2">
+            <Smartphone size={13} className="text-accent shrink-0" /> iPhone
+          </p>
+          <div className="space-y-1.5 text-muted leading-relaxed">
+            <p><span className="font-medium text-accent">Option A (Mac/PC):</span> Go to <span className="font-medium">iCloud.com → Contacts</span>, select contacts, click the export button → <span className="font-medium">Export vCard</span>.</p>
+            <p><span className="font-medium text-accent">Option B (iPhone only):</span> Open <span className="font-medium">Contacts app</span> → tap a contact → <span className="font-medium">Share Contact → Save to Files</span>.</p>
+          </div>
+        </div>
+        <div className={`${card} p-3 space-y-1.5`}>
+          <p className="font-semibold text-sm text-accent flex items-center gap-2">
+            <Globe size={13} className="text-accent shrink-0" /> Android / Google Contacts
+          </p>
+          <p className="text-muted leading-relaxed">Open <span className="font-medium">Contacts app → ⋮ menu → Export to .vcf</span>. Or go to <span className="font-medium">contacts.google.com → Export → vCard</span>.</p>
+        </div>
+        <div className={`${mutedCard} px-3 py-2 flex items-center gap-2`}>
+          <Check size={10} className="text-accent shrink-0" strokeWidth={3} />
+          <p className="text-muted text-[10px]">Find it in <span className="text-accent font-medium">Settings → Import phone contacts</span></p>
+        </div>
+      </div>
+    ),
+  },
+
+  // ── 12. Bulk Import ──────────────────────────────────────────────
   {
     icon: FileSpreadsheet,
     color: 'bg-green-500/15',
@@ -453,7 +494,7 @@ const slides = [
     ),
   },
 
-  // ── 14. All Set ──────────────────────────────────────────────────
+  // ── 15. All Set ──────────────────────────────────────────────────
   {
     icon: CheckCircle2,
     color: 'bg-accent/15',
@@ -466,7 +507,7 @@ const slides = [
           'Add contacts the moment you meet them',
           'Log every conversation, coffee, or call',
           'Plan meetings with push reminders and one-tap calendar export',
-          'Import from CSV, LinkedIn, or a photo — your choice',
+          'Import from phone contacts, CSV, LinkedIn, or a photo scan',
           'Share your card instantly with a QR code',
           'Stays in sync across all your devices',
         ].map((tip) => (

@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Group by uid
-  const byUid: Record<string, { ref: FirebaseFirestore.DocumentReference; contactName: string; description: string; date: string; lastSentDate?: string }[]> = {};
+  const byUid: Record<string, { ref: FirebaseFirestore.DocumentReference; contactName: string; description: string; date: string; lastSentDate?: string; type?: string; intervalWeeks?: number }[]> = {};
   for (const docSnap of snapshot.docs) {
     const data = docSnap.data();
     const uid = data.uid as string;
@@ -107,6 +107,8 @@ export async function GET(req: NextRequest) {
       description: data.description,
       date: data.date,
       lastSentDate: data.lastSentDate,
+      type: data.type,
+      intervalWeeks: data.intervalWeeks,
     });
   }
 
@@ -125,12 +127,13 @@ export async function GET(req: NextRequest) {
     const localToday = getLocalDateStr(timezone);
     const localTwoDays = getLocalDateOffset(timezone, 2);
 
-    // Filter: due today or in 2 days, not already sent today
-    const dueItems = allItems.filter(
-      (item) =>
-        (item.date === localToday || item.date === localTwoDays) &&
-        item.lastSentDate !== localToday
-    );
+    // Reconnect notifications fire only on the exact due date (no 2-day preview).
+    // Planned/reach-out notifications fire on the day AND 2 days before.
+    const dueItems = allItems.filter((item) => {
+      if (item.lastSentDate === localToday) return false; // already sent today
+      if (item.type === 'reconnect') return item.date === localToday;
+      return item.date === localToday || item.date === localTwoDays;
+    });
 
     if (dueItems.length === 0) continue;
 
@@ -143,8 +146,8 @@ export async function GET(req: NextRequest) {
     const title = 'InTouch Reminder';
     const body =
       dueItems.length === 1
-        ? `${dueItems[0].contactName}: ${dueItems[0].description} — ${dueItems[0].date === localToday ? 'today' : 'in 2 days'}`
-        : `${dueItems.length} upcoming interactions`;
+        ? `${dueItems[0].contactName}: ${dueItems[0].description}${dueItems[0].date !== localToday ? ' — in 2 days' : ''}`
+        : `${dueItems.length} upcoming reminders`;
 
     const payload = JSON.stringify({ title, body });
 
@@ -173,8 +176,19 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Mark each notification as sent today to prevent duplicate sends
-    await Promise.all(dueItems.map((item) => item.ref.update({ lastSentDate: localToday })));
+    // After firing, update each notification:
+    // - Reconnect: advance date by intervalWeeks so it auto-recurs (no manual reset needed)
+    // - Others: mark lastSentDate to prevent duplicate sends on the same calendar day
+    await Promise.all(dueItems.map((item) => {
+      if (item.type === 'reconnect' && item.intervalWeeks && item.date === localToday) {
+        // Advance to next due date
+        const nextDate = new Date(item.date + 'T12:00:00Z');
+        nextDate.setDate(nextDate.getDate() + item.intervalWeeks * 7);
+        const nextDateStr = nextDate.toISOString().slice(0, 10);
+        return item.ref.update({ date: nextDateStr, lastSentDate: localToday });
+      }
+      return item.ref.update({ lastSentDate: localToday });
+    }));
   }
 
   return NextResponse.json({ sent, message: `Sent push to ${sent} device(s)` });

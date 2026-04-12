@@ -112,8 +112,11 @@ export function getOverdueContacts(contacts: Contact[]): Contact[] {
     .filter((c) => {
       // Recurring interval reminder only
       if (!c.reconnectIntervalWeeks) return false;
+      // Never show as overdue until they've been contacted at least once —
+      // the first notification fires via push on the scheduled date.
+      if (!c.lastContacted) return false;
       const intervalMs = c.reconnectIntervalWeeks * 7 * 24 * 60 * 60 * 1000;
-      const lastDate = c.lastContacted ? new Date(c.lastContacted).getTime() : 0;
+      const lastDate = new Date(c.lastContacted).getTime();
       return now - lastDate > intervalMs;
     })
     .sort((a, b) => {

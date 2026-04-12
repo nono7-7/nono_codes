@@ -308,7 +308,7 @@ export default function App() {
         // Reconnect interval notification — write or clear from Firestore
         if (contact.reconnectIntervalWeeks) {
           const nextDue = computeReconnectDueDate(contact);
-          saveReconnectNotification(user.uid, contact.id, contact.name, nextDue).catch(() => {});
+          saveReconnectNotification(user.uid, contact.id, contact.name, nextDue, contact.reconnectIntervalWeeks).catch(() => {});
         } else {
           clearReconnectNotification(user.uid, contact.id).catch(() => {});
         }
@@ -405,7 +405,7 @@ export default function App() {
         if (contact?.reconnectIntervalWeeks) {
           const nextDue = new Date();
           nextDue.setDate(nextDue.getDate() + contact.reconnectIntervalWeeks * 7);
-          saveReconnectNotification(user.uid, contactId, contact.name, nextDue.toISOString().slice(0, 10)).catch(() => {});
+          saveReconnectNotification(user.uid, contactId, contact.name, nextDue.toISOString().slice(0, 10), contact.reconnectIntervalWeeks).catch(() => {});
         }
       }
     },

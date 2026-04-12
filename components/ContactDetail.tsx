@@ -128,37 +128,48 @@ export default function ContactDetail({
         {displayEdu && (
           <p className="text-muted text-sm mt-0.5">{displayEdu}</p>
         )}
-        <div className="flex items-center gap-3 mt-3">
-          <span
-            className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-              contact.classification === 'inner'
-                ? 'bg-accent/15 text-accent'
-                : isDark
-                ? 'bg-dark-border text-muted-light'
-                : 'bg-light-border text-muted'
-            }`}
-          >
-            {contact.classification === 'inner' ? 'Inner Circle' : 'Wider Network'}
-          </span>
-          {contact.homeLocation && (
-            <span className="text-xs text-muted flex items-center gap-1">
-              <MapPin size={12} />
-              {contact.homeLocation}
-            </span>
-          )}
-          {contact.reconnectIntervalWeeks && (
-            <span className="text-xs text-muted flex items-center gap-1">
-              <Clock size={12} />
-              Every {contact.reconnectIntervalWeeks}w
-            </span>
-          )}
-          {contact.reconnectDate && (
-            <span className="text-xs text-accent flex items-center gap-1">
-              <Clock size={12} />
-              Reach out by {new Date(contact.reconnectDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            </span>
-          )}
-        </div>
+        {(() => {
+          const badgeCount = 1
+            + (contact.homeLocation ? 1 : 0)
+            + (contact.reconnectIntervalWeeks ? 1 : 0)
+            + (contact.reconnectDate ? 1 : 0);
+          const compact = badgeCount >= 3;
+          return (
+            <div className={`flex items-center flex-wrap mt-3 ${compact ? 'gap-1.5' : 'gap-3'}`}>
+              <span
+                className={`font-medium rounded-full ${
+                  compact ? 'text-[10px] px-2 py-0.5' : 'text-xs px-2.5 py-1'
+                } ${
+                  contact.classification === 'inner'
+                    ? 'bg-accent/15 text-accent'
+                    : isDark
+                    ? 'bg-dark-border text-muted-light'
+                    : 'bg-light-border text-muted'
+                }`}
+              >
+                {contact.classification === 'inner' ? 'Inner Circle' : 'Wider Network'}
+              </span>
+              {contact.homeLocation && (
+                <span className={`text-muted flex items-center gap-1 ${compact ? 'text-[10px]' : 'text-xs'}`}>
+                  <MapPin size={compact ? 10 : 12} />
+                  <span className="max-w-[90px] truncate">{contact.homeLocation}</span>
+                </span>
+              )}
+              {contact.reconnectIntervalWeeks && (
+                <span className={`text-muted flex items-center gap-1 ${compact ? 'text-[10px]' : 'text-xs'}`}>
+                  <Clock size={compact ? 10 : 12} />
+                  Every {contact.reconnectIntervalWeeks}w
+                </span>
+              )}
+              {contact.reconnectDate && (
+                <span className={`text-accent flex items-center gap-1 ${compact ? 'text-[10px]' : 'text-xs'}`}>
+                  <Clock size={compact ? 10 : 12} />
+                  Reach out by {new Date(contact.reconnectDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              )}
+            </div>
+          );
+        })()}
         {contact.lastContacted && (
           <p className="text-xs text-muted mt-2">
             Last contacted{' '}
