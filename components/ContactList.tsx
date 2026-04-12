@@ -147,7 +147,7 @@ export default function ContactList({
                   const dj = getDisplayJob(contact);
                   return (dj.role || dj.company) ? (
                     <p className="text-xs text-muted mt-0.5 truncate leading-snug">
-                      {dj.role && dj.company ? `${dj.role} · ${dj.company}` : dj.role || dj.company}
+                      {dj.company && dj.role ? `${dj.company} · ${dj.role}` : dj.company || dj.role}
                     </p>
                   ) : null;
                 })()}
@@ -182,6 +182,7 @@ export default function ContactList({
                 )}
               </div>
               <div className="flex flex-col items-end gap-1.5 shrink-0 self-start pt-0.5">
+                {/* Classification — rounded-full pill (status badge) */}
                 <span
                   className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                     contact.classification === 'inner'
@@ -193,13 +194,16 @@ export default function ContactList({
                 >
                   {contact.classification === 'inner' ? 'Inner' : 'Wider'}
                 </span>
+                {/* Tags — rounded-md chip with warm slate tone (label metadata) */}
                 {contact.tags.length > 0 && (
                   <div className="flex gap-1 flex-wrap justify-end">
                     {contact.tags.slice(0, 2).map((tag) => (
                       <span
                         key={tag}
-                        className={`text-[10px] px-1.5 py-0.5 rounded ${
-                          isDark ? 'bg-dark-border text-muted' : 'bg-light-border text-muted'
+                        className={`text-[10px] px-1.5 py-0.5 rounded-md border-l-[2px] ${
+                          isDark
+                            ? 'bg-zinc-800 text-zinc-400 border-zinc-600'
+                            : 'bg-slate-100 text-slate-500 border-slate-300'
                         }`}
                       >
                         {capitalizeTag(tag)}

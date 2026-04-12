@@ -306,6 +306,7 @@ export default function NetworkView({
         entries={byLocation}
         onTap={(v) => onFilter({ field: 'homeLocation', value: v })}
         isDark={isDark}
+        defaultOpen={false}
       />
 
       <BreakdownSection
@@ -313,6 +314,15 @@ export default function NetworkView({
         entries={byCompany}
         onTap={(v) => onFilter({ field: 'company', value: v })}
         isDark={isDark}
+        defaultOpen={false}
+      />
+
+      <BreakdownSection
+        title="By Role"
+        entries={byRole}
+        onTap={(v) => onFilter({ field: 'role', value: v })}
+        isDark={isDark}
+        defaultOpen={false}
       />
 
       <BreakdownSection
@@ -320,6 +330,7 @@ export default function NetworkView({
         entries={byUniversity}
         onTap={(v) => onFilter({ field: 'university', value: v })}
         isDark={isDark}
+        defaultOpen={false}
       />
 
       <BreakdownSection
@@ -327,6 +338,7 @@ export default function NetworkView({
         entries={byTag}
         onTap={(v) => onFilter({ field: 'tag', value: v })}
         isDark={isDark}
+        defaultOpen={false}
       />
 
       <BreakdownSection
@@ -343,13 +355,6 @@ export default function NetworkView({
         onTap={(v) => onFilter({ field: 'search', value: v })}
         isDark={isDark}
         defaultOpen={false}
-      />
-
-      <BreakdownSection
-        title="By Role"
-        entries={byRole}
-        onTap={(v) => onFilter({ field: 'role', value: v })}
-        isDark={isDark}
       />
 
       <BreakdownSection
