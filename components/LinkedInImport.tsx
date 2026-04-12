@@ -84,15 +84,24 @@ export default function LinkedInImport({
         isCurrent: true,
       };
 
+      // Location logic: LinkedIn connections CSV does not include a location field,
+      // so we never wipe a user-entered homeLocation. If a future LinkedIn export
+      // ever provides location and it differs from the existing one, that would be
+      // handled here — but for now we always preserve what the user entered.
+      const linkedinLocation = (u.linkedin as { location?: string }).location?.trim() ?? '';
+      const existingLocation = u.existing.homeLocation?.trim() ?? '';
+      const resolvedLocation =
+        linkedinLocation && linkedinLocation.toLowerCase() !== existingLocation.toLowerCase()
+          ? linkedinLocation   // LinkedIn has a different location → use it
+          : existingLocation;  // No LinkedIn location, or same → keep existing
+
       const updatedContact: Contact = {
         ...u.existing,
         // Update top-level fields with whatever LinkedIn has for this change
         company: u.changes.find(c => c.field === 'company')?.to ?? u.existing.company,
         role: u.changes.find(c => c.field === 'role')?.to ?? u.existing.role,
         jobs: [...previousJobs, newJob],
-        // Always preserve homeLocation — LinkedIn data doesn't include it,
-        // so never let a refresh wipe a location the user entered manually.
-        homeLocation: u.existing.homeLocation,
+        homeLocation: resolvedLocation,
       };
       // Backfill LinkedIn URL if not already set
       if (!updatedContact.linkedinUrl && u.linkedin.linkedinUrl) {

@@ -38,19 +38,31 @@ export default function ContactList({
 
   const hasAnyFilter = hasActiveFilters(filter);
 
+  const headerContent = (
+    <>
+      <h1 className="font-[family-name:var(--font-outfit)] text-[19px] font-semibold tracking-tight">
+        InTouch
+      </h1>
+    </>
+  );
+
+  const addButton = (
+    <motion.button
+      onClick={onAdd}
+      whileTap={{ scale: 0.92 }}
+      className="w-9 h-9 flex items-center justify-center rounded-xl bg-accent text-dark-bg transition-transform"
+      style={{ boxShadow: '0 2px 8px rgba(45,212,191,0.30)' }}
+    >
+      <Plus size={18} strokeWidth={2.5} />
+    </motion.button>
+  );
+
   if (contacts.length === 0) {
     return (
       <div className="pt-4 px-4">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="font-[family-name:var(--font-outfit)] text-lg font-semibold tracking-tight">
-            InTouch
-          </h1>
-          <button
-            onClick={onAdd}
-            className="w-9 h-9 flex items-center justify-center rounded-lg bg-accent text-dark-bg active:scale-[0.96] transition-transform"
-          >
-            <Plus size={18} strokeWidth={2.5} />
-          </button>
+          {headerContent}
+          {addButton}
         </div>
         <EmptyState onAdd={onAdd} isDark={isDark} />
       </div>
@@ -60,26 +72,17 @@ export default function ContactList({
   return (
     <div className="pt-4 px-4 pb-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-2.5">
-          <h1 className="font-[family-name:var(--font-outfit)] text-xl font-black tracking-tight">
-            InTouch
-          </h1>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          {headerContent}
           {syncStatus && <SyncIndicator status={syncStatus} />}
         </div>
-        <motion.button
-          onClick={onAdd}
-          whileTap={{ scale: 0.92 }}
-          className="w-9 h-9 flex items-center justify-center rounded-xl bg-accent text-dark-bg shadow-sm active:shadow-none transition-shadow"
-          style={{ boxShadow: '0 2px 8px rgba(45,212,191,0.35)' }}
-        >
-          <Plus size={18} strokeWidth={2.5} />
-        </motion.button>
+        {addButton}
       </div>
 
       {/* Search */}
       <div className="relative mb-3">
-        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted/70" />
+        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted/60" />
         <input
           type="text"
           value={filter.search}
@@ -105,7 +108,7 @@ export default function ContactList({
 
       {/* Count + Sort */}
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-semibold text-muted/70 font-[family-name:var(--font-outfit)] tracking-wide uppercase">
+        <p className="text-xs text-muted font-[family-name:var(--font-outfit)]">
           {hasAnyFilter
             ? `${displayed.length} result${displayed.length !== 1 ? 's' : ''}`
             : `${contacts.length} connection${contacts.length !== 1 ? 's' : ''}`}
@@ -118,28 +121,32 @@ export default function ContactList({
       </div>
 
       {/* Cards */}
-      <div className="space-y-2.5">
+      <div className="space-y-2">
         {displayed.map((contact) => (
           <motion.button
             key={contact.id}
             onClick={() => onSelect(contact)}
             whileTap={{ scale: 0.985 }}
-            className={`w-full text-left px-4 py-3.5 rounded-xl border transition-all duration-150 ${
+            className={`relative overflow-hidden w-full text-left px-4 py-3.5 rounded-xl border transition-all duration-150 ${
               isDark
-                ? 'bg-dark-card border-dark-border hover:border-accent/25 card-shadow-dark'
-                : 'bg-white border-light-border hover:border-accent/30 card-shadow'
-            } ${contact.classification === 'inner' ? 'border-l-[3px] border-l-accent/60' : ''}`}
+                ? 'bg-dark-card border-dark-border hover:border-accent/20 card-shadow-dark'
+                : 'bg-white border-light-border hover:border-accent/25 card-shadow'
+            }`}
           >
-            <div className="flex items-center gap-3.5">
+            {/* Inner circle accent bar — absolute so it never shifts card content */}
+            {contact.classification === 'inner' && (
+              <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-accent/50 rounded-r-sm" />
+            )}
+            <div className="flex items-center gap-3">
               <Avatar name={contact.name} photoUrl={contact.photoUrl} size="md" />
               <div className="min-w-0 flex-1">
-                <p className="font-[family-name:var(--font-outfit)] font-bold text-[15px] leading-snug truncate">
+                <p className="font-[family-name:var(--font-outfit)] font-semibold text-[14px] leading-snug truncate">
                   {contact.name}
                 </p>
                 {(() => {
                   const dj = getDisplayJob(contact);
                   return (dj.role || dj.company) ? (
-                    <p className="text-[13px] text-muted mt-0.5 truncate leading-snug">
+                    <p className="text-xs text-muted mt-0.5 truncate leading-snug">
                       {dj.role && dj.company ? `${dj.role} · ${dj.company}` : dj.role || dj.company}
                     </p>
                   ) : null;
@@ -155,7 +162,7 @@ export default function ContactList({
                   </p>
                 )}
                 {(contact.email || contact.phone) && (
-                  <div className="flex items-center gap-2.5 mt-2">
+                  <div className="flex items-center gap-2 mt-1.5">
                     {contact.email && (
                       <a href={`mailto:${contact.email}`} onClick={(e) => e.stopPropagation()} className="text-muted/60 hover:text-accent transition-colors">
                         <Mail size={13} />
@@ -176,12 +183,12 @@ export default function ContactList({
               </div>
               <div className="flex flex-col items-end gap-1.5 shrink-0 self-start pt-0.5">
                 <span
-                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-wide ${
+                  className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                     contact.classification === 'inner'
                       ? 'bg-accent/15 text-accent'
                       : isDark
-                      ? 'bg-dark-border/80 text-muted-light'
-                      : 'bg-slate-100 text-muted'
+                      ? 'bg-dark-border text-muted-light'
+                      : 'bg-light-border text-muted'
                   }`}
                 >
                   {contact.classification === 'inner' ? 'Inner' : 'Wider'}
@@ -191,8 +198,8 @@ export default function ContactList({
                     {contact.tags.slice(0, 2).map((tag) => (
                       <span
                         key={tag}
-                        className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${
-                          isDark ? 'bg-dark-border/60 text-muted' : 'bg-slate-100 text-slate-500'
+                        className={`text-[10px] px-1.5 py-0.5 rounded ${
+                          isDark ? 'bg-dark-border text-muted' : 'bg-light-border text-muted'
                         }`}
                       >
                         {capitalizeTag(tag)}
