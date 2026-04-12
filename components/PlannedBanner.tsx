@@ -34,8 +34,8 @@ export default function PlannedBanner({
         animate={{ height: 'auto', opacity: 1 }}
         exit={{ height: 0, opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className={`mx-4 mb-3 rounded-lg border overflow-hidden ${
-          isDark ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-500/5 border-blue-500/15'
+        className={`mx-4 mb-3 rounded-xl border overflow-hidden ${
+          isDark ? 'bg-blue-500/10 border-blue-500/20 card-shadow-dark' : 'bg-blue-500/5 border-blue-500/15 card-shadow'
         }`}
       >
         <div className="px-4 py-3 flex items-start gap-3">

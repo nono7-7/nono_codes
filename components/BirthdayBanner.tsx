@@ -36,8 +36,8 @@ export default function BirthdayBanner({
         animate={{ height: 'auto', opacity: 1 }}
         exit={{ height: 0, opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className={`mx-4 mb-3 rounded-lg border overflow-hidden ${
-          isDark ? 'bg-accent/10 border-accent/20' : 'bg-accent/5 border-accent/15'
+        className={`mx-4 mb-3 rounded-xl border overflow-hidden ${
+          isDark ? 'bg-accent/10 border-accent/20 card-shadow-dark' : 'bg-accent/5 border-accent/15 card-shadow'
         }`}
       >
         <div className="px-4 py-3 flex items-start gap-3">

@@ -4,7 +4,7 @@ import { getInitials, getAvatarColor } from '@/lib/avatar';
 
 const SIZES = {
   sm: 'w-8 h-8 text-xs',
-  md: 'w-12 h-12 text-sm',
+  md: 'w-10 h-10 text-sm',
   lg: 'w-20 h-20 text-xl',
 };
 

@@ -90,6 +90,9 @@ export default function LinkedInImport({
         company: u.changes.find(c => c.field === 'company')?.to ?? u.existing.company,
         role: u.changes.find(c => c.field === 'role')?.to ?? u.existing.role,
         jobs: [...previousJobs, newJob],
+        // Always preserve homeLocation — LinkedIn data doesn't include it,
+        // so never let a refresh wipe a location the user entered manually.
+        homeLocation: u.existing.homeLocation,
       };
       // Backfill LinkedIn URL if not already set
       if (!updatedContact.linkedinUrl && u.linkedin.linkedinUrl) {

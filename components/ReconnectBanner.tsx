@@ -42,8 +42,8 @@ export default function ReconnectBanner({
         animate={{ height: 'auto', opacity: 1 }}
         exit={{ height: 0, opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className={`mx-4 mb-3 rounded-lg border overflow-hidden ${
-          isDark ? 'bg-accent/10 border-accent/20' : 'bg-accent/5 border-accent/15'
+        className={`mx-4 mb-3 rounded-xl border overflow-hidden ${
+          isDark ? 'bg-accent/10 border-accent/20 card-shadow-dark' : 'bg-accent/5 border-accent/15 card-shadow'
         }`}
       >
         <div className="px-4 py-3 flex items-start gap-3">
@@ -66,15 +66,16 @@ export default function ReconnectBanner({
                         {weeks > 0 ? `${weeks}w overdue` : 'due'}
                       </span>
                     </button>
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 0.85 }}
                       onClick={(e) => {
                         e.stopPropagation();
                         onMarkContacted(c.id);
                       }}
-                      className="w-6 h-6 flex items-center justify-center rounded-full bg-accent/15 text-accent shrink-0 active:scale-[0.9] transition-transform"
+                      className="w-6 h-6 flex items-center justify-center rounded-full bg-accent/20 text-accent shrink-0 hover:bg-accent/30 transition-colors"
                     >
                       <Check size={12} strokeWidth={3} />
-                    </button>
+                    </motion.button>
                   </div>
                 );
               })}
