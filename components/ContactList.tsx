@@ -147,7 +147,7 @@ export default function ContactList({
                 {(() => {
                   const dj = getDisplayJob(contact);
                   return (dj.role || dj.company) ? (
-                    <p className="text-xs text-muted mt-0.5 truncate leading-snug">
+                    <p className="text-xs text-muted mt-1 truncate leading-snug">
                       {dj.company && dj.role ? `${dj.company} · ${dj.role}` : dj.company || dj.role}
                     </p>
                   ) : null;
@@ -193,13 +193,13 @@ export default function ContactList({
                       ? 'bg-dark-border text-muted-light'
                       : 'bg-light-border text-muted'
                   }`}
-                  style={{ fontWeight: 550 }}
+                  style={{ fontWeight: 515 }}
                 >
                   {contact.classification === 'inner' ? 'Inner' : 'Wider'}
                 </span>
-                {/* Tags — mt-0.5 matches the mt-0.5 on the company/role line */}
+                {/* Tags — mt-1 matches the mt-1 on the company/role line */}
                 {contact.tags.length > 0 && (
-                  <div className="flex gap-1 mt-0.5">
+                  <div className="flex gap-1 mt-1">
                     {contact.tags.slice(0, 2).map((tag) => (
                       <span
                         key={tag}
