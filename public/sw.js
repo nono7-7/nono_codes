@@ -79,7 +79,7 @@ self.addEventListener('push', (event) => {
         icon,
         badge,
         data: data.data ?? {},
-        tag: 'intouch-reminder',
+        tag: data.tag ?? 'intouch-reminder',
         renotify: true,
       });
     })

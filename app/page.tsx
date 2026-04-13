@@ -301,16 +301,20 @@ export default function App() {
       // Reach-out date notification — write or clear from Firestore
       if (user) {
         if (contact.reachOut && contact.reconnectDate) {
-          saveReachOutNotification(user.uid, contact.id, contact.name, contact.reconnectDate).catch(() => {});
+          saveReachOutNotification(user.uid, contact.id, contact.name, contact.reconnectDate)
+            .catch((e) => console.error('[notification] reach-out write failed:', e));
         } else {
-          clearReachOutNotification(user.uid, contact.id).catch(() => {});
+          clearReachOutNotification(user.uid, contact.id)
+            .catch((e) => console.error('[notification] reach-out clear failed:', e));
         }
         // Reconnect interval notification — write or clear from Firestore
         if (contact.reconnectIntervalWeeks) {
           const nextDue = computeReconnectDueDate(contact);
-          saveReconnectNotification(user.uid, contact.id, contact.name, nextDue, contact.reconnectIntervalWeeks).catch(() => {});
+          saveReconnectNotification(user.uid, contact.id, contact.name, nextDue, contact.reconnectIntervalWeeks)
+            .catch((e) => console.error('[notification] reconnect write failed:', e));
         } else {
-          clearReconnectNotification(user.uid, contact.id).catch(() => {});
+          clearReconnectNotification(user.uid, contact.id)
+            .catch((e) => console.error('[notification] reconnect clear failed:', e));
         }
       }
       await refresh();
@@ -405,7 +409,8 @@ export default function App() {
         if (contact?.reconnectIntervalWeeks) {
           const nextDue = new Date();
           nextDue.setDate(nextDue.getDate() + contact.reconnectIntervalWeeks * 7);
-          saveReconnectNotification(user.uid, contactId, contact.name, nextDue.toISOString().slice(0, 10), contact.reconnectIntervalWeeks).catch(() => {});
+          saveReconnectNotification(user.uid, contactId, contact.name, nextDue.toISOString().slice(0, 10), contact.reconnectIntervalWeeks)
+            .catch((e) => console.error('[notification] reconnect advance failed:', e));
         }
       }
     },
@@ -565,7 +570,8 @@ export default function App() {
       showToast('Interaction planned');
       // Write to Firestore for email reminder (if user has opted in and is logged in)
       if (user?.email && appSettings.emailNotificationsEnabled) {
-        savePlannedNotification(user.uid, user.email, contact.name, planned).catch(() => {});
+        savePlannedNotification(user.uid, user.email, contact.name, planned)
+          .catch((e) => console.error('[notification] planned write failed:', e));
       }
     },
     [contacts, refresh, showToast, user, appSettings.emailNotificationsEnabled]
@@ -598,7 +604,8 @@ export default function App() {
       );
       // Mark the Firestore notification as complete so no more emails are sent
       if (user) {
-        completePlannedNotification(user.uid, plannedId).catch(() => {});
+        completePlannedNotification(user.uid, plannedId)
+          .catch((e) => console.error('[notification] planned complete failed:', e));
       }
       showToast('Logged & completed');
     },

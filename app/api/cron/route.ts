@@ -143,38 +143,44 @@ export async function GET(req: NextRequest) {
 
     dueItems.sort((a, b) => (a.date === localToday ? -1 : 1) - (b.date === localToday ? -1 : 1));
 
-    const title = 'InTouch Reminder';
-    const body =
-      dueItems.length === 1
-        ? `${dueItems[0].contactName}: ${dueItems[0].description}${dueItems[0].date !== localToday ? ' — in 2 days' : ''}`
-        : `${dueItems.length} upcoming reminders`;
+    const expiredSubRefs: FirebaseFirestore.DocumentReference[] = [];
 
-    const payload = JSON.stringify({ title, body });
+    // Send one push per due item so each notification names the specific person
+    for (const item of dueItems) {
+      const title = 'InTouch Reminder';
+      const body = `${item.contactName}: ${item.description}${item.date !== localToday ? ' — in 2 days' : ''}`;
+      const tag = `intouch-${item.ref.id}`;
+      const payload = JSON.stringify({ title, body, tag });
 
-    for (const subDoc of subsSnap.docs) {
-      const subData = subDoc.data();
-      try {
-        await webpush.sendNotification(
-          {
-            endpoint: subData.endpoint as string,
-            keys: subData.keys as { p256dh: string; auth: string },
-          },
-          payload
-        );
-        sent++;
-      } catch (e: unknown) {
-        if (
-          typeof e === 'object' &&
-          e !== null &&
-          'statusCode' in e &&
-          (e as { statusCode: number }).statusCode === 410
-        ) {
-          await subDoc.ref.delete(); // expired subscription
-        } else {
-          console.error(`Push failed for uid ${uid}:`, e);
+      for (const subDoc of subsSnap.docs) {
+        const subData = subDoc.data();
+        try {
+          await webpush.sendNotification(
+            {
+              endpoint: subData.endpoint as string,
+              keys: subData.keys as { p256dh: string; auth: string },
+            },
+            payload
+          );
+          sent++;
+        } catch (e: unknown) {
+          if (
+            typeof e === 'object' &&
+            e !== null &&
+            'statusCode' in e &&
+            (e as { statusCode: number }).statusCode === 410
+          ) {
+            expiredSubRefs.push(subDoc.ref);
+          } else {
+            console.error(`Push failed for uid ${uid}:`, e);
+          }
         }
       }
     }
+
+    // Delete expired subscriptions (deduped)
+    const uniqueExpired = [...new Set(expiredSubRefs)];
+    await Promise.all(uniqueExpired.map((ref) => ref.delete()));
 
     // After firing, update each notification:
     // - Reconnect: advance date by intervalWeeks so it auto-recurs (no manual reset needed)
