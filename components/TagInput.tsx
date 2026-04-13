@@ -73,7 +73,7 @@ export default function TagInput({
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Type a tag and press Enter..."
+        placeholder="Search or create a tag..."
         className={`w-full px-3 py-2.5 rounded-lg text-sm outline-none border ${
           isDark
             ? 'bg-dark-card border-dark-border text-white placeholder:text-muted'
@@ -82,6 +82,15 @@ export default function TagInput({
       />
 
       <div className="flex flex-wrap gap-1.5">
+        {/* Create new tag chip — shown when typed value isn't an exact existing tag */}
+        {input.trim() && !suggestions.some((t) => t === input.toLowerCase().trim()) && (
+          <button
+            onClick={() => addTag(input)}
+            className="px-2.5 py-1 rounded-md text-xs font-medium transition-colors bg-accent/15 text-accent border border-accent/30 hover:bg-accent/25"
+          >
+            + Create &ldquo;{input.trim()}&rdquo;
+          </button>
+        )}
         {filtered.slice(0, 12).map((tag) => (
           <button
             key={tag}
