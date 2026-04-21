@@ -199,27 +199,47 @@ export default function ContactDetail({
             <h3 className="font-[family-name:var(--font-outfit)] text-xs font-semibold text-muted uppercase tracking-wider mb-3">
               Contact
             </h3>
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {([...(contact.phones || [])].sort((a, b) => {
                 const order = { personal: 0, work: 1, other: 2 };
                 return (order[a.label] ?? 2) - (order[b.label] ?? 2);
-              })).map((p) => (
-                <a key={p.id} href={`tel:${p.number}`} className="flex items-center gap-3 text-sm text-accent">
-                  <Phone size={14} />
-                  <span className="capitalize text-[11px] text-muted mr-1">{p.label}</span>
-                  {p.number}
-                </a>
-              ))}
+              })).map((p) => {
+                const color = p.label === 'personal' ? 'teal' : p.label === 'work' ? 'blue' : 'slate';
+                const borderClass = color === 'teal' ? 'border-teal-400' : color === 'blue' ? 'border-blue-400' : 'border-slate-400';
+                const labelClass = color === 'teal' ? 'text-teal-500' : color === 'blue' ? 'text-blue-500' : 'text-slate-400';
+                const valueClass = color === 'teal' ? 'text-teal-600' : color === 'blue' ? 'text-blue-600' : 'text-slate-500';
+                return (
+                  <a key={p.id} href={`tel:${p.number}`}
+                    className={`flex items-center gap-3 pl-3 border-l-[3px] ${borderClass} py-0.5`}
+                  >
+                    <Phone size={13} className={labelClass} />
+                    <div>
+                      <p className={`text-[10px] font-semibold uppercase tracking-wide ${labelClass}`}>{p.label}</p>
+                      <p className={`text-sm font-medium ${valueClass}`}>{p.number}</p>
+                    </div>
+                  </a>
+                );
+              })}
               {([...(contact.emails || [])].sort((a, b) => {
                 const order = { personal: 0, work: 1, other: 2 };
                 return (order[a.label] ?? 2) - (order[b.label] ?? 2);
-              })).map((e) => (
-                <a key={e.id} href={`mailto:${e.address}`} className="flex items-center gap-3 text-sm text-accent">
-                  <Mail size={14} />
-                  <span className="capitalize text-[11px] text-muted mr-1">{e.label}</span>
-                  {e.address}
-                </a>
-              ))}
+              })).map((e) => {
+                const color = e.label === 'personal' ? 'teal' : e.label === 'work' ? 'blue' : 'slate';
+                const borderClass = color === 'teal' ? 'border-teal-400' : color === 'blue' ? 'border-blue-400' : 'border-slate-400';
+                const labelClass = color === 'teal' ? 'text-teal-500' : color === 'blue' ? 'text-blue-500' : 'text-slate-400';
+                const valueClass = color === 'teal' ? 'text-teal-600' : color === 'blue' ? 'text-blue-600' : 'text-slate-500';
+                return (
+                  <a key={e.id} href={`mailto:${e.address}`}
+                    className={`flex items-center gap-3 pl-3 border-l-[3px] ${borderClass} py-0.5`}
+                  >
+                    <Mail size={13} className={labelClass} />
+                    <div>
+                      <p className={`text-[10px] font-semibold uppercase tracking-wide ${labelClass}`}>{e.label}</p>
+                      <p className={`text-sm font-medium ${valueClass}`}>{e.address}</p>
+                    </div>
+                  </a>
+                );
+              })}
               {contact.linkedinUrl && (
                 <a
                   href={contact.linkedinUrl}
