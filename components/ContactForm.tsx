@@ -413,27 +413,27 @@ export default function ContactForm({
         <div className="space-y-2">
           {(form.phones || []).map((p) => (
             <div key={p.id} className={`rounded-lg p-3 border ${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'}`}>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between mb-2">
                 <select
                   value={p.label}
                   onChange={(e) => updatePhone(p.id, { label: e.target.value as PhoneEntry['label'] })}
-                  className={`${inputClass} py-1.5 text-xs w-24 flex-shrink-0`}
+                  className={`${inputClass} py-1 text-xs w-28`}
                 >
                   <option value="personal">Personal</option>
                   <option value="work">Work</option>
                   <option value="other">Other</option>
                 </select>
-                <input
-                  type="tel"
-                  value={p.number}
-                  onChange={(e) => updatePhone(p.id, { number: e.target.value })}
-                  placeholder="+34 612 345 678"
-                  className={`${inputClass} py-1.5 text-xs flex-1`}
-                />
-                <button type="button" onClick={() => removePhone(p.id)} className="text-muted hover:text-red-400 flex-shrink-0">
+                <button type="button" onClick={() => removePhone(p.id)} className="text-muted hover:text-red-400">
                   <X size={14} />
                 </button>
               </div>
+              <input
+                type="tel"
+                value={p.number}
+                onChange={(e) => updatePhone(p.id, { number: e.target.value })}
+                placeholder="+44 7700 900000"
+                className={`${inputClass} py-1.5 text-xs w-full`}
+              />
             </div>
           ))}
           <button type="button" onClick={addPhone} className="flex items-center gap-2 text-xs text-accent font-medium py-1">
@@ -444,27 +444,27 @@ export default function ContactForm({
         <div className="space-y-2">
           {(form.emails || []).map((e) => (
             <div key={e.id} className={`rounded-lg p-3 border ${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'}`}>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between mb-2">
                 <select
                   value={e.label}
                   onChange={(ev) => updateEmail(e.id, { label: ev.target.value as EmailEntry['label'] })}
-                  className={`${inputClass} py-1.5 text-xs w-24 flex-shrink-0`}
+                  className={`${inputClass} py-1 text-xs w-28`}
                 >
                   <option value="personal">Personal</option>
                   <option value="work">Work</option>
                   <option value="other">Other</option>
                 </select>
-                <input
-                  type="email"
-                  value={e.address}
-                  onChange={(ev) => updateEmail(e.id, { address: ev.target.value })}
-                  placeholder="name@email.com"
-                  className={`${inputClass} py-1.5 text-xs flex-1`}
-                />
-                <button type="button" onClick={() => removeEmail(e.id)} className="text-muted hover:text-red-400 flex-shrink-0">
+                <button type="button" onClick={() => removeEmail(e.id)} className="text-muted hover:text-red-400">
                   <X size={14} />
                 </button>
               </div>
+              <input
+                type="email"
+                value={e.address}
+                onChange={(ev) => updateEmail(e.id, { address: ev.target.value })}
+                placeholder="name@email.com"
+                className={`${inputClass} py-1.5 text-xs w-full`}
+              />
             </div>
           ))}
           <button type="button" onClick={addEmail} className="flex items-center gap-2 text-xs text-accent font-medium py-1">
