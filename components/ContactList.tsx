@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Search, Plus, MapPin, Mail, Phone, MessageCircle } from 'lucide-react';
+import { Search, Plus, MapPin, Mail, Phone, MessageCircle, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Contact, ActiveFilter, SortOrder } from '@/lib/types';
 import { filterContacts, sortContacts, getTopTags, capitalizeTag, getDisplayJob, getDisplayEducation, hasActiveFilters } from '@/lib/utils';
@@ -88,12 +88,20 @@ export default function ContactList({
           value={filter.search}
           onChange={(e) => onFilterChange({ ...filter, search: e.target.value })}
           placeholder="Search your network..."
-          className={`w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none border transition-all focus:ring-2 focus:ring-accent/20 focus:border-accent/40 ${
+          className={`w-full pl-9 ${filter.search ? 'pr-8' : 'pr-4'} py-2.5 rounded-xl text-sm outline-none border transition-all focus:ring-2 focus:ring-accent/20 focus:border-accent/40 ${
             isDark
               ? 'bg-dark-card border-dark-border text-white placeholder:text-muted/60'
               : 'bg-white border-light-border text-dark-bg placeholder:text-muted/60 card-shadow'
           }`}
         />
+        {filter.search && (
+          <button
+            onClick={() => onFilterChange({ ...filter, search: '' })}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted/50 hover:text-muted transition-colors"
+          >
+            <X size={14} />
+          </button>
+        )}
       </div>
 
       {/* Filters */}
