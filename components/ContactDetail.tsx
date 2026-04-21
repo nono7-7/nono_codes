@@ -200,14 +200,20 @@ export default function ContactDetail({
               Contact
             </h3>
             <div className="space-y-2.5">
-              {(contact.phones || []).map((p) => (
+              {([...(contact.phones || [])].sort((a, b) => {
+                const order = { personal: 0, work: 1, other: 2 };
+                return (order[a.label] ?? 2) - (order[b.label] ?? 2);
+              })).map((p) => (
                 <a key={p.id} href={`tel:${p.number}`} className="flex items-center gap-3 text-sm text-accent">
                   <Phone size={14} />
                   <span className="capitalize text-[11px] text-muted mr-1">{p.label}</span>
                   {p.number}
                 </a>
               ))}
-              {(contact.emails || []).map((e) => (
+              {([...(contact.emails || [])].sort((a, b) => {
+                const order = { personal: 0, work: 1, other: 2 };
+                return (order[a.label] ?? 2) - (order[b.label] ?? 2);
+              })).map((e) => (
                 <a key={e.id} href={`mailto:${e.address}`} className="flex items-center gap-3 text-sm text-accent">
                   <Mail size={14} />
                   <span className="capitalize text-[11px] text-muted mr-1">{e.label}</span>
