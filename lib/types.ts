@@ -1,5 +1,17 @@
 export type InteractionType = 'coffee' | 'call' | 'event' | 'linkedin' | 'message' | 'other';
 
+export interface PhoneEntry {
+  id: string;
+  label: 'personal' | 'work' | 'other';
+  number: string;
+}
+
+export interface EmailEntry {
+  id: string;
+  label: 'personal' | 'work' | 'other';
+  address: string;
+}
+
 export interface Interaction {
   id: string;
   date: string;       // YYYY-MM-DD
@@ -33,8 +45,8 @@ export interface Contact {
   homeLocation: string;
   nationality: string;
   linkedinUrl: string;
-  phone: string;
-  email: string;
+  phones: PhoneEntry[];
+  emails: EmailEntry[];
 
   notes: string;
   birthday: string; // YYYY-MM-DD or empty
@@ -101,8 +113,8 @@ export interface Job {
 export interface UserProfile {
   name: string;
   photoUrl: string;
-  phone: string;
-  email: string;
+  phones: PhoneEntry[];
+  emails: EmailEntry[];
   linkedinUrl: string;
   birthday: string;
   mainLocation: string;

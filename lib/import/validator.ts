@@ -13,7 +13,7 @@
  * Intra-file duplicates are also detected (same logic within the import batch).
  */
 
-import type { Contact } from '../types';
+import type { Contact, PhoneEntry, EmailEntry } from '../types';
 import type { ImportRow, ColumnMapping, ImportSummary, MappableField } from './types';
 import { nanoid } from 'nanoid';
 
@@ -78,10 +78,10 @@ export function validateRows(
 ): { rows: ImportRow[]; summary: ImportSummary } {
   // Build lookup sets from existing contacts
   const existingEmails = new Set(
-    existingContacts.map((c) => c.email.toLowerCase()).filter(Boolean)
+    existingContacts.flatMap((c) => (c.emails ?? []).map((e) => e.address.toLowerCase())).filter(Boolean)
   );
   const existingPhones = new Set(
-    existingContacts.map((c) => normalizePhone(c.phone)).filter(Boolean)
+    existingContacts.flatMap((c) => (c.phones ?? []).map((p) => normalizePhone(p.number))).filter(Boolean)
   );
   const existingNameCompany = new Set(
     existingContacts
@@ -233,8 +233,8 @@ export function rowToContact(mapped: Record<string, string>): Contact {
     homeLocation: mapped.homeLocation || '',
     nationality: '',
     linkedinUrl: mapped.linkedinUrl || '',
-    phone: mapped.phone || '',
-    email: mapped.email || '',
+    phones: mapped.phone ? [{ id: nanoid(), label: 'personal' as const, number: mapped.phone }] : [],
+    emails: mapped.email ? [{ id: nanoid(), label: 'personal' as const, address: mapped.email }] : [],
     notes: mapped.notes || '',
     birthday: mapped.birthday || '',
     tags,

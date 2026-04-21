@@ -2,17 +2,19 @@ import type { Contact, UserProfile } from './types';
 
 const SHAREABLE_FIELDS = [
   'name', 'role', 'company', 'university', 'homeLocation',
-  'email', 'phone', 'linkedinUrl', 'photoUrl',
+  'linkedinUrl', 'photoUrl',
 ] as const;
 
 type ShareableData = Pick<Contact, typeof SHAREABLE_FIELDS[number]>;
 
 export function encodeContactForSharing(contact: Contact): string {
-  const data: Partial<ShareableData> = {};
+  const data: Partial<ShareableData> & { phones?: Contact['phones']; emails?: Contact['emails'] } = {};
   for (const field of SHAREABLE_FIELDS) {
     const val = contact[field];
-    if (val) data[field] = val;
+    if (val) data[field] = val as string;
   }
+  if (contact.phones && contact.phones.length > 0) data.phones = contact.phones;
+  if (contact.emails && contact.emails.length > 0) data.emails = contact.emails;
   const json = JSON.stringify(data);
   const encoded = btoa(unescape(encodeURIComponent(json)));
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -21,8 +23,8 @@ export function encodeContactForSharing(contact: Contact): string {
 
 export function encodeProfileForSharing(profile: UserProfile): string {
   const data: Record<string, unknown> = { name: profile.name || 'Me' };
-  if (profile.sharePhone && profile.phone)           data.phone = profile.phone;
-  if (profile.shareEmail && profile.email)           data.email = profile.email;
+  if (profile.sharePhone && profile.phones && profile.phones.length > 0) data.phones = profile.phones;
+  if (profile.shareEmail && profile.emails && profile.emails.length > 0) data.emails = profile.emails;
   if (profile.shareLinkedin && profile.linkedinUrl)  data.linkedinUrl = profile.linkedinUrl;
   if (profile.shareLocation && profile.mainLocation) data.homeLocation = profile.mainLocation;
   if (profile.shareEducation && profile.education.length > 0) {

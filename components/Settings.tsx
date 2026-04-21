@@ -8,7 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { exportContacts, clearAll } from '@/lib/db';
 import { nanoid } from 'nanoid';
-import type { AppSettings, UserProfile, Education, Job } from '@/lib/types';
+import type { AppSettings, UserProfile, Education, Job, PhoneEntry, EmailEntry } from '@/lib/types';
 import Avatar from './Avatar';
 import UserQRModal from './UserQRModal';
 import ImageCropModal from './ImageCropModal';
@@ -149,6 +149,30 @@ export default function Settings({
     onProfileChange({ ...userProfile, jobs: userProfile.jobs.filter((j) => j.id !== id) });
   };
 
+  // ── Phones ─────────────────────────────────────────────
+  const addPhone = () => {
+    const entry: PhoneEntry = { id: nanoid(), label: 'personal', number: '' };
+    onProfileChange({ ...userProfile, phones: [...(userProfile.phones || []), entry] });
+  };
+  const updatePhone = (id: string, patch: Partial<PhoneEntry>) => {
+    onProfileChange({ ...userProfile, phones: (userProfile.phones || []).map((p) => (p.id === id ? { ...p, ...patch } : p)) });
+  };
+  const removePhone = (id: string) => {
+    onProfileChange({ ...userProfile, phones: (userProfile.phones || []).filter((p) => p.id !== id) });
+  };
+
+  // ── Emails ─────────────────────────────────────────────
+  const addEmail = () => {
+    const entry: EmailEntry = { id: nanoid(), label: 'personal', address: '' };
+    onProfileChange({ ...userProfile, emails: [...(userProfile.emails || []), entry] });
+  };
+  const updateEmail = (id: string, patch: Partial<EmailEntry>) => {
+    onProfileChange({ ...userProfile, emails: (userProfile.emails || []).map((e) => (e.id === id ? { ...e, ...patch } : e)) });
+  };
+  const removeEmail = (id: string) => {
+    onProfileChange({ ...userProfile, emails: (userProfile.emails || []).filter((e) => e.id !== id) });
+  };
+
   // ── Data ───────────────────────────────────────────────
   const handleExport = async () => {
     const json = await exportContacts();
@@ -237,30 +261,105 @@ export default function Settings({
 
         {/* CONTACT INFO */}
         <h3 className={`${sectionHeader} mt-5`}>Contact Info</h3>
-        <div className="space-y-2 mb-5">
-          {[
-            { icon: Phone, field: 'phone' as const, placeholder: 'Phone number', shareKey: 'sharePhone' as const, type: 'tel' },
-            { icon: Mail, field: 'email' as const, placeholder: 'Contact email', shareKey: 'shareEmail' as const, type: 'email' },
-            { icon: Link2, field: 'linkedinUrl' as const, placeholder: 'LinkedIn URL', shareKey: 'shareLinkedin' as const, type: 'url' },
-          ].map(({ icon: Icon, field, placeholder, shareKey, type }) => (
-            <div key={field} className="flex items-center gap-2">
-              <Icon size={15} className="text-muted flex-shrink-0" />
-              <input
-                type={type}
-                value={userProfile[field]}
-                onChange={(e) => onProfileChange({ ...userProfile, [field]: e.target.value })}
-                placeholder={placeholder}
-                className={`${inputCls} flex-1`}
-              />
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <span className="text-[10px] text-muted">QR</span>
-                <Toggle
-                  on={userProfile[shareKey]}
-                  onChange={(v) => onProfileChange({ ...userProfile, [shareKey]: v })}
+        <div className="space-y-2 mb-2">
+          {/* Phones */}
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-1.5">
+              <Phone size={13} className="text-muted" />
+              <span className="text-xs text-muted font-medium">Phone</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-muted">QR</span>
+              <Toggle on={userProfile.sharePhone} onChange={(v) => onProfileChange({ ...userProfile, sharePhone: v })} />
+            </div>
+          </div>
+          {(userProfile.phones || []).map((p) => (
+            <div key={p.id} className={`rounded-lg p-2.5 border ${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'}`}>
+              <div className="flex items-center gap-2">
+                <select
+                  value={p.label}
+                  onChange={(e) => updatePhone(p.id, { label: e.target.value as PhoneEntry['label'] })}
+                  className={`${inputCls} py-1.5 text-xs w-24 flex-shrink-0`}
+                >
+                  <option value="personal">Personal</option>
+                  <option value="work">Work</option>
+                  <option value="other">Other</option>
+                </select>
+                <input
+                  type="tel"
+                  value={p.number}
+                  onChange={(e) => updatePhone(p.id, { number: e.target.value })}
+                  placeholder="Phone number"
+                  className={`${inputCls} py-1.5 text-xs flex-1`}
                 />
+                <button type="button" onClick={() => removePhone(p.id)} className="text-muted hover:text-red-400 flex-shrink-0">
+                  <X size={14} />
+                </button>
               </div>
             </div>
           ))}
+          <button type="button" onClick={addPhone} className="flex items-center gap-2 text-xs text-accent font-medium py-1 mb-1">
+            <Plus size={14} /> Add Phone
+          </button>
+
+          {/* Emails */}
+          <div className="flex items-center justify-between mb-1 mt-2">
+            <div className="flex items-center gap-1.5">
+              <Mail size={13} className="text-muted" />
+              <span className="text-xs text-muted font-medium">Email</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-muted">QR</span>
+              <Toggle on={userProfile.shareEmail} onChange={(v) => onProfileChange({ ...userProfile, shareEmail: v })} />
+            </div>
+          </div>
+          {(userProfile.emails || []).map((em) => (
+            <div key={em.id} className={`rounded-lg p-2.5 border ${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'}`}>
+              <div className="flex items-center gap-2">
+                <select
+                  value={em.label}
+                  onChange={(e) => updateEmail(em.id, { label: e.target.value as EmailEntry['label'] })}
+                  className={`${inputCls} py-1.5 text-xs w-24 flex-shrink-0`}
+                >
+                  <option value="personal">Personal</option>
+                  <option value="work">Work</option>
+                  <option value="other">Other</option>
+                </select>
+                <input
+                  type="email"
+                  value={em.address}
+                  onChange={(e) => updateEmail(em.id, { address: e.target.value })}
+                  placeholder="Contact email"
+                  className={`${inputCls} py-1.5 text-xs flex-1`}
+                />
+                <button type="button" onClick={() => removeEmail(em.id)} className="text-muted hover:text-red-400 flex-shrink-0">
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+          <button type="button" onClick={addEmail} className="flex items-center gap-2 text-xs text-accent font-medium py-1 mb-2">
+            <Plus size={14} /> Add Email
+          </button>
+
+          {/* LinkedIn */}
+          <div className="flex items-center gap-2">
+            <Link2 size={15} className="text-muted flex-shrink-0" />
+            <input
+              type="url"
+              value={userProfile.linkedinUrl}
+              onChange={(e) => onProfileChange({ ...userProfile, linkedinUrl: e.target.value })}
+              placeholder="LinkedIn URL"
+              className={`${inputCls} flex-1`}
+            />
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-[10px] text-muted">QR</span>
+              <Toggle
+                on={userProfile.shareLinkedin}
+                onChange={(v) => onProfileChange({ ...userProfile, shareLinkedin: v })}
+              />
+            </div>
+          </div>
         </div>
 
         {/* ABOUT */}

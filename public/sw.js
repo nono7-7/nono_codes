@@ -1,4 +1,4 @@
-const CACHE_NAME = 'intouch-v2';
+const CACHE_NAME = 'intouch-v3';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
@@ -35,6 +35,23 @@ self.addEventListener('fetch', (event) => {
   // Don't cache Next.js API routes — they must always hit the network.
   if (url.pathname.startsWith('/api/')) return;
 
+  // Network-first for HTML navigation (always get the latest page shell)
+  if (event.request.mode === 'navigate' || url.pathname === '/') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache-first for static assets (JS/CSS have content hashes, safe to cache)
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const fetched = fetch(event.request)

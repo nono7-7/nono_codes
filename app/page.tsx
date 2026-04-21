@@ -51,9 +51,16 @@ export default function App() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isDark, setIsDark] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [birthdayDismissed, setBirthdayDismissed] = useState(false);
-  const [reconnectDismissed, setReconnectDismissed] = useState(false);
-  const [plannedDismissed, setPlannedDismissed] = useState(false);
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const [birthdayDismissed, setBirthdayDismissed] = useState(() => {
+    try { return localStorage.getItem(`intouch-birthday-dismissed-${today}`) === '1'; } catch { return false; }
+  });
+  const [reconnectDismissed, setReconnectDismissed] = useState(() => {
+    try { return localStorage.getItem(`intouch-reconnect-dismissed-${today}`) === '1'; } catch { return false; }
+  });
+  const [plannedDismissed, setPlannedDismissed] = useState(() => {
+    try { return localStorage.getItem(`intouch-planned-dismissed-${today}`) === '1'; } catch { return false; }
+  });
   const [appSettings, setAppSettings] = useState<AppSettings>({
     reconnectRemindersEnabled: true,
     cloudSyncEnabled: true, // default ON — new devices pull from Firestore on first login
@@ -66,7 +73,7 @@ export default function App() {
   const [showNotifHelpModal, setShowNotifHelpModal] = useState(false);
   const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile>({
-    name: '', photoUrl: '', phone: '', email: '', linkedinUrl: '',
+    name: '', photoUrl: '', phones: [], emails: [], linkedinUrl: '',
     birthday: '', mainLocation: '', education: [], jobs: [],
     sharePhone: false, shareEmail: false, shareLinkedin: false,
     shareBirthday: false, shareLocation: false, shareEducation: false, shareJobs: false,
@@ -88,11 +95,14 @@ export default function App() {
 
   // Auth listener
   useEffect(() => {
+    let cancelPending = () => {}; // cancel any in-flight Firestore check if auth fires again
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      cancelPending(); // abort previous slow-path check
       // Always clear in-memory data first to prevent cross-account leaks
       setContacts([]);
       setUserProfile({
-        name: '', photoUrl: '', phone: '', email: '', linkedinUrl: '',
+        name: '', photoUrl: '', phones: [], emails: [], linkedinUrl: '',
         birthday: '', mainLocation: '', education: [], jobs: [],
         sharePhone: false, shareEmail: false, shareLinkedin: false,
         shareBirthday: false, shareLocation: false, shareEducation: false, shareJobs: false,
@@ -101,18 +111,50 @@ export default function App() {
       setDBUser(firebaseUser?.uid ?? null);
       setUser(firebaseUser);
       if (firebaseUser) {
+        // Fast path: localStorage flag present on this device — skip Firestore check
         const onboarded = localStorage.getItem(`intouch-onboarded-${firebaseUser.uid}`);
         if (onboarded) {
           setAppState('app');
           setTimeout(() => { if (shouldShowWhatsNew()) setShowWhatsNew(true); }, 800);
-        } else {
-          setAppState('onboarding');
+          return;
         }
+        // Slow path: localStorage cleared (PWA reinstall / new device) — check Firestore
+        // Stay in 'loading' while we verify so the user never sees a false onboarding screen
+        setAppState('loading');
+        let cancelled = false;
+        cancelPending = () => { cancelled = true; };
+        pullProfileFromCloud(firebaseUser.uid)
+          .then((cloudProfile) => {
+            if (cancelled) return;
+            // Only treat as returning user if the profile has real data.
+            // An empty doc (e.g. from "Skip for now") does NOT count — that user
+            // should still be prompted to set up their profile.
+            const hasRealData = cloudProfile && (
+              cloudProfile.name || cloudProfile.linkedinUrl || cloudProfile.mainLocation ||
+              (cloudProfile.emails && cloudProfile.emails.length > 0) ||
+              (cloudProfile.phones && cloudProfile.phones.length > 0) ||
+              (cloudProfile.education && cloudProfile.education.length > 0) ||
+              (cloudProfile.jobs && cloudProfile.jobs.length > 0)
+            );
+            if (hasRealData) {
+              // Returning user on a fresh device — restore the flag and go straight to app
+              localStorage.setItem(`intouch-onboarded-${firebaseUser.uid}`, 'true');
+              setAppState('app');
+              setTimeout(() => { if (shouldShowWhatsNew()) setShowWhatsNew(true); }, 800);
+            } else {
+              // New user OR user who skipped setup — show onboarding
+              setAppState('onboarding');
+            }
+          })
+          .catch((e) => {
+            console.error('[auth] Firestore profile check failed:', e);
+            if (!cancelled) setAppState('onboarding');
+          });
       } else {
         setAppState('auth');
       }
     });
-    return () => unsubscribe();
+    return () => { cancelPending(); unsubscribe(); };
   }, []);
 
   // Capture PWA install prompt before browser discards it
@@ -162,10 +204,14 @@ export default function App() {
                 const mergedProfile = { ...profile, ...cloudProfile, photoUrl: profile.photoUrl };
                 setUserProfile(mergedProfile);
                 await saveUserProfile(mergedProfile);
-              } else if (profile.name) {
-                // Nothing in Firestore yet (e.g. first sync or offline edits) —
-                // push local profile so it's never lost if the device is replaced
-                syncProfileToCloud(user.uid, profile).catch(() => {});
+                // Always push the merged result back so Firestore stays current
+                // (covers case where local had newer edits that never synced)
+                syncProfileToCloud(user.uid, mergedProfile)
+                  .catch((e) => console.error('[profile] push merged profile failed:', e));
+              } else if (profile.name || profile.linkedinUrl || profile.emails?.length > 0 || profile.phones?.length > 0) {
+                // Nothing in Firestore yet but local has real data — push it up
+                syncProfileToCloud(user.uid, profile)
+                  .catch((e) => console.error('[profile] push local profile failed:', e));
               }
               setSyncStatus('idle');
             }
@@ -433,11 +479,14 @@ export default function App() {
     async (newProfile: UserProfile) => {
       setUserProfile(newProfile);
       await saveUserProfile(newProfile);
-      if (user && appSettings.cloudSyncEnabled) {
-        syncProfileToCloud(user.uid, newProfile).catch(() => {});
+      // Profile always syncs to Firestore regardless of cloudSyncEnabled —
+      // it's tiny, critical data that must survive device wipes / reinstalls.
+      if (user) {
+        syncProfileToCloud(user.uid, newProfile)
+          .catch((e) => console.error('[profile] sync to cloud failed:', e));
       }
     },
-    [user, appSettings.cloudSyncEnabled]
+    [user]
   );
 
   // Force-upload all local contacts + profile to Firestore, then pull back (bidirectional sync)
@@ -666,7 +715,18 @@ export default function App() {
   };
 
   const handleProfileSetupComplete = async (profile: UserProfile) => {
-    await handleProfileChange(profile);
+    // Save locally first
+    setUserProfile(profile);
+    await saveUserProfile(profile);
+    // Await the Firestore sync — we must not proceed until the profile is
+    // confirmed in the cloud, otherwise a reinstall will find nothing there.
+    if (user) {
+      try {
+        await syncProfileToCloud(user.uid, profile);
+      } catch (e) {
+        console.error('[profile] setup sync to cloud failed:', e);
+      }
+    }
     setAppState('app');
     // Show nudge banner if notifications not yet granted
     const nudgeDismissed = localStorage.getItem('intouch-notif-nudge-dismissed');
@@ -766,7 +826,7 @@ export default function App() {
                   <PlannedBanner
                     contacts={contacts}
                     dismissed={plannedDismissed}
-                    onDismiss={() => setPlannedDismissed(true)}
+                    onDismiss={() => { setPlannedDismissed(true); try { localStorage.setItem(`intouch-planned-dismissed-${today}`, '1'); } catch {} }}
                     onSelect={(c) => setScreen({ type: 'detail', contact: c })}
                     onComplete={(contactId, plannedId) => handleCompletePlanned(contactId, plannedId)}
                     isDark={isDark}
@@ -774,7 +834,7 @@ export default function App() {
                   <BirthdayBanner
                     contacts={contacts}
                     dismissed={birthdayDismissed}
-                    onDismiss={() => setBirthdayDismissed(true)}
+                    onDismiss={() => { setBirthdayDismissed(true); try { localStorage.setItem(`intouch-birthday-dismissed-${today}`, '1'); } catch {} }}
                     onSelect={(c) => setScreen({ type: 'detail', contact: c })}
                     isDark={isDark}
                   />
@@ -782,7 +842,7 @@ export default function App() {
                     contacts={contacts}
                     enabled={appSettings.reconnectRemindersEnabled}
                     dismissed={reconnectDismissed}
-                    onDismiss={() => setReconnectDismissed(true)}
+                    onDismiss={() => { setReconnectDismissed(true); try { localStorage.setItem(`intouch-reconnect-dismissed-${today}`, '1'); } catch {} }}
                     onSelect={(c) => setScreen({ type: 'detail', contact: c })}
                     onMarkContacted={handleMarkContacted}
                     isDark={isDark}

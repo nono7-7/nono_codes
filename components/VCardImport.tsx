@@ -40,11 +40,11 @@ export default function VCardImport({
       // Deduplicate against existing contacts by name+phone
       const existing = await getAllContacts();
       const existingKeys = new Set(
-        existing.map((c) => `${c.name.toLowerCase()}|${c.phone}`)
+        existing.map((c) => `${c.name.toLowerCase()}|${c.phones?.[0]?.number ?? ''}`)
       );
       const dupeIndices = new Set<number>();
       parsed.forEach((c, i) => {
-        if (existingKeys.has(`${c.name.toLowerCase()}|${c.phone}`)) {
+        if (existingKeys.has(`${c.name.toLowerCase()}|${c.phones?.[0]?.number ?? ''}`)) {
           dupeIndices.add(i);
         }
       });
@@ -210,7 +210,7 @@ export default function VCardImport({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{c.name || '(no name)'}</p>
                       <p className={`text-[11px] truncate ${muted}`}>
-                        {[c.phone, c.email, c.company].filter(Boolean).join(' · ') || 'No details'}
+                        {[c.phones?.[0]?.number, c.emails?.[0]?.address, c.company].filter(Boolean).join(' · ') || 'No details'}
                       </p>
                     </div>
                     {skipped.has(i) && (

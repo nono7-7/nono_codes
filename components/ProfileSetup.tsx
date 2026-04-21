@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, ArrowRight, QrCode, GraduationCap, Briefcase, Plus, X, Star, MapPin, Cake } from 'lucide-react';
 import { nanoid } from 'nanoid';
-import type { UserProfile, Education, Job } from '@/lib/types';
+import type { UserProfile, Education, Job, PhoneEntry, EmailEntry } from '@/lib/types';
 
 interface Props {
   onComplete: (profile: UserProfile) => void;
@@ -13,8 +13,8 @@ interface Props {
 
 export default function ProfileSetup({ onComplete, isDark }: Props) {
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
+  const [phones, setPhones] = useState<PhoneEntry[]>([]);
+  const [emails, setEmails] = useState<EmailEntry[]>([]);
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [birthday, setBirthday] = useState('');
   const [mainLocation, setMainLocation] = useState('');
@@ -55,12 +55,28 @@ export default function ProfileSetup({ onComplete, isDark }: Props) {
   const removeJob = (id: string) =>
     setJobs((prev) => prev.filter((j) => j.id !== id));
 
+  // ── Phone handlers ──
+  const addPhone = () =>
+    setPhones((prev) => [...prev, { id: nanoid(), label: 'personal' as const, number: '' }]);
+  const updatePhone = (id: string, patch: Partial<PhoneEntry>) =>
+    setPhones((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  const removePhone = (id: string) =>
+    setPhones((prev) => prev.filter((p) => p.id !== id));
+
+  // ── Email handlers ──
+  const addEmail = () =>
+    setEmails((prev) => [...prev, { id: nanoid(), label: 'personal' as const, address: '' }]);
+  const updateEmail = (id: string, patch: Partial<EmailEntry>) =>
+    setEmails((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+  const removeEmail = (id: string) =>
+    setEmails((prev) => prev.filter((e) => e.id !== id));
+
   const handleSave = () => {
     onComplete({
       name: name.trim(),
       photoUrl: '',
-      phone: phone.trim(),
-      email: email.trim(),
+      phones,
+      emails,
       linkedinUrl: linkedinUrl.trim(),
       birthday: birthday.trim(),
       mainLocation: mainLocation.trim(),
@@ -80,8 +96,8 @@ export default function ProfileSetup({ onComplete, isDark }: Props) {
     onComplete({
       name: '',
       photoUrl: '',
-      phone: '',
-      email: '',
+      phones: [],
+      emails: [],
       linkedinUrl: '',
       birthday: '',
       mainLocation: '',
@@ -132,17 +148,51 @@ export default function ProfileSetup({ onComplete, isDark }: Props) {
               onChange={(e) => setName(e.target.value)} autoComplete="name"
               className={`${inputBase} ${inputTheme}`} />
           </div>
+          {/* Phones */}
           <div>
             <label className={labelCls}>Phone number</label>
-            <input type="tel" placeholder="+44 7700 900000" value={phone}
-              onChange={(e) => setPhone(e.target.value)} autoComplete="tel"
-              className={`${inputBase} ${inputTheme}`} />
+            <div className="space-y-2">
+              {phones.map((p) => (
+                <div key={p.id} className="flex gap-2 items-center">
+                  <select value={p.label} onChange={(e) => updatePhone(p.id, { label: e.target.value as PhoneEntry['label'] })}
+                    className={`${inputBase} ${inputTheme} w-[100px] shrink-0 py-2`}>
+                    <option value="personal">Personal</option>
+                    <option value="work">Work</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <input type="tel" placeholder="+44 7700 900000" value={p.number}
+                    onChange={(e) => updatePhone(p.id, { number: e.target.value })}
+                    className={`${inputBase} ${inputTheme} flex-1`} />
+                  <button type="button" onClick={() => removePhone(p.id)} className="text-muted hover:text-red-400 shrink-0"><X size={15} /></button>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={addPhone} className="flex items-center gap-1.5 text-xs text-accent font-medium py-1.5 mt-1">
+              <Plus size={13} /> Add phone
+            </button>
           </div>
+          {/* Emails */}
           <div>
             <label className={labelCls}>Contact email</label>
-            <input type="email" placeholder="you@example.com" value={email}
-              onChange={(e) => setEmail(e.target.value)} autoComplete="email"
-              className={`${inputBase} ${inputTheme}`} />
+            <div className="space-y-2">
+              {emails.map((e) => (
+                <div key={e.id} className="flex gap-2 items-center">
+                  <select value={e.label} onChange={(ev) => updateEmail(e.id, { label: ev.target.value as EmailEntry['label'] })}
+                    className={`${inputBase} ${inputTheme} w-[100px] shrink-0 py-2`}>
+                    <option value="personal">Personal</option>
+                    <option value="work">Work</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <input type="email" placeholder="you@example.com" value={e.address}
+                    onChange={(ev) => updateEmail(e.id, { address: ev.target.value })}
+                    className={`${inputBase} ${inputTheme} flex-1`} />
+                  <button type="button" onClick={() => removeEmail(e.id)} className="text-muted hover:text-red-400 shrink-0"><X size={15} /></button>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={addEmail} className="flex items-center gap-1.5 text-xs text-accent font-medium py-1.5 mt-1">
+              <Plus size={13} /> Add email
+            </button>
           </div>
           <div>
             <label className={labelCls}>LinkedIn URL</label>

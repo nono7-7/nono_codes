@@ -1,4 +1,4 @@
-import type { Contact, ActiveFilter, SortOrder, Job, Education, PlannedInteraction } from './types';
+import type { Contact, ActiveFilter, SortOrder, Job, Education, PlannedInteraction, PhoneEntry, EmailEntry } from './types';
 
 export const DEFAULT_TAGS = [
   'finance', 'tech', 'vc', 'startup', 'consulting', 'legal',
@@ -180,8 +180,8 @@ export function createEmptyContact(): Omit<Contact, 'id' | 'dateAdded' | 'lastUp
     homeLocation: '',
     nationality: '',
     linkedinUrl: '',
-    phone: '',
-    email: '',
+    phones: [] as PhoneEntry[],
+    emails: [] as EmailEntry[],
     notes: '',
     birthday: '',
     tags: [],

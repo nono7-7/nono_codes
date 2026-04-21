@@ -162,20 +162,20 @@ export default function ContactList({
                     {contact.homeLocation}
                   </p>
                 )}
-                {(contact.email || contact.phone) && (
+                {((contact.emails?.length > 0) || (contact.phones?.length > 0)) && (
                   <div className="flex items-center gap-2 mt-1.5">
-                    {contact.email && (
-                      <a href={`mailto:${contact.email}`} onClick={(e) => e.stopPropagation()} className="text-muted/60 hover:text-accent transition-colors">
+                    {contact.emails?.[0] && (
+                      <a href={`mailto:${contact.emails[0].address}`} onClick={(e) => e.stopPropagation()} className="text-muted/60 hover:text-accent transition-colors">
                         <Mail size={13} />
                       </a>
                     )}
-                    {contact.phone && (
-                      <a href={`tel:${contact.phone}`} onClick={(e) => e.stopPropagation()} className="text-muted/60 hover:text-accent transition-colors">
+                    {contact.phones?.[0] && (
+                      <a href={`tel:${contact.phones[0].number}`} onClick={(e) => e.stopPropagation()} className="text-muted/60 hover:text-accent transition-colors">
                         <Phone size={13} />
                       </a>
                     )}
-                    {contact.phone && (
-                      <a href={`https://wa.me/${contact.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-muted/60 hover:text-accent transition-colors">
+                    {contact.phones?.[0] && (
+                      <a href={`https://wa.me/${contact.phones[0].number.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-muted/60 hover:text-accent transition-colors">
                         <MessageCircle size={13} />
                       </a>
                     )}

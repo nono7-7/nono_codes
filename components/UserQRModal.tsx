@@ -14,8 +14,8 @@ function sharedFieldsList(profile: UserProfile): string[] {
     const cur = profile.jobs.find((j) => j.isCurrent) ?? profile.jobs[0];
     if (cur.role || cur.company) fields.push(`${cur.role}${cur.role && cur.company ? ' @ ' : ''}${cur.company}`);
   }
-  if (profile.sharePhone && profile.phone)           fields.push(profile.phone);
-  if (profile.shareEmail && profile.email)           fields.push(profile.email);
+  if (profile.sharePhone && profile.phones?.length > 0)  fields.push(profile.phones[0].number);
+  if (profile.shareEmail && profile.emails?.length > 0)  fields.push(profile.emails[0].address);
   if (profile.shareLinkedin && profile.linkedinUrl)  fields.push('LinkedIn');
   if (profile.shareLocation && profile.mainLocation) fields.push(profile.mainLocation);
   if (profile.shareEducation && profile.education.length > 0) fields.push(profile.education[0].university);

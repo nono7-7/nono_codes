@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { nanoid } from 'nanoid';
 import { Camera, Plus, X, Star, GraduationCap, Briefcase } from 'lucide-react';
-import type { Contact, Education, Job } from '@/lib/types';
+import type { Contact, Education, Job, PhoneEntry, EmailEntry } from '@/lib/types';
 import { createEmptyContact } from '@/lib/utils';
 import { compressImage } from '@/lib/avatar';
 import TagInput from './TagInput';
@@ -115,6 +115,30 @@ export default function ContactForm({
   };
   const removeJob = (id: string) => {
     setForm((f) => ({ ...f, jobs: (f.jobs || []).filter((j) => j.id !== id) }));
+  };
+
+  // Phone helpers
+  const addPhone = () => {
+    const entry: PhoneEntry = { id: nanoid(), label: 'personal', number: '' };
+    setForm((f) => ({ ...f, phones: [...(f.phones || []), entry] }));
+  };
+  const updatePhone = (id: string, patch: Partial<PhoneEntry>) => {
+    setForm((f) => ({ ...f, phones: (f.phones || []).map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
+  };
+  const removePhone = (id: string) => {
+    setForm((f) => ({ ...f, phones: (f.phones || []).filter((p) => p.id !== id) }));
+  };
+
+  // Email helpers
+  const addEmail = () => {
+    const entry: EmailEntry = { id: nanoid(), label: 'personal', address: '' };
+    setForm((f) => ({ ...f, emails: [...(f.emails || []), entry] }));
+  };
+  const updateEmail = (id: string, patch: Partial<EmailEntry>) => {
+    setForm((f) => ({ ...f, emails: (f.emails || []).map((e) => (e.id === id ? { ...e, ...patch } : e)) }));
+  };
+  const removeEmail = (id: string) => {
+    setForm((f) => ({ ...f, emails: (f.emails || []).filter((e) => e.id !== id) }));
   };
 
   const inputClass = `w-full px-3 py-2.5 rounded-lg text-sm outline-none border ${
@@ -385,13 +409,67 @@ export default function ContactForm({
       {/* Contact Info */}
       {sectionLabel('Contact Info')}
       <div className="space-y-3">
-        <div>
-          <label className={labelClass}>{optLabel('Phone')}</label>
-          <input type="tel" value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+34 612 345 678" className={inputClass} />
+        {/* Phones */}
+        <div className="space-y-2">
+          {(form.phones || []).map((p) => (
+            <div key={p.id} className={`rounded-lg p-3 border ${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'}`}>
+              <div className="flex items-center gap-2">
+                <select
+                  value={p.label}
+                  onChange={(e) => updatePhone(p.id, { label: e.target.value as PhoneEntry['label'] })}
+                  className={`${inputClass} py-1.5 text-xs w-24 flex-shrink-0`}
+                >
+                  <option value="personal">Personal</option>
+                  <option value="work">Work</option>
+                  <option value="other">Other</option>
+                </select>
+                <input
+                  type="tel"
+                  value={p.number}
+                  onChange={(e) => updatePhone(p.id, { number: e.target.value })}
+                  placeholder="+34 612 345 678"
+                  className={`${inputClass} py-1.5 text-xs flex-1`}
+                />
+                <button type="button" onClick={() => removePhone(p.id)} className="text-muted hover:text-red-400 flex-shrink-0">
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+          <button type="button" onClick={addPhone} className="flex items-center gap-2 text-xs text-accent font-medium py-1">
+            <Plus size={14} /> Add Phone
+          </button>
         </div>
-        <div>
-          <label className={labelClass}>{optLabel('Email')}</label>
-          <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="name@email.com" className={inputClass} />
+        {/* Emails */}
+        <div className="space-y-2">
+          {(form.emails || []).map((e) => (
+            <div key={e.id} className={`rounded-lg p-3 border ${isDark ? 'bg-dark-card border-dark-border' : 'bg-white border-light-border'}`}>
+              <div className="flex items-center gap-2">
+                <select
+                  value={e.label}
+                  onChange={(ev) => updateEmail(e.id, { label: ev.target.value as EmailEntry['label'] })}
+                  className={`${inputClass} py-1.5 text-xs w-24 flex-shrink-0`}
+                >
+                  <option value="personal">Personal</option>
+                  <option value="work">Work</option>
+                  <option value="other">Other</option>
+                </select>
+                <input
+                  type="email"
+                  value={e.address}
+                  onChange={(ev) => updateEmail(e.id, { address: ev.target.value })}
+                  placeholder="name@email.com"
+                  className={`${inputClass} py-1.5 text-xs flex-1`}
+                />
+                <button type="button" onClick={() => removeEmail(e.id)} className="text-muted hover:text-red-400 flex-shrink-0">
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+          <button type="button" onClick={addEmail} className="flex items-center gap-2 text-xs text-accent font-medium py-1">
+            <Plus size={14} /> Add Email
+          </button>
         </div>
         <div>
           <label className={labelClass}>{optLabel('LinkedIn URL')}</label>

@@ -54,7 +54,7 @@ export default function ContactDetail({
   const [planDesc, setPlanDesc] = useState('');
 
   const howMet = buildHowMetSentence(contact);
-  const hasContactInfo = contact.phone || contact.email || contact.linkedinUrl || contact.birthday;
+  const hasContactInfo = (contact.phones && contact.phones.length > 0) || (contact.emails && contact.emails.length > 0) || contact.linkedinUrl || contact.birthday;
   const displayJob = getDisplayJob(contact);
   const displayEdu = getDisplayEducation(contact);
   const hasHowMet = contact.howMet || contact.whereMet || contact.eventOrContext || contact.dateMet;
@@ -200,18 +200,20 @@ export default function ContactDetail({
               Contact
             </h3>
             <div className="space-y-2.5">
-              {contact.phone && (
-                <a href={`tel:${contact.phone}`} className="flex items-center gap-3 text-sm text-accent">
+              {(contact.phones || []).map((p) => (
+                <a key={p.id} href={`tel:${p.number}`} className="flex items-center gap-3 text-sm text-accent">
                   <Phone size={14} />
-                  {contact.phone}
+                  <span className="capitalize text-[11px] text-muted mr-1">{p.label}</span>
+                  {p.number}
                 </a>
-              )}
-              {contact.email && (
-                <a href={`mailto:${contact.email}`} className="flex items-center gap-3 text-sm text-accent">
+              ))}
+              {(contact.emails || []).map((e) => (
+                <a key={e.id} href={`mailto:${e.address}`} className="flex items-center gap-3 text-sm text-accent">
                   <Mail size={14} />
-                  {contact.email}
+                  <span className="capitalize text-[11px] text-muted mr-1">{e.label}</span>
+                  {e.address}
                 </a>
-              )}
+              ))}
               {contact.linkedinUrl && (
                 <a
                   href={contact.linkedinUrl}

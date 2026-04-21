@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from 'idb';
-import type { Contact, AppSettings, UserProfile, Education, Job } from './types';
+import type { Contact, AppSettings, UserProfile, Education, Job, PhoneEntry, EmailEntry } from './types';
 import { createEmptyContact } from './utils';
 
 const DB_PREFIX = 'intouch-db';
@@ -55,6 +55,16 @@ function normalizeContact(c: Record<string, unknown>): Contact {
     plannedInteractions: (c.plannedInteractions as Contact['plannedInteractions']) ?? [],
     reachOut: (c.reachOut as boolean) ?? false,
     deleted: (c.deleted as boolean) ?? false,
+    phones: (() => {
+      if (Array.isArray(c.phones) && (c.phones as PhoneEntry[]).length > 0) return c.phones as PhoneEntry[];
+      if (c.phone && typeof c.phone === 'string') return [{ id: 'legacy', label: 'personal' as const, number: c.phone as string }];
+      return [] as PhoneEntry[];
+    })(),
+    emails: (() => {
+      if (Array.isArray(c.emails) && (c.emails as EmailEntry[]).length > 0) return c.emails as EmailEntry[];
+      if (c.email && typeof c.email === 'string') return [{ id: 'legacy', label: 'personal' as const, address: c.email as string }];
+      return [] as EmailEntry[];
+    })(),
   } as Contact;
 }
 
@@ -157,8 +167,8 @@ export async function clearAll(): Promise<void> {
 const DEFAULT_PROFILE: UserProfile = {
   name: '',
   photoUrl: '',
-  phone: '',
-  email: '',
+  phones: [],
+  emails: [],
   linkedinUrl: '',
   birthday: '',
   mainLocation: '',
